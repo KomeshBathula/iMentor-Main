@@ -1,0 +1,20 @@
+{
+  "concept": "Precision is a measure of the accuracy of a classifier, indicating the proportion of true positive predictions out of all positive predictions made. Supporting.",
+  "key_points": [
+    "Precision is the ratio of true positives to the sum of true positives and false positives.",
+    "It focuses on the positive class and is useful when the cost of false positives is high.",
+    "Precision is often used in conjunction with recall to get a more complete picture of a classifier's performance."
+  ],
+  "math": "\\text{Precision} = \\frac{\\text{True Positives}}{\\text{True Positives} + \\text{False Positives}}",
+  "worked_example": "Given a classifier that predicts 100 instances as positive, out of which 80 are actually positive (true positives) and 20 are false positives, the precision is calculated as: \\[\\text{Precision} = \\frac{80}{80 + 20} = 0.8\\]",
+  "misconceptions": [
+    "Precision is the same as accuracy, which is incorrect because accuracy is the ratio of correct predictions to the total number of predictions.",
+    "Precision only considers the positive class, ignoring the negative class, which can lead to a misunderstanding of its full impact on model performance."
+  ],
+  "teaching_context": "Precision is a crucial metric for evaluating the performance of a classifier, especially when the focus is on the positive class. It helps us understand how often the classifier is correct when it predicts a positive outcome. Intuitively, precision is about the reliability of the positive predictions. Since there are no prerequisites identified for this concept, we can start by building a strong foundation. Mathematically, precision is calculated as the number of true positives divided by the total number of positive predictions (true positives plus false positives). This metric is particularly useful in scenarios where the cost of false positives is high, such as in medical diagnoses or spam filtering. In real-world applications, precision is often used in conjunction with recall to provide a more comprehensive view of the classifier's performance. By understanding precision, students can better assess the reliability of their models in specific contexts.",
+  "course": "Machine Learning",
+  "topic_id": "performance_metrics",
+  "topic_name": "Performance Metrics",
+  "subtopic_id": "precision",
+  "subtopic_name": "Precision"
+}

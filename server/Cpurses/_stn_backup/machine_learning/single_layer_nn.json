@@ -1,0 +1,21 @@
+{
+  "concept": "A single layer neural network (SLNN) is a type of artificial neural network that consists of a single layer of artificial neurons (or nodes) connected to an input layer and an output layer. This structure is fundamental in understanding more complex neural networks and is the basis for the perceptron model.",
+  "key_points": [
+    "It consists of a single layer of neurons.",
+    "It is the simplest form of a neural network.",
+    "It can be used for binary classification tasks.",
+    "It is based on the perceptron model."
+  ],
+  "math": "$y = \\sigma(w_1x_1 + w_2x_2 + ... + w_nx_n + b)$",
+  "worked_example": "Given an input vector $X = [1, 2, 3]$ and weights $W = [0.5, 0.3, 0.2]$, and a bias $b = 0.1$, the output of the SLNN is calculated as $y = \\sigma(0.5*1 + 0.3*2 + 0.2*3 + 0.1) = \\sigma(1.6)$. Assuming a sigmoid activation function, $y = \\sigma(1.6) \\approx 0.833$.",
+  "misconceptions": [
+    "SLNNs can solve any problem, including non-linearly separable data.",
+    "SLNNs are the same as perceptrons."
+  ],
+  "teaching_context": "A single layer neural network (SLNN) is a foundational concept in machine learning, forming the basis for more complex neural networks. It consists of a single layer of neurons connected to an input and an output layer. This structure is simple yet powerful, capable of performing binary classification tasks. The intuition behind SLNNs is that they can learn to separate data into two classes based on a linear decision boundary. This is achieved through the use of a linear combination of input features, followed by an activation function to introduce non-linearity. The key to understanding SLNNs is to grasp the role of the perceptron model, which is essentially a linear classifier. In the context of machine learning, SLNNs are important because they help students understand the basics of how neural networks operate and how they can be used to solve real-world problems. For example, in a binary classification task, an SLNN can be trained to distinguish between two classes of data based on a set of input features. This concept builds on the understanding of linear algebra and basic calculus, which are prerequisites for more advanced topics in machine learning.",
+  "course": "Machine Learning",
+  "topic_id": "perceptron",
+  "topic_name": "Perceptron",
+  "subtopic_id": "single_layer_nn",
+  "subtopic_name": "Single layer NN"
+}

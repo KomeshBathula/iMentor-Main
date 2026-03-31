@@ -1,0 +1,1193 @@
+{
+  "course": "Machine Learning",
+  "generated_at": "2026-03-30T00:00:00Z",
+  "skill_tree": [
+    {
+      "subtopic_id": "definition_of_ml",
+      "subtopic_name": "Definition of ML",
+      "topic_id": "introduction_to_machine_learning",
+      "topic_name": "Introduction to Machine Learning",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 2,
+      "skill_level": "foundational",
+      "estimated_study_hours": 1,
+      "prerequisites": [],
+      "unlocks": [
+        "history_of_ml",
+        "scopeof_ml"
+      ],
+      "learning_outcomes": [
+        "Student will be able to define machine learning.",
+        "Student will understand the basic concepts of machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "history_of_ml",
+      "subtopic_name": "history of ML",
+      "topic_id": "introduction_to_machine_learning",
+      "topic_name": "Introduction to Machine Learning",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 2,
+      "skill_level": "foundational",
+      "estimated_study_hours": 1,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "scopeof_ml"
+      ],
+      "learning_outcomes": [
+        "Student will be able to trace the historical development of machine learning.",
+        "Student will understand the evolution of machine learning techniques."
+      ]
+    },
+    {
+      "subtopic_id": "scopeof_ml",
+      "subtopic_name": "scopeof ML",
+      "topic_id": "introduction_to_machine_learning",
+      "topic_name": "Introduction to Machine Learning",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 2,
+      "skill_level": "foundational",
+      "estimated_study_hours": 1,
+      "prerequisites": [
+        "definition_of_ml",
+        "history_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to identify the various applications of machine learning.",
+        "Student will understand the scope and impact of machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "supervised_learning",
+      "subtopic_name": "Supervised Learning",
+      "topic_id": "learning_paradigms_i",
+      "topic_name": "Learning Paradigms I",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "unsupervised__learning",
+        "semi_supervised__learning"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of supervised learning.",
+        "Student will understand how supervised learning works."
+      ]
+    },
+    {
+      "subtopic_id": "unsupervised__learning",
+      "subtopic_name": "unsupervised  Learning",
+      "topic_id": "learning_paradigms_i",
+      "topic_name": "Learning Paradigms I",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of unsupervised learning.",
+        "Student will understand how unsupervised learning works."
+      ]
+    },
+    {
+      "subtopic_id": "semi_supervised__learning",
+      "subtopic_name": "semi-supervised  Learning",
+      "topic_id": "learning_paradigms_i",
+      "topic_name": "Learning Paradigms I",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of semi-supervised learning.",
+        "Student will understand how semi-supervised learning works."
+      ]
+    },
+    {
+      "subtopic_id": "online_learning",
+      "subtopic_name": "Online Learning",
+      "topic_id": "learning_paradigms_ii",
+      "topic_name": "Learning Paradigms II",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of online learning.",
+        "Student will understand how online learning works."
+      ]
+    },
+    {
+      "subtopic_id": "active__learning",
+      "subtopic_name": "active  Learning",
+      "topic_id": "learning_paradigms_ii",
+      "topic_name": "Learning Paradigms II",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of active learning.",
+        "Student will understand how active learning works."
+      ]
+    },
+    {
+      "subtopic_id": "reinforcement_learning",
+      "subtopic_name": "reinforcement learning",
+      "topic_id": "learning_paradigms_ii",
+      "topic_name": "Learning Paradigms II",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "adaptive_rl_control"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of reinforcement learning.",
+        "Student will understand how reinforcement learning works."
+      ]
+    },
+    {
+      "subtopic_id": "hypothesis_space",
+      "subtopic_name": "Hypothesis space",
+      "topic_id": "inductive_learning_&_bias",
+      "topic_name": "Inductive Learning & Bias",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "inductive_bias"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of hypothesis space.",
+        "Student will understand the role of hypothesis space in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "inductive_bias",
+      "subtopic_name": "inductive bias",
+      "topic_id": "inductive_learning_&_bias",
+      "topic_name": "Inductive Learning & Bias",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "hypothesis_space"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of inductive bias.",
+        "Student will understand the role of inductive bias in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "distance_measures",
+      "subtopic_name": "Distance measures",
+      "topic_id": "metric_learning_&_problem_formulation",
+      "topic_name": "Metric Learning & Problem Formulation",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "similarity_measures"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of distance measures.",
+        "Student will understand the role of distance measures in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "similarity_measures",
+      "subtopic_name": "similarity measures",
+      "topic_id": "metric_learning_&_problem_formulation",
+      "topic_name": "Metric Learning & Problem Formulation",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "distance_measures"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of similarity measures.",
+        "Student will understand the role of similarity measures in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "overfitting",
+      "subtopic_name": "Overfitting",
+      "topic_id": "bias_variance_tradeoff",
+      "topic_name": "Bias-Variance Tradeoff",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "underfitting",
+        "l1",
+        "techniques"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of overfitting.",
+        "Student will understand the role of overfitting in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "underfitting",
+      "subtopic_name": "underfitting",
+      "topic_id": "bias_variance_tradeoff",
+      "topic_name": "Bias-Variance Tradeoff",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "overfitting"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of underfitting.",
+        "Student will understand the role of underfitting in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "feature_scaling",
+      "subtopic_name": "Feature scaling",
+      "topic_id": "data_representation_&_preprocessing",
+      "topic_name": "Data Representation & Preprocessing",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "normalization"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of feature scaling.",
+        "Student will understand the role of feature scaling in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "normalization",
+      "subtopic_name": "normalization",
+      "topic_id": "data_representation_&_preprocessing",
+      "topic_name": "Data Representation & Preprocessing",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "feature_scaling"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of normalization.",
+        "Student will understand the role of normalization in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "ml_pipeline",
+      "subtopic_name": "ML pipeline",
+      "topic_id": "ml_design_practices",
+      "topic_name": "ML Design Practices",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "evaluation",
+        "time_series",
+        "end_to_end_ml_pipeline"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of ML pipeline.",
+        "Student will understand the role of ML pipeline in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "evaluation",
+      "subtopic_name": "evaluation",
+      "topic_id": "ml_design_practices",
+      "topic_name": "ML Design Practices",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "ml_pipeline"
+      ],
+      "unlocks": [
+        "precision",
+        "strengths"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of evaluation.",
+        "Student will understand the role of evaluation in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "tutorial",
+      "subtopic_name": "Tutorial",
+      "topic_id": "module_1_review",
+      "topic_name": "Module 1 Review",
+      "module_id": "module_1",
+      "module_name": "Module 1",
+      "difficulty_score": 2,
+      "skill_level": "foundational",
+      "estimated_study_hours": 2,
+      "prerequisites": [
+        "definition_of_ml",
+        "history_of_ml",
+        "scopeof_ml",
+        "supervised_learning",
+        "unsupervised__learning",
+        "semi_supervised__learning",
+        "online_learning",
+        "active__learning",
+        "reinforcement_learning",
+        "hypothesis_space",
+        "inductive_bias",
+        "distance_measures",
+        "similarity_measures",
+        "overfitting",
+        "underfitting",
+        "feature_scaling",
+        "normalization",
+        "ml_pipeline",
+        "evaluation"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to review and consolidate the knowledge of Module 1.",
+        "Student will understand the key concepts and techniques covered in Module 1."
+      ]
+    },
+    {
+      "subtopic_id": "least_squares",
+      "subtopic_name": "Least squares",
+      "topic_id": "linear_regression",
+      "topic_name": "Linear Regression",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of least squares.",
+        "Student will understand the role of least squares in linear regression."
+      ]
+    },
+    {
+      "subtopic_id": "sigmoid",
+      "subtopic_name": "Sigmoid",
+      "topic_id": "logistic_regression",
+      "topic_name": "Logistic Regression",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "binary_classification"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of sigmoid.",
+        "Student will understand the role of sigmoid in logistic regression."
+      ]
+    },
+    {
+      "subtopic_id": "binary_classification",
+      "subtopic_name": "binary classification",
+      "topic_id": "logistic_regression",
+      "topic_name": "Logistic Regression",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "sigmoid"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of binary classification.",
+        "Student will understand the role of binary classification in logistic regression."
+      ]
+    },
+    {
+      "subtopic_id": "cost_optimization",
+      "subtopic_name": "Cost optimization",
+      "topic_id": "gradient_descent_&_delta_rule",
+      "topic_name": "Gradient Descent & Delta Rule",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "sgd"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of cost optimization.",
+        "Student will understand the role of cost optimization in gradient descent."
+      ]
+    },
+    {
+      "subtopic_id": "single_layer_nn",
+      "subtopic_name": "Single layer NN",
+      "topic_id": "perceptron",
+      "topic_name": "Perceptron",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of single layer NN.",
+        "Student will understand the role of single layer NN in perceptron."
+      ]
+    },
+    {
+      "subtopic_id": "chain_rule",
+      "subtopic_name": "Chain rule",
+      "topic_id": "backpropagation_derivation",
+      "topic_name": "Backpropagation Derivation",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 5,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "gradients"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of chain rule.",
+        "Student will understand the role of chain rule in backpropagation."
+      ]
+    },
+    {
+      "subtopic_id": "gradients",
+      "subtopic_name": "gradients",
+      "topic_id": "backpropagation_derivation",
+      "topic_name": "Backpropagation Derivation",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 5,
+      "prerequisites": [
+        "chain_rule"
+      ],
+      "unlocks": [
+        "nn_training"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of gradients.",
+        "Student will understand the role of gradients in backpropagation."
+      ]
+    },
+    {
+      "subtopic_id": "nn_training",
+      "subtopic_name": "NN training",
+      "topic_id": "backpropagation_algorithm",
+      "topic_name": "Backpropagation Algorithm",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 5,
+      "prerequisites": [
+        "gradients"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of NN training.",
+        "Student will understand the role of NN training in backpropagation."
+      ]
+    },
+    {
+      "subtopic_id": "max_margin",
+      "subtopic_name": "Max margin",
+      "topic_id": "support_vector_machines",
+      "topic_name": "Support Vector Machines",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "kernels"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of max margin.",
+        "Student will understand the role of max margin in support vector machines."
+      ]
+    },
+    {
+      "subtopic_id": "kernels",
+      "subtopic_name": "kernels",
+      "topic_id": "support_vector_machines",
+      "topic_name": "Support Vector Machines",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "max_margin"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of kernels.",
+        "Student will understand the role of kernels in support vector machines."
+      ]
+    },
+    {
+      "subtopic_id": "numericals",
+      "subtopic_name": "Numericals",
+      "topic_id": "module_2_review",
+      "topic_name": "Module 2 Review",
+      "module_id": "module_2",
+      "module_name": "Module 2",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "least_squares",
+        "sigmoid",
+        "binary_classification",
+        "cost_optimization",
+        "single_layer_nn",
+        "chain_rule",
+        "gradients",
+        "nn_training",
+        "max_margin",
+        "kernels"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to review and consolidate the knowledge of Module 2.",
+        "Student will understand the key concepts and techniques covered in Module 2."
+      ]
+    },
+    {
+      "subtopic_id": "entropy",
+      "subtopic_name": "Entropy",
+      "topic_id": "decision_trees",
+      "topic_name": "Decision Trees",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "information_gain"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of entropy.",
+        "Student will understand the role of entropy in decision trees."
+      ]
+    },
+    {
+      "subtopic_id": "information_gain",
+      "subtopic_name": "information gain",
+      "topic_id": "decision_trees",
+      "topic_name": "Decision Trees",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "entropy"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of information gain.",
+        "Student will understand the role of information gain in decision trees."
+      ]
+    },
+    {
+      "subtopic_id": "ensemble",
+      "subtopic_name": "Ensemble",
+      "topic_id": "random_forests",
+      "topic_name": "Random Forests",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "bagging"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of ensemble.",
+        "Student will understand the role of ensemble in random forests."
+      ]
+    },
+    {
+      "subtopic_id": "bagging",
+      "subtopic_name": "Bagging",
+      "topic_id": "random_forests",
+      "topic_name": "Random Forests",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "ensemble"
+      ],
+      "unlocks": [
+        "boosting"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of bagging.",
+        "Student will understand the role of bagging in random forests."
+      ]
+    },
+    {
+      "subtopic_id": "naive_bayes",
+      "subtopic_name": "Naive Bayes",
+      "topic_id": "bayesian_classifier",
+      "topic_name": "Bayesian Classifier",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of Naive Bayes.",
+        "Student will understand the role of Naive Bayes in Bayesian classifier."
+      ]
+    },
+    {
+      "subtopic_id": "k_means",
+      "subtopic_name": "K-means",
+      "topic_id": "clustering",
+      "topic_name": "Clustering",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "hierarchical"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of K-means.",
+        "Student will understand the role of K-means in clustering."
+      ]
+    },
+    {
+      "subtopic_id": "hierarchical",
+      "subtopic_name": "hierarchical",
+      "topic_id": "clustering",
+      "topic_name": "Clustering",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "k_means"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of hierarchical clustering.",
+        "Student will understand the role of hierarchical clustering in unsupervised learning."
+      ]
+    },
+    {
+      "subtopic_id": "dimensionality_reduction",
+      "subtopic_name": "Dimensionality reduction",
+      "topic_id": "principal_component_analysis",
+      "topic_name": "Principal Component Analysis",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [
+        "dimensionality_issues"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of dimensionality reduction.",
+        "Student will understand the role of dimensionality reduction in PCA."
+      ]
+    },
+    {
+      "subtopic_id": "graph_representation",
+      "subtopic_name": "Graph representation",
+      "topic_id": "graph_based_methods",
+      "topic_name": "Graph-Based Methods",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "definition_of_ml"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain the concept of graph representation in ML.",
+        "Student will understand how graph structures are used in machine learning."
+      ]
+    },
+    {
+      "subtopic_id": "precision",
+      "subtopic_name": "Precision",
+      "topic_id": "performance_metrics",
+      "topic_name": "Performance Metrics",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 2,
+      "prerequisites": [
+        "evaluation"
+      ],
+      "unlocks": [
+        "recall"
+      ],
+      "learning_outcomes": [
+        "Student will be able to define precision and compute it from a confusion matrix.",
+        "Student will understand when to prioritize precision over recall."
+      ]
+    },
+    {
+      "subtopic_id": "recall",
+      "subtopic_name": "Recall",
+      "topic_id": "performance_metrics",
+      "topic_name": "Performance Metrics",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 2,
+      "prerequisites": [
+        "precision"
+      ],
+      "unlocks": [
+        "roc"
+      ],
+      "learning_outcomes": [
+        "Student will be able to define recall and compute it from a confusion matrix.",
+        "Student will understand the precision-recall tradeoff."
+      ]
+    },
+    {
+      "subtopic_id": "roc",
+      "subtopic_name": "ROC",
+      "topic_id": "performance_metrics",
+      "topic_name": "Performance Metrics",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 4,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 2,
+      "prerequisites": [
+        "recall"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to construct and interpret an ROC curve.",
+        "Student will understand AUC-ROC as a model evaluation metric."
+      ]
+    },
+    {
+      "subtopic_id": "strengths",
+      "subtopic_name": "Algorithm Strengths",
+      "topic_id": "algorithm_comparison",
+      "topic_name": "Algorithm Comparison",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 2,
+      "prerequisites": [
+        "evaluation"
+      ],
+      "unlocks": [
+        "limits"
+      ],
+      "learning_outcomes": [
+        "Student will be able to compare the strengths of major ML algorithms.",
+        "Student will understand when to apply each algorithm class."
+      ]
+    },
+    {
+      "subtopic_id": "limits",
+      "subtopic_name": "Algorithm Limits",
+      "topic_id": "algorithm_comparison",
+      "topic_name": "Algorithm Comparison",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 2,
+      "prerequisites": [
+        "strengths"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to identify the limitations of major ML algorithms.",
+        "Student will understand how to select algorithms given constraints."
+      ]
+    },
+    {
+      "subtopic_id": "case_studies",
+      "subtopic_name": "Case Studies",
+      "topic_id": "module_3_review",
+      "topic_name": "Module 3 Review",
+      "module_id": "module_3",
+      "module_name": "Module 3",
+      "difficulty_score": 3,
+      "skill_level": "intermediate",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "entropy",
+        "information_gain",
+        "ensemble",
+        "bagging",
+        "naive_bayes",
+        "k_means",
+        "hierarchical",
+        "dimensionality_reduction",
+        "graph_representation",
+        "precision",
+        "recall",
+        "roc",
+        "strengths",
+        "limits"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to apply Module 3 algorithms to real-world case studies.",
+        "Student will understand how to choose and evaluate algorithms in practice."
+      ]
+    },
+    {
+      "subtopic_id": "l1",
+      "subtopic_name": "L1 Regularization",
+      "topic_id": "regularization_techniques",
+      "topic_name": "Regularization Techniques",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 4,
+      "skill_level": "advanced",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "overfitting"
+      ],
+      "unlocks": [
+        "l2"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain L1 (Lasso) regularization and its sparsity effect.",
+        "Student will understand when to apply L1 regularization over L2."
+      ]
+    },
+    {
+      "subtopic_id": "l2",
+      "subtopic_name": "L2 Regularization",
+      "topic_id": "regularization_techniques",
+      "topic_name": "Regularization Techniques",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 4,
+      "skill_level": "advanced",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "l1"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain L2 (Ridge) regularization and its weight-shrinkage effect.",
+        "Student will understand the difference between L1 and L2 penalties."
+      ]
+    },
+    {
+      "subtopic_id": "sgd",
+      "subtopic_name": "Stochastic Gradient Descent",
+      "topic_id": "loss_functions_&_optimizers",
+      "topic_name": "Loss Functions & Optimizers",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "cost_optimization"
+      ],
+      "unlocks": [
+        "momentum"
+      ],
+      "learning_outcomes": [
+        "Student will be able to explain stochastic gradient descent and mini-batch variants.",
+        "Student will understand SGD convergence properties and hyperparameter tuning."
+      ]
+    },
+    {
+      "subtopic_id": "momentum",
+      "subtopic_name": "Momentum",
+      "topic_id": "loss_functions_&_optimizers",
+      "topic_name": "Loss Functions & Optimizers",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "sgd"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain momentum-based optimizers (SGD+momentum, Adam).",
+        "Student will understand how momentum accelerates gradient descent."
+      ]
+    },
+    {
+      "subtopic_id": "dimensionality_issues",
+      "subtopic_name": "Dimensionality Issues",
+      "topic_id": "feature_selection",
+      "topic_name": "Feature Selection",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 4,
+      "skill_level": "advanced",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "dimensionality_reduction"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to identify the curse of dimensionality and its effects.",
+        "Student will understand feature selection strategies to mitigate dimensionality problems."
+      ]
+    },
+    {
+      "subtopic_id": "boosting",
+      "subtopic_name": "Boosting",
+      "topic_id": "ensemble_learning",
+      "topic_name": "Ensemble Learning",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "bagging"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain AdaBoost and gradient boosting algorithms.",
+        "Student will understand how boosting reduces bias by combining weak learners."
+      ]
+    },
+    {
+      "subtopic_id": "techniques",
+      "subtopic_name": "Data Augmentation Techniques",
+      "topic_id": "data_augmentation",
+      "topic_name": "Data Augmentation",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 4,
+      "skill_level": "advanced",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "overfitting"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to describe common data augmentation strategies.",
+        "Student will understand how augmentation reduces overfitting in limited datasets."
+      ]
+    },
+    {
+      "subtopic_id": "adaptive_rl_control",
+      "subtopic_name": "Adaptive RL Control",
+      "topic_id": "ml_for_control_applications",
+      "topic_name": "ML for Control Applications",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 6,
+      "skill_level": "advanced",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "reinforcement_learning"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to explain how RL is applied to adaptive control systems.",
+        "Student will understand policy gradient methods for control tasks."
+      ]
+    },
+    {
+      "subtopic_id": "time_series",
+      "subtopic_name": "Time Series",
+      "topic_id": "forecasting_&_anomaly_detection",
+      "topic_name": "Forecasting & Anomaly Detection",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "ml_pipeline"
+      ],
+      "unlocks": [
+        "faults"
+      ],
+      "learning_outcomes": [
+        "Student will be able to apply ML models to time-series forecasting tasks.",
+        "Student will understand autocorrelation, seasonality, and trend decomposition."
+      ]
+    },
+    {
+      "subtopic_id": "faults",
+      "subtopic_name": "Fault Detection",
+      "topic_id": "forecasting_&_anomaly_detection",
+      "topic_name": "Forecasting & Anomaly Detection",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 3,
+      "prerequisites": [
+        "time_series"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to build anomaly and fault detection models.",
+        "Student will understand threshold-based and model-based detection approaches."
+      ]
+    },
+    {
+      "subtopic_id": "end_to_end_ml_pipeline",
+      "subtopic_name": "End-to-End ML Pipeline",
+      "topic_id": "course_wrap_up",
+      "topic_name": "Course Wrap-Up",
+      "module_id": "module_4",
+      "module_name": "Module 4",
+      "difficulty_score": 5,
+      "skill_level": "advanced",
+      "estimated_study_hours": 4,
+      "prerequisites": [
+        "ml_pipeline",
+        "evaluation",
+        "overfitting",
+        "l1",
+        "l2",
+        "sgd",
+        "boosting"
+      ],
+      "unlocks": [],
+      "learning_outcomes": [
+        "Student will be able to design and implement a complete ML pipeline from data ingestion to deployment.",
+        "Student will understand MLOps principles including monitoring, versioning, and retraining."
+      ]
+    }
+  ]
+}

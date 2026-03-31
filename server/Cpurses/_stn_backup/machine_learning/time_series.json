@@ -1,0 +1,21 @@
+{
+  "concept": "A time series is a sequence of data points indexed in time order, often representing measurements taken sequentially over time. Supporting.",
+  "key_points": [
+    "Time series data points are ordered by time, allowing for the analysis of trends and patterns over time.",
+    "Forecasting involves predicting future values based on historical data, while anomaly detection identifies unusual patterns that do not conform to expected behavior.",
+    "Time series analysis often involves statistical methods to extract meaningful information from the data.",
+    "Common techniques include moving averages, exponential smoothing, and autoregressive integrated moving average (ARIMA) models."
+  ],
+  "math": "\\text{ARIMA}(p,d,q) = (1 - \\phi_1 B - \\phi_2 B^2 - \\cdots - \\phi_p B^p)(1 - B)^d (1 + \\theta_1 B + \\theta_2 B^2 + \\cdots + \\theta_q B^q)X_t",
+  "worked_example": "Given a time series of monthly sales data, use an ARIMA(1,1,1) model to forecast the next month's sales. First, difference the data to make it stationary. Then, estimate the parameters \\(\\phi_1, \\theta_1,\\) and \\(d\\) using historical data. Finally, apply the model to predict the next month's sales.",
+  "misconceptions": [
+    "Time series data can be analyzed without considering the temporal order, which is incorrect as the order is crucial for meaningful analysis.",
+    "Forecasting and anomaly detection are the same process, which is a misconception as they serve different purposes."
+  ],
+  "teaching_context": "Understanding time series is essential for analyzing and predicting data that changes over time. Since there are no prerequisites identified, we can start from the basics. Time series data points are ordered by time, allowing for the analysis of trends and patterns. Forecasting involves predicting future values based on historical data, while anomaly detection identifies unusual patterns that do not conform to expected behavior. Mathematically, we can use models like ARIMA to extract meaningful information from the data. In real-world applications, time series analysis is used in various fields such as finance (stock prices), weather forecasting, and even in social media trends. By building on these concepts, students can develop a strong foundation in analyzing and predicting time-dependent data.",
+  "course": "Machine Learning",
+  "topic_id": "forecasting_&_anomaly_detection",
+  "topic_name": "Forecasting & Anomaly Detection",
+  "subtopic_id": "time_series",
+  "subtopic_name": "Time series"
+}

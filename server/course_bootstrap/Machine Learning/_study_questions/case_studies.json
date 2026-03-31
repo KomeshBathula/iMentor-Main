@@ -1,0 +1,152 @@
+{
+  "subtopic_id": "case_studies",
+  "subtopic_name": "Case studies",
+  "topic_name": "Module 3 Review",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following best describes the importance of data preprocessing in machine learning case studies?",
+      "options": [
+        "A) It is only necessary for image data.",
+        "B) It is crucial for ensuring that the data is in a suitable format for the model.",
+        "C) It is optional and can be skipped if the model performs well.",
+        "D) It is only needed for text data."
+      ],
+      "correct_option": "B",
+      "explanation": "Data preprocessing is crucial for ensuring that the data is in a suitable format for the model. This includes tasks such as normalization, handling missing values, and encoding categorical variables, which are essential for the model's performance.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "In a case study involving a classification problem, which of the following would be the most appropriate evaluation metric?",
+      "options": [
+        "A) Mean squared error",
+        "B) Accuracy",
+        "C) Precision",
+        "D) Recall"
+      ],
+      "correct_option": "B",
+      "explanation": "Accuracy is the most appropriate evaluation metric for a classification problem as it measures the proportion of correct predictions out of all predictions made.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following scenarios would most likely require feature engineering?",
+      "options": [
+        "A) When the dataset is too small to train a model.",
+        "B) When the raw data does not contain enough information to make accurate predictions.",
+        "C) When the model is already performing well with the raw data.",
+        "D) When the model is overfitting to the training data."
+      ],
+      "correct_option": "B",
+      "explanation": "Feature engineering is necessary when the raw data does not contain enough information to make accurate predictions. By creating new features or transforming existing ones, the model can better capture the underlying patterns in the data.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following best describes the role of domain knowledge in machine learning case studies?",
+      "options": [
+        "A) It is only useful for explaining the results after the model is trained.",
+        "B) It is crucial for understanding the context and interpreting the results.",
+        "C) It is unnecessary if the model performs well.",
+        "D) It is only needed for academic research."
+      ],
+      "correct_option": "B",
+      "explanation": "Domain knowledge is crucial for understanding the context and interpreting the results of a machine learning model. It helps in selecting appropriate features, interpreting the model's predictions, and ensuring that the model's output is meaningful in the real-world scenario.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "In a case study involving a regression problem, which of the following would be the most appropriate evaluation metric?",
+      "options": [
+        "A) Accuracy",
+        "B) Precision",
+        "C) Recall",
+        "D) Mean squared error"
+      ],
+      "correct_option": "D",
+      "explanation": "Mean squared error (MSE) is the most appropriate evaluation metric for a regression problem as it measures the average squared difference between the predicted values and the actual values.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the importance of feature selection in machine learning case studies.",
+      "model_answer": "Feature selection is crucial in machine learning as it helps in identifying the most relevant features that contribute to the model's performance. By selecting the right features, we can reduce the dimensionality of the data, improve the model's accuracy, and avoid overfitting. Additionally, it can enhance the interpretability of the model, making it easier to understand the relationships between the input features and the output.",
+      "key_concepts": [
+        "feature selection",
+        "dimensionality reduction",
+        "overfitting",
+        "model interpretability"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the role of cross-validation in evaluating machine learning models.",
+      "model_answer": "Cross-validation is a powerful technique for evaluating machine learning models. It helps in estimating the model's performance on unseen data by splitting the dataset into multiple subsets and training the model on different combinations of these subsets. This process provides a more reliable estimate of the model's performance and helps in avoiding overfitting. Additionally, it can provide insights into the model's stability and generalization capabilities.",
+      "key_concepts": [
+        "cross-validation",
+        "overfitting",
+        "model stability",
+        "generalization"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "sa_3",
+      "question": "Compare and contrast the use of decision trees and random forests in machine learning.",
+      "model_answer": "Decision trees and random forests are both popular machine learning algorithms, but they have different characteristics. Decision trees are simple and easy to interpret, but they can be prone to overfitting, especially when the tree is deep. On the other hand, random forests are an ensemble method that combines multiple decision trees. They tend to be more robust and less prone to overfitting, as the randomness in the selection of features and samples helps to reduce the variance of the model. Additionally, random forests can handle a larger number of features and are generally more accurate than individual decision trees.",
+      "key_concepts": [
+        "decision trees",
+        "random forests",
+        "overfitting",
+        "ensemble methods"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Feature Selection",
+      "back": "The process of choosing the most relevant features from the dataset to improve model performance and reduce dimensionality. Techniques include filter methods, wrapper methods, and embedded methods.",
+      "hint": "Think of it as picking the best ingredients for a recipe."
+    },
+    {
+      "id": "fc_2",
+      "front": "Cross-Validation",
+      "back": "A technique for evaluating the performance of a machine learning model by splitting the dataset into multiple subsets and training the model on different combinations of these subsets. Common methods include K-fold cross-validation and leave-one-out cross-validation.",
+      "hint": "Imagine dividing your data into groups to test the model's performance."
+    },
+    {
+      "id": "fc_3",
+      "front": "Bias-Variance Tradeoff",
+      "back": "A fundamental concept in machine learning that refers to the balance between a model's ability to fit the training data (low bias) and its ability to generalize to new data (low variance). A model with high bias is too simple, while a model with high variance is too complex.",
+      "hint": "It's like balancing a seesaw between simplicity and complexity."
+    },
+    {
+      "id": "fc_4",
+      "front": "Feature Engineering",
+      "back": "The process of creating new features or transforming existing ones to improve the model's performance. This can include techniques such as one-hot encoding, polynomial features, and principal component analysis.",
+      "hint": "Think of it as crafting the perfect recipe from your raw ingredients."
+    },
+    {
+      "id": "fc_5",
+      "front": "Domain Knowledge",
+      "back": "The understanding of the context and the problem domain, which is crucial for selecting appropriate features, interpreting the model's predictions, and ensuring that the model's output is meaningful in the real-world scenario.",
+      "hint": "It's like knowing the recipe before you start cooking."
+    }
+  ],
+  "topic_id": "module_3_review"
+}

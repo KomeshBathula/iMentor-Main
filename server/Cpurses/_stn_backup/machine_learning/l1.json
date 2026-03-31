@@ -1,0 +1,21 @@
+{
+  "concept": "L1 regularization, also known as L1 norm or Lasso regularization, adds the absolute value of the magnitude of coefficients as a penalty term to the loss function, promoting sparsity in the model parameters.",
+  "key_points": [
+    "Adds the absolute value of the coefficients to the loss function.",
+    "Promotes sparsity, leading to some coefficients being exactly zero.",
+    "Can be used for feature selection, as it tends to eliminate irrelevant features.",
+    "Balanced by a hyperparameter, often denoted as λ (lambda)."
+  ],
+  "math": "$J(\\theta) = \\text{loss}(\\theta) + \\lambda \\sum_{i=1}^{n} |\\theta_i|$",
+  "worked_example": "Given a linear regression model with features [x1, x2, x3] and corresponding weights [w1, w2, w3], applying L1 regularization with λ = 0.1 would modify the loss function to include the penalty term: $J(\\theta) = \\text{loss}(\\theta) + 0.1(|w1| + |w2| + |w3|)$. If the penalty term causes one of the weights to become zero, that feature is effectively removed from the model.",
+  "misconceptions": [
+    "L1 regularization always results in a sparse model, which is not true as it depends on the value of λ and the data.",
+    "L1 regularization is the same as L2 regularization, which is incorrect as they use different penalties."
+  ],
+  "teaching_context": "L1 regularization is a powerful technique in machine learning that helps in reducing overfitting and improving model interpretability. It adds a penalty term to the loss function based on the absolute value of the coefficients, which can lead to some coefficients being exactly zero. This sparsity property makes L1 regularization particularly useful for feature selection, as it can effectively eliminate irrelevant or redundant features from the model. The intuition behind L1 regularization is that by penalizing the absolute values of the coefficients, the model is encouraged to use only the most important features, which can be seen as a form of feature selection. This concept builds on the understanding of regularization techniques and loss functions, reinforcing the idea that adding penalties to the loss function can improve model performance. In practice, the choice of λ is crucial, as it controls the trade-off between fitting the training data and having a sparse model. The real-world relevance of L1 regularization is evident in applications where interpretability is important, such as in medical diagnosis or financial forecasting, where understanding the impact of each feature is crucial.",
+  "course": "Machine Learning",
+  "topic_id": "regularization_techniques",
+  "topic_name": "Regularization Techniques",
+  "subtopic_id": "l1",
+  "subtopic_name": "L1"
+}

@@ -1,0 +1,21 @@
+{
+  "concept": "Least squares is a method for estimating the unknown parameters in a linear regression model. It minimizes the sum of the squares of the residuals, which are the differences between the observed and predicted values.",
+  "key_points": [
+    "Minimizes the sum of the squared residuals.",
+    "Provides a way to estimate the parameters of a linear model.",
+    "Commonly used in regression analysis.",
+    "Can be derived from the principle of maximum likelihood."
+  ],
+  "math": "\\[ \\min_{\\beta} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2 \\]",
+  "worked_example": "Given a dataset with two points (1, 2) and (2, 3), we want to find the line of best fit. The equation of the line is $y = mx + b$. Using the least squares method, we can derive the values of $m$ and $b$ that minimize the sum of the squared residuals. The solution involves solving the normal equations, which in this case are $m = 1$ and $b = 1$. Thus, the line of best fit is $y = x + 1$.",
+  "misconceptions": [
+    "Least squares always gives the best fit in all situations.",
+    "The method can be used for non-linear models."
+  ],
+  "teaching_context": "Least squares is a fundamental concept in linear regression, which is a core topic in machine learning. It provides a way to estimate the parameters of a linear model by minimizing the sum of the squared residuals. This method is intuitive because it seeks to find the line that is closest to all the data points in a least-squares sense. Since there are no prerequisites identified for this concept, we can start by building an intuitive understanding of why we would want to minimize the sum of the squared residuals. We can then move on to the mathematical derivation of the least squares method, which involves solving a system of linear equations. Finally, we can discuss the real-world relevance of least squares by showing how it is used in various applications, such as predicting housing prices or stock market trends. This concept is core because it is essential for understanding more advanced topics in machine learning, such as multiple linear regression and regularization.",
+  "course": "Machine Learning",
+  "topic_id": "linear_regression",
+  "topic_name": "Linear Regression",
+  "subtopic_id": "least_squares",
+  "subtopic_name": "Least squares"
+}

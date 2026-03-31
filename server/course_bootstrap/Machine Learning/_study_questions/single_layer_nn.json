@@ -1,0 +1,153 @@
+{
+  "subtopic_id": "single_layer_nn",
+  "subtopic_name": "Single layer NN",
+  "topic_name": "Perceptron",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary limitation of a single layer neural network (SLNN)?",
+      "options": [
+        "A) It cannot handle non-linear data.",
+        "B) It requires a large number of neurons.",
+        "C) It cannot be trained using backpropagation.",
+        "D) It is too complex to implement."
+      ],
+      "correct_option": "A",
+      "explanation": "SLNNs are limited to linearly separable data, which means they can only solve problems that can be separated by a straight line (in 2D) or a hyperplane (in higher dimensions).",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following best describes the role of weights in a single layer neural network?",
+      "options": [
+        "A) They determine the threshold for activation.",
+        "B) They represent the input features.",
+        "C) They adjust the output based on the input data.",
+        "D) They are fixed values that do not change during training."
+      ],
+      "correct_option": "C",
+      "explanation": "Weights in a SLNN adjust the output based on the input data, allowing the network to learn the optimal relationship between inputs and outputs.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of classification, what is the purpose of the activation function in a single layer neural network?",
+      "options": [
+        "A) To reduce the dimensionality of the input data.",
+        "B) To introduce non-linearity into the model.",
+        "C) To normalize the input features.",
+        "D) To increase the number of neurons in the network."
+      ],
+      "correct_option": "B",
+      "explanation": "The activation function introduces non-linearity into the model, allowing the SLNN to handle non-linear data, even though its primary form is linear.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "What is the main advantage of using a single layer neural network over a more complex model?",
+      "options": [
+        "A) It is computationally more expensive.",
+        "B) It is easier to understand and implement.",
+        "C) It can handle more complex data.",
+        "D) It requires more data for training."
+      ],
+      "correct_option": "B",
+      "explanation": "SLNNs are simpler and easier to understand and implement, making them a good starting point for understanding neural networks.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following scenarios is most suitable for a single layer neural network?",
+      "options": [
+        "A) A dataset with complex, non-linear relationships.",
+        "B) A dataset with linearly separable data.",
+        "C) A dataset with high-dimensional input features.",
+        "D) A dataset with a large number of classes.",
+        "E) A dataset with overlapping classes.",
+        "F) A dataset with missing values.",
+        "G) A dataset with non-numeric data."
+      ],
+      "correct_option": "B",
+      "explanation": "SLNNs are best suited for linearly separable data, making them ideal for tasks where the data can be separated by a straight line or hyperplane.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the role of weights in a single layer neural network and how they are adjusted during training.",
+      "model_answer": "Weights in a single layer neural network determine the contribution of each input feature to the output. During training, the weights are adjusted to minimize the error between the predicted output and the actual output. This is typically done using a supervised learning algorithm, such as gradient descent, which iteratively updates the weights to find the optimal solution.",
+      "key_concepts": [
+        "weights",
+        "training",
+        "gradient descent"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the limitations of a single layer neural network and provide an example of a scenario where it would be insufficient.",
+      "model_answer": "A single layer neural network is limited to linear relationships between inputs and outputs. It cannot handle non-linear data, which means it is insufficient for scenarios where the data is not linearly separable. For example, if you have a dataset with overlapping classes or complex, non-linear relationships, a single layer neural network would not be able to accurately model the data.",
+      "key_concepts": [
+        "limitations",
+        "non-linear data",
+        "overlapping classes"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "sa_3",
+      "question": "Compare and contrast a single layer neural network with a multi-layer neural network, highlighting the key differences.",
+      "model_answer": "A single layer neural network consists of a single layer of neurons that processes the input data and produces an output. It is limited to linear relationships and can only handle linearly separable data. In contrast, a multi-layer neural network, such as a deep neural network, has multiple layers of neurons, allowing it to model more complex, non-linear relationships. The additional layers enable the network to learn more abstract and hierarchical features, making it more powerful for tasks that require understanding of complex data.",
+      "key_concepts": [
+        "single layer",
+        "multi-layer",
+        "linear relationships",
+        "non-linear relationships"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Single Layer Neural Network (SLNN)",
+      "back": "A neural network with a single layer of neurons that processes the input data and produces an output. It is limited to linear relationships and can only handle linearly separable data.",
+      "hint": "Think of a straight line or hyperplane."
+    },
+    {
+      "id": "fc_2",
+      "front": "Activation Function",
+      "back": "A function that introduces non-linearity into the model, allowing the network to handle non-linear data. Common examples include the sigmoid, ReLU, and tanh functions.",
+      "hint": "It transforms the weighted sum of inputs."
+    },
+    {
+      "id": "fc_3",
+      "front": "Weights",
+      "back": "Parameters in a neural network that determine the contribution of each input feature to the output. They are adjusted during training to minimize the error between the predicted and actual outputs.",
+      "hint": "Think of them as coefficients in a linear equation."
+    },
+    {
+      "id": "fc_4",
+      "front": "Linear Separability",
+      "back": "The property of data that can be separated by a straight line (in 2D) or a hyperplane (in higher dimensions). SLNNs are limited to linearly separable data.",
+      "hint": "It's about the ability to draw a line or hyperplane."
+    },
+    {
+      "id": "fc_5",
+      "front": "Supervised Learning",
+      "back": "A type of machine learning where the network learns from labeled data, adjusting the weights to minimize the error between predicted and actual outputs.",
+      "hint": "It involves training on labeled examples."
+    }
+  ],
+  "topic_id": "perceptron"
+}

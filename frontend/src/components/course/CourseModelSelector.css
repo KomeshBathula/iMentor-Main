@@ -1,0 +1,76 @@
+.course-model-selector {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.selector-header {
+    margin-bottom: 12px;
+}
+
+.course-slug {
+    font-size: 0.75rem;
+    color: #6366f1;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.model-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.model-card {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.model-card:hover {
+    border-color: #6366f1;
+}
+
+.model-card.active {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.model-name {
+    display: block;
+    font-size: 0.9rem;
+    color: #f3f4f6;
+    font-weight: 500;
+}
+
+.model-stats {
+    font-size: 0.7rem;
+    color: #9ca3af;
+}
+
+.health-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.health-dot.healthy {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+}
+
+.health-dot.warning {
+    background: #f59e0b;
+}
+
+.health-dot.offline {
+    background: #ef4444;
+}

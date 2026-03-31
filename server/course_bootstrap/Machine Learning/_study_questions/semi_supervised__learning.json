@@ -1,0 +1,147 @@
+{
+  "subtopic_id": "semi_supervised__learning",
+  "subtopic_name": "semi-supervised  Learning",
+  "topic_name": "Learning Paradigms I",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following best describes semi-supervised learning?",
+      "options": [
+        "A) Using only labeled data for training",
+        "B) Combining labeled and unlabeled data for training",
+        "C) Using only unlabeled data for training",
+        "D) Applying reinforcement learning techniques"
+      ],
+      "correct_option": "B",
+      "explanation": "Semi-supervised learning combines both labeled and unlabeled data to improve model performance, leveraging the unlabeled data to learn the structure of the data.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "In semi-supervised learning, what is the primary benefit of using unlabeled data?",
+      "options": [
+        "A) Reducing the computational cost of training",
+        "B) Increasing the diversity of the training data",
+        "C) Enhancing the model's ability to generalize",
+        "D) Improving the accuracy of predictions on labeled data"
+      ],
+      "correct_option": "C",
+      "explanation": "Unlabeled data can help the model learn the underlying structure and patterns in the data, which in turn enhances its ability to generalize to new, unseen data.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following is a common technique used in semi-supervised learning?",
+      "options": [
+        "A) K-means clustering",
+        "B) Support vector machines",
+        "C) Generative Adversarial Networks (GANs)",
+        "D) Semi-supervised Support Vector Machines (SVMs)"
+      ],
+      "correct_option": "D",
+      "explanation": "Semi-supervised SVMs are designed to leverage both labeled and unlabeled data, making them a common technique in semi-supervised learning.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Why might a model trained with semi-supervised learning perform better on unseen data compared to a model trained only with labeled data?",
+      "options": [
+        "A) It uses more computational resources",
+        "B) It can generalize better due to the additional unlabeled data",
+        "C) It requires less data to train",
+        "D) It is less prone to overfitting"
+      ],
+      "correct_option": "B",
+      "explanation": "The additional unlabeled data helps the model learn the underlying structure of the data, which can improve its ability to generalize to new, unseen data.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which scenario is most suitable for semi-supervised learning?",
+      "options": [
+        "A) When there is a large amount of labeled data and a small amount of unlabeled data",
+        "B) When there is a large amount of unlabeled data and a small amount of labeled data",
+        "C) When there is an equal amount of labeled and unlabeled data",
+        "D) When there is no labeled or unlabeled data available"
+      ],
+      "correct_option": "B",
+      "explanation": "Semi-supervised learning is particularly useful when there is a large amount of unlabeled data and only a small amount of labeled data, as it can leverage the unlabeled data to improve model performance.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the concept of self-training in semi-supervised learning.",
+      "model_answer": "Self-training is a technique in semi-supervised learning where a model is first trained on a small set of labeled data. The model then predicts labels for the unlabeled data, which are added to the training set. This process is repeated iteratively, improving the model's performance as it gains more labeled data.",
+      "key_concepts": [
+        "self-training",
+        "semi-supervised learning"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Compare and contrast semi-supervised learning with supervised and unsupervised learning.",
+      "model_answer": "Semi-supervised learning combines both labeled and unlabeled data to train a model, leveraging the unlabeled data to improve performance. Supervised learning uses only labeled data, while unsupervised learning does not use labeled data at all. Semi-supervised learning can be seen as a middle ground between these two approaches, offering a balance between the benefits of labeled and unlabeled data.",
+      "key_concepts": [
+        "semi-supervised learning",
+        "supervised learning",
+        "unsupervised learning"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Describe a scenario where semi-supervised learning would be particularly advantageous.",
+      "model_answer": "Semi-supervised learning would be particularly advantageous in scenarios where obtaining labeled data is expensive or time-consuming, but there is a large amount of unlabeled data available. For example, in image classification tasks, where labeling images can be costly, but there are millions of unlabeled images available online. Semi-supervised learning can help improve the model's performance by leveraging the unlabeled data.",
+      "key_concepts": [
+        "semi-supervised learning",
+        "cost of labeling"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Semi-supervised Learning",
+      "back": "A type of machine learning that uses both labeled and unlabeled data for training, aiming to improve model performance by leveraging the additional unlabeled data.",
+      "hint": "Think of it as a blend of supervised and unsupervised learning."
+    },
+    {
+      "id": "fc_2",
+      "front": "Self-training",
+      "back": "A semi-supervised learning technique where a model is trained on a small set of labeled data, then predicts labels for the unlabeled data, which are added to the training set, and the process is repeated.",
+      "hint": "Iterative process to improve model performance."
+    },
+    {
+      "id": "fc_3",
+      "front": "Generative Model",
+      "back": "A model that can generate new instances of data, often used in semi-supervised learning to help learn the underlying distribution of the data.",
+      "hint": "Think of it as a model that can create new examples."
+    },
+    {
+      "id": "fc_4",
+      "front": "Label Propagation",
+      "back": "A method in semi-supervised learning where labels of unlabeled data are propagated from their nearest labeled neighbors, assuming that nearby points in the feature space share the same label.",
+      "hint": "Nearest neighbor assumption for labeling."
+    },
+    {
+      "id": "fc_5",
+      "front": "Semi-supervised SVM",
+      "back": "A variant of SVM that incorporates both labeled and unlabeled data to improve model performance, often using techniques like label propagation or self-training.",
+      "hint": "Combines labeled and unlabeled data in SVM."
+    }
+  ],
+  "topic_id": "learning_paradigms_i"
+}

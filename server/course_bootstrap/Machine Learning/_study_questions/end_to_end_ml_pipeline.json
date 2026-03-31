@@ -1,0 +1,150 @@
+{
+  "subtopic_id": "end_to_end_ml_pipeline",
+  "subtopic_name": "End-to-end ML pipeline",
+  "topic_name": "Course Wrap-Up",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the first step in the end-to-end machine learning pipeline?",
+      "options": [
+        "A) Data preprocessing",
+        "B) Feature selection",
+        "C) Model training",
+        "D) Evaluation"
+      ],
+      "correct_option": "A",
+      "explanation": "Data preprocessing is the first step as it involves cleaning and transforming raw data into a format suitable for model training.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is NOT a step in the machine learning pipeline?",
+      "options": [
+        "A) Data collection",
+        "B) Data cleaning",
+        "C) Data visualization",
+        "D) Data augmentation"
+      ],
+      "correct_option": "C",
+      "explanation": "Data visualization is not a step in the machine learning pipeline but rather a tool used for understanding and presenting data.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of machine learning, what does the term 'bias' refer to?",
+      "options": [
+        "A) A model's tendency to make incorrect predictions",
+        "B) A model's tendency to make consistent errors",
+        "C) A model's tendency to ignore outliers",
+        "D) A model's tendency to overfit the data"
+      ],
+      "correct_option": "B",
+      "explanation": "Bias refers to a model's tendency to make consistent errors, which can be due to oversimplification of the model.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which technique is commonly used to reduce variance in a machine learning model?",
+      "options": [
+        "A) Regularization",
+        "B) Cross-validation",
+        "C) Feature scaling",
+        "D) Data augmentation"
+      ],
+      "correct_option": "A",
+      "explanation": "Regularization is a technique used to reduce variance by adding a penalty to the loss function, which helps in preventing overfitting.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "What is the purpose of the cross-validation technique in the machine learning pipeline?",
+      "options": [
+        "A) To evaluate the model's performance on unseen data",
+        "B) To reduce the computational cost of training",
+        "C) To increase the size of the training dataset",
+        "D) To prevent overfitting by averaging model predictions"
+      ],
+      "correct_option": "D",
+      "explanation": "Cross-validation is used to prevent overfitting by averaging model predictions across different subsets of the data, providing a more reliable estimate of the model's performance.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Describe the role of data preprocessing in the machine learning pipeline.",
+      "model_answer": "Data preprocessing is crucial as it involves cleaning and transforming raw data into a format suitable for model training. This includes handling missing values, removing outliers, normalizing data, and encoding categorical variables. Proper preprocessing ensures that the data is consistent and accurate, which is essential for building effective machine learning models.",
+      "key_concepts": [
+        "data cleaning",
+        "feature scaling",
+        "encoding categorical variables"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Explain the difference between bias and variance in the context of machine learning.",
+      "model_answer": "Bias refers to the error introduced by approximating a real-world problem, which is inherently more complex, with a simplified model. High bias can cause the model to miss relevant relations between features and the target variable, leading to underfitting. Variance, on the other hand, is the error due to the model's sensitivity to small fluctuations in the training data. High variance can cause the model to fit the noise in the training data, leading to overfitting. Balancing bias and variance is crucial for building a model that generalizes well to unseen data.",
+      "key_concepts": [
+        "bias",
+        "variance",
+        "underfitting",
+        "overfitting"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the importance of the evaluation step in the machine learning pipeline.",
+      "model_answer": "The evaluation step is crucial as it assesses the performance of the trained model on unseen data. This helps in determining whether the model is generalizing well or if it is overfitting to the training data. Evaluation metrics such as accuracy, precision, recall, and F1 score provide insights into the model's effectiveness. Additionally, evaluation helps in identifying potential issues and guiding further improvements in the model's architecture or training process.",
+      "key_concepts": [
+        "evaluation metrics",
+        "generalization",
+        "overfitting"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Bias",
+      "back": "Bias refers to the error introduced by approximating a real-world problem, which is inherently more complex, with a simplified model. High bias can cause the model to miss relevant relations between features and the target variable, leading to underfitting.",
+      "hint": "Think of bias as the model's tendency to make consistent errors."
+    },
+    {
+      "id": "fc_2",
+      "front": "Variance",
+      "back": "Variance refers to the error due to the model's sensitivity to small fluctuations in the training data. High variance can cause the model to fit the noise in the training data, leading to overfitting.",
+      "hint": "Variance is the model's sensitivity to noise in the training data."
+    },
+    {
+      "id": "fc_3",
+      "front": "Cross-validation",
+      "back": "Cross-validation is a technique used to prevent overfitting by averaging model predictions across different subsets of the data, providing a more reliable estimate of the model's performance.",
+      "hint": "Think of cross-validation as a way to simulate multiple training and testing processes."
+    },
+    {
+      "id": "fc_4",
+      "front": "Regularization",
+      "back": "Regularization is a technique used to reduce variance by adding a penalty to the loss function, which helps in preventing overfitting.",
+      "hint": "Regularization adds a constraint to the model to prevent it from becoming too complex."
+    },
+    {
+      "id": "fc_5",
+      "front": "Feature Scaling",
+      "back": "Feature scaling involves transforming the features of the dataset to a standard scale, typically between 0 and 1 or -1 and 1, to ensure that no feature dominates the others due to its scale.",
+      "hint": "Feature scaling helps in ensuring that all features contribute equally to the model."
+    }
+  ],
+  "topic_id": "course_wrap_up"
+}

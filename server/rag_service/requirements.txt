@@ -1,0 +1,95 @@
+# ── Core Web & API Frameworks ────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+requests
+python-dotenv
+Werkzeug>=3.0.0
+aiohttp
+httpx
+python-json-logger
+prometheus-fastapi-instrumentator>=7.0.0
+sentry-sdk[starlette,fastapi]
+
+# ── LangChain ────────────────────────────────────────────────────────────────
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+
+# ── CrewAI for Agentic Deep Research ─────────────────────────────────────────
+# Imported lazily — startup will not fail if crewai has issues
+crewai>=1.0.0
+crewai-tools>=1.0.0
+
+# ── AI & LLM SDKs ────────────────────────────────────────────────────────────
+google-genai>=1.0.0
+# ollama — REMOVED: fully migrated to SGLang
+groq
+openai>=1.0.0
+pydantic>=2.0.0
+
+# ── Vector & Graph Databases ─────────────────────────────────────────────────
+qdrant-client>=1.12.0
+neo4j>=5.25.0
+
+# ── Embeddings ───────────────────────────────────────────────────────────────
+# Primary: FastEmbed (ONNX-based, CPU-efficient, no external dependency)
+# Uses mixedbread-ai/mxbai-embed-large-v1 (1024-dim) — same dims as before, Qdrant-compatible
+fastembed>=0.3.6  # 0.3.6+ required for SparseTextEmbedding (hybrid search)
+# Fallback: sentence-transformers (optional, requires PyTorch)
+# sentence-transformers>=3.1.0  # Uncomment only if EMBED_PROVIDER=sentence_transformers
+protobuf
+sentencepiece
+
+# ── Text-to-Speech ────────────────────────────────────────────────────────────
+gTTS
+
+# ── Speech-to-Text ────────────────────────────────────────────────────────────
+SpeechRecognition
+
+# ── Foundational Data Science ─────────────────────────────────────────────────
+pandas
+numpy>=1.26.0
+scipy
+
+# ── Document & Data Processing ───────────────────────────────────────────────
+pypdf
+python-docx
+python-pptx
+pdfplumber
+pymupdf
+pymupdf4llm
+Pillow
+pytesseract
+spacy>=3.7.0
+# After install: python -m spacy download en_core_web_sm
+
+# ── Web Scraping & Media ──────────────────────────────────────────────────────
+beautifulsoup4
+yt-dlp
+moviepy
+pydub
+
+# ── Search ────────────────────────────────────────────────────────────────────
+ddgs
+duckduckgo-search>=5.0.0
+arxiv
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+uuid
+nltk
+reportlab
+textstat
+
+# ── Zero-shot NLI routing (query intent classifier) ──────────────────────────
+# Used by /classify_intent — cross-encoder/nli-deberta-v3-small (~184 MB)
+# Requires PyTorch (CPU) which is already a transitive dependency via sentence-transformers.
+# If PyTorch is NOT installed, the endpoint falls back to keyword heuristics gracefully.
+transformers>=4.40.0  # HuggingFace pipeline("zero-shot-classification")
+torch>=2.1.0          # CPU-only PyTorch is sufficient and smaller: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# ── NOTE: Training stack (trl/peft/bitsandbytes/datasets) is NOT included ────
+# Those are fine-tuning dependencies; install separately in a training env if needed.
+pyvis>=0.3.0
+networkx>=3.0

@@ -1,0 +1,148 @@
+{
+  "subtopic_id": "similarity_measures",
+  "subtopic_name": "similarity measures",
+  "topic_name": "Metric Learning & Problem Formulation",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following is a valid similarity measure between two points $x$ and $y$ in a feature space?",
+      "options": [
+        "A) $s(x, y) = \frac{1}{1 + \\exp(-d(x, y))}$",
+        "B) $s(x, y) = \\exp(-d(x, y))$",
+        "C) $s(x, y) = \frac{1}{1 + \\exp(d(x, y))}$",
+        "D) $s(x, y) = 1 - \\cos(d(x, y))$"
+      ],
+      "correct_option": "A",
+      "explanation": "Option A uses the sigmoid function, which maps the distance to a value between 0 and 1, making it a valid similarity measure. Options B and C are not bounded between 0 and 1, and option D is not symmetric.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which similarity measure would you use if you want to ensure that the similarity between two points is high only if they are very close in the feature space?",
+      "options": [
+        "A) Cosine similarity",
+        "B) Jaccard similarity",
+        "C) Manhattan distance",
+        "D) Euclidean distance"
+      ],
+      "correct_option": "D",
+      "explanation": "Euclidean distance is a direct measure of the distance between two points, ensuring that the similarity is high only when the points are very close. The other options are not primarily distance metrics.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following statements is true regarding the relationship between distance and similarity measures?",
+      "options": [
+        "A) A high distance always indicates a low similarity.",
+        "B) A low distance always indicates a high similarity.",
+        "C) A high distance can indicate a high similarity if the measure is not symmetric.",
+        "D) A low distance can indicate a low similarity if the measure is not positive definite."
+      ],
+      "correct_option": "B",
+      "explanation": "A low distance typically indicates a high similarity, as most similarity measures are inversely related to distance. Options A, C, and D are incorrect because they do not always hold true for all similarity measures.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following scenarios would benefit most from a similarity measure that incorporates both distance and content-based features?",
+      "options": [
+        "A) Recommending movies based on user ratings",
+        "B) Clustering documents based on keyword frequency",
+        "C) Finding the nearest neighbor in a high-dimensional space",
+        "D) Classifying images based on pixel intensity"
+      ],
+      "correct_option": "A",
+      "explanation": "Recommendation systems often use a combination of distance and content-based features to find items similar to a user's preferences. Options B, C, and D are more focused on content-based or distance-based features alone.",
+      "difficulty": "advanced",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a key property that a valid similarity measure should satisfy?",
+      "options": [
+        "A) Reflexivity: $s(x, x) = 0$",
+        "B) Symmetry: $s(x, y) = s(y, x)$",
+        "C) Transitivity: $s(x, y) \\cdot s(y, z) \\geq s(x, z)$",
+        "D) Positive definiteness: $s(x, y) \\geq 0$ for all $x, y$"
+      ],
+      "correct_option": "B",
+      "explanation": "Symmetry is a key property of a valid similarity measure, ensuring that the measure is the same regardless of the order of the points. Reflexivity, transitivity, and positive definiteness are not always required for all similarity measures.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between a distance metric and a similarity measure.",
+      "model_answer": "A distance metric quantifies the dissimilarity between two points, typically resulting in a positive value. In contrast, a similarity measure quantifies the degree of similarity between two points, often resulting in a value between 0 and 1. Distance metrics are symmetric and satisfy the triangle inequality, while similarity measures can be asymmetric and do not necessarily satisfy the triangle inequality.",
+      "key_concepts": [
+        "distance metric",
+        "similarity measure"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "sa_2",
+      "question": "Describe how cosine similarity can be used to measure the similarity between two vectors in a high-dimensional space.",
+      "model_answer": "Cosine similarity measures the cosine of the angle between two vectors, which is a measure of their orientation rather than their magnitude. It is defined as $s(x, y) = \\cos(\theta) = \frac{x \\cdot y}{\\|x\\| \\|y\\|}$, where $x \\cdot y$ is the dot product of the vectors and $\\|x\\|$ and $\\|y\\|$ are their magnitudes. This measure is useful for comparing the direction of vectors in a high-dimensional space, making it a popular choice in text and image analysis.",
+      "key_concepts": [
+        "cosine similarity",
+        "dot product",
+        "high-dimensional space"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the limitations of using Euclidean distance as a similarity measure in a recommendation system.",
+      "model_answer": "Using Euclidean distance as a similarity measure in a recommendation system can be limiting because it only considers the magnitude of the difference between user preferences and item features. It does not account for the content-based features that might be more relevant to the user's preferences. For example, two users might have very similar ratings for a movie, but the movie's content (genre, actors, etc.) might be very different, leading to dissimilar recommendations. A more effective approach would be to use a combination of distance and content-based features to provide more accurate and relevant recommendations.",
+      "key_concepts": [
+        "Euclidean distance",
+        "content-based features",
+        "recommendation system"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Cosine Similarity",
+      "back": "A measure of the cosine of the angle between two vectors, defined as $s(x, y) = \\cos(\theta) = \frac{x \\cdot y}{\\|x\\| \\|y\\|}$, where $x \\cdot y$ is the dot product of the vectors and $\\|x\\|$ and $\\|y\\|$ are their magnitudes. It is used to measure the orientation of vectors in a high-dimensional space.",
+      "hint": "Think of it as measuring the angle between vectors."
+    },
+    {
+      "id": "fc_2",
+      "front": "Jaccard Similarity",
+      "back": "A measure of the intersection over union between two sets, defined as $s(A, B) = \frac{|A \\cap B|}{|A \\cup B|}$. It is commonly used in text analysis to compare the similarity of documents based on the presence of words.",
+      "hint": "Useful for comparing sets of items."
+    },
+    {
+      "id": "fc_3",
+      "front": "Euclidean Distance",
+      "back": "A measure of the straight-line distance between two points in a feature space, defined as $d(x, y) = \\sqrt{\\sum_{i=1}^{n} (x_i - y_i)^2}$. It is widely used in machine learning for its simplicity and effectiveness in high-dimensional spaces.",
+      "hint": "Think of it as the length of the line segment connecting two points."
+    },
+    {
+      "id": "fc_4",
+      "front": "Manhattan Distance",
+      "back": "A measure of the distance between two points in a grid-like path, defined as $d(x, y) = \\sum_{i=1}^{n} |x_i - y_i|$. It is also known as the L1 norm and is useful in scenarios where movement is restricted to horizontal and vertical directions.",
+      "hint": "Imagine moving only horizontally and vertically."
+    },
+    {
+      "id": "fc_5",
+      "front": "Pearson Correlation Coefficient",
+      "back": "A measure of the linear correlation between two variables, defined as $r_{xy} = \frac{\\sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})}{\\sqrt{\\sum_{i=1}^{n} (x_i - \bar{x})^2 \\sum_{i=1}^{n} (y_i - \bar{y})^2}}$, where $\bar{x}$ and $\bar{y}$ are the means of the variables. It ranges from -1 to 1, with 1 indicating a perfect positive correlation.",
+      "hint": "Think of it as a measure of linear dependence."
+    }
+  ],
+  "topic_id": "metric_learning_&_problem_formulation"
+}

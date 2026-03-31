@@ -1,0 +1,154 @@
+{
+  "subtopic_id": "overfitting",
+  "subtopic_name": "Overfitting",
+  "topic_name": "Bias-Variance Tradeoff",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following best describes overfitting?",
+      "options": [
+        "A) The model performs well on both training and test data.",
+        "B) The model performs poorly on both training and test data.",
+        "C) The model performs well on training data but poorly on test data.",
+        "D) The model performs poorly on training data but well on test data."
+      ],
+      "correct_option": "C",
+      "explanation": "Overfitting is characterized by a model that fits the training data too closely, including its noise and outliers, leading to poor performance on unseen data.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which regularization technique can help prevent overfitting by penalizing large coefficients in a linear model?",
+      "options": [
+        "A) Dropout",
+        "B) Batch Normalization",
+        "C) L2 Regularization",
+        "D) Data Augmentation"
+      ],
+      "correct_option": "C",
+      "explanation": "L2 Regularization adds a penalty equivalent to the square of the magnitude of coefficients, which helps in reducing overfitting.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of overfitting, what does the term 'generalization' refer to?",
+      "options": [
+        "A) The model's ability to perform well on the training data.",
+        "B) The model's ability to perform well on the test data.",
+        "C) The model's ability to perform consistently on both training and test data.",
+        "D) The model's ability to perform consistently on new, unseen data."
+      ],
+      "correct_option": "D",
+      "explanation": "Generalization refers to the model's ability to perform well on new, unseen data, which is the goal in machine learning to avoid overfitting.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following is a sign of overfitting in a machine learning model?",
+      "options": [
+        "A) High in-sample error and low out-of-sample error.",
+        "B) Low in-sample error and high out-of-sample error.",
+        "C) High in-sample error and high out-of-sample error.",
+        "D) Low in-sample error and low out-of-sample error."
+      ],
+      "correct_option": "B",
+      "explanation": "Overfitting is indicated by a large gap between in-sample and out-of-sample errors, where the model fits the training data too closely, including its noise.",
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a common technique to mitigate overfitting in a neural network?",
+      "options": [
+        "A) Increasing the learning rate",
+        "B) Adding more layers and neurons",
+        "C) Implementing dropout",
+        "D) Reducing the batch size"
+      ],
+      "correct_option": "C",
+      "explanation": "Implementing dropout randomly drops units during training, which helps in reducing overfitting by making the model more robust.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the concept of bias and variance in the context of overfitting and underfitting.",
+      "model_answer": "Bias refers to the error due to overly simplistic assumptions in the learning algorithm, leading to underfitting. Variance refers to the error due to the model's sensitivity to fluctuations in the training data, leading to overfitting. Overfitting occurs when the model has high variance and low bias, fitting the training data too closely, while underfitting occurs when the model has high bias and low variance, failing to capture the underlying pattern in the data.",
+      "key_concepts": [
+        "bias",
+        "variance",
+        "overfitting",
+        "underfitting"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Describe a scenario where overfitting might occur in a machine learning model.",
+      "model_answer": "Consider a scenario where a model is trained to predict house prices based on features like size, location, and age. If the model is too complex, it might start to fit the noise in the training data, such as random fluctuations in prices, leading to poor predictions on new houses. This is an example of overfitting, where the model performs well on the training data but poorly on new, unseen data.",
+      "key_concepts": [
+        "overfitting",
+        "noise in training data",
+        "new, unseen data"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the trade-offs between bias and variance in the context of overfitting and underfitting.",
+      "model_answer": "The trade-off between bias and variance is a fundamental concept in machine learning. High bias models are overly simplistic and fail to capture the underlying pattern in the data, leading to underfitting. High variance models are too complex and fit the noise in the training data, leading to overfitting. The goal is to find a balance where the model has low bias and low variance, generalizing well to new data. This balance is often achieved through techniques like cross-validation, regularization, and model selection.",
+      "key_concepts": [
+        "bias",
+        "variance",
+        "underfitting",
+        "overfitting",
+        "cross-validation",
+        "regularization",
+        "model selection"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Bias",
+      "back": "Bias is the error due to overly simplistic assumptions in the learning algorithm, leading to underfitting. It refers to the difference between the expected prediction of the model and the true value of the target variable.",
+      "hint": "Think of it as the model's tendency to make the same mistake repeatedly."
+    },
+    {
+      "id": "fc_2",
+      "front": "Variance",
+      "back": "Variance is the error due to the model's sensitivity to fluctuations in the training data, leading to overfitting. It refers to the model's tendency to fit the noise in the training data, resulting in poor generalization to new data.",
+      "hint": "Imagine a model that fits the training data too closely, including its noise."
+    },
+    {
+      "id": "fc_3",
+      "front": "Regularization",
+      "back": "Regularization is a technique used to control the complexity of a model and reduce overfitting. It adds a penalty to the loss function based on the magnitude of the model's coefficients, such as L1 and L2 regularization.",
+      "hint": "Think of it as a way to shrink the model's coefficients to prevent overfitting."
+    },
+    {
+      "id": "fc_4",
+      "front": "In-sample error",
+      "back": "In-sample error is the error measured on the training data. It is the difference between the predicted values and the actual values in the training set.",
+      "hint": "It's like checking how well the model fits the data it was trained on."
+    },
+    {
+      "id": "fc_5",
+      "front": "Out-of-sample error",
+      "back": "Out-of-sample error is the error measured on new, unseen data. It is the difference between the predicted values and the actual values in the test set, indicating the model's generalization ability.",
+      "hint": "It's like checking how well the model predicts new data it hasn't seen before."
+    }
+  ],
+  "topic_id": "bias_variance_tradeoff"
+}

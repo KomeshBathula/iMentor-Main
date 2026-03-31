@@ -1,0 +1,150 @@
+{
+  "subtopic_id": "graph_representation",
+  "subtopic_name": "Graph representation",
+  "topic_name": "Graph-Based Methods",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What does the set V in a graph (V, E) represent?",
+      "options": [
+        "A) The set of edges",
+        "B) The set of vertices",
+        "C) The set of weights",
+        "D) The set of nodes"
+      ],
+      "correct_option": "B",
+      "explanation": "In a graph (V, E), V represents the set of vertices or nodes, which are the fundamental elements of the graph.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a valid representation of a graph with 3 nodes and 2 edges?",
+      "options": [
+        "A) (V = {1, 2, 3}, E = {(1, 2), (2, 3)})",
+        "B) (V = {1, 2, 3}, E = {(1, 2), (3, 4)})",
+        "C) (V = {1, 2, 3}, E = {(1, 2), (2, 3), (3, 1)})",
+        "D) (V = {1, 2, 3}, E = {(1, 2), (2, 2)})"
+      ],
+      "correct_option": "A",
+      "explanation": "Option A correctly represents a graph with 3 nodes and 2 edges. The other options either have incorrect edges or more than 2 edges.",
+      "difficulty": "beginner",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following statements is true about an undirected graph?",
+      "options": [
+        "A) Edges have a direction from one node to another",
+        "B) Edges can be traversed in both directions",
+        "C) Nodes can have multiple edges to the same node",
+        "D) Nodes cannot have self-loops"
+      ],
+      "correct_option": "B",
+      "explanation": "In an undirected graph, edges can be traversed in both directions, meaning the relationship between nodes is symmetric.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following is a correct way to represent a weighted graph?",
+      "options": [
+        "A) (V = {1, 2, 3}, E = {(1, 2), (2, 3)})",
+        "B) (V = {1, 2, 3}, E = {(1, 2, 5), (2, 3, 10)})",
+        "C) (V = {1, 2, 3}, E = {(1, 2), (2, 3), (3, 1)})",
+        "D) (V = {1, 2, 3}, E = {(1, 2), (2, 2)})"
+      ],
+      "correct_option": "B",
+      "explanation": "Option B correctly represents a weighted graph where each edge is associated with a weight. The other options either do not include weights or have incorrect edges.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a correct statement about a directed acyclic graph (DAG)?",
+      "options": [
+        "A) It can have cycles",
+        "B) It can have self-loops",
+        "C) It cannot have cycles",
+        "D) It can have multiple edges between the same nodes"
+      ],
+      "correct_option": "C",
+      "explanation": "A directed acyclic graph (DAG) is a directed graph with no cycles, meaning it cannot have cycles or self-loops.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between an undirected and a directed graph.",
+      "model_answer": "An undirected graph is a graph where the edges have no direction, meaning the relationship between nodes is symmetric. In contrast, a directed graph has edges with a specific direction from one node to another, indicating a directed relationship between nodes.",
+      "key_concepts": [
+        "undirected graph",
+        "directed graph"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Describe how you would represent a graph with self-loops and multiple edges between the same nodes.",
+      "model_answer": "To represent a graph with self-loops and multiple edges between the same nodes, we can use a weighted graph where each edge is associated with a weight. For self-loops, the edge would connect a node to itself, and for multiple edges, we can have multiple edges between the same nodes, each with its own weight.",
+      "key_concepts": [
+        "self-loops",
+        "multiple edges",
+        "weighted graph"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the implications of using a graph to model a real-world network, such as a social network or a computer network.",
+      "model_answer": "Using a graph to model a real-world network, such as a social network or a computer network, allows us to represent and analyze the complex relationships and interactions between entities. In a social network, nodes can represent individuals, and edges can represent friendships or connections. In a computer network, nodes can represent devices, and edges can represent the connections between them. This representation helps in understanding the structure and dynamics of the network, which is crucial for tasks such as recommendation systems, clustering, and network analysis.",
+      "key_concepts": [
+        "social network",
+        "computer network",
+        "recommendation systems",
+        "clustering",
+        "network analysis"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Graph",
+      "back": "A mathematical structure consisting of a set of vertices (nodes) and a set of edges (connections) between these vertices.",
+      "hint": "Think of a network of friends."
+    },
+    {
+      "id": "fc_2",
+      "front": "Vertex/Node",
+      "back": "An element of a graph, represented as a point or a circle, which can be connected to other vertices by edges.",
+      "hint": "A person in a network of friends."
+    },
+    {
+      "id": "fc_3",
+      "front": "Edge",
+      "back": "A connection between two vertices in a graph, representing a relationship or interaction.",
+      "hint": "A friendship in a social network."
+    },
+    {
+      "id": "fc_4",
+      "front": "Directed Graph",
+      "back": "A graph where each edge has a specific direction, indicating a directed relationship between nodes.",
+      "hint": "Traffic flow in a city."
+    },
+    {
+      "id": "fc_5",
+      "front": "Weighted Graph",
+      "back": "A graph where each edge is associated with a numerical value (weight), representing the strength or cost of the connection.",
+      "hint": "Distance between two cities."
+    }
+  ],
+  "topic_id": "graph_based_methods"
+}

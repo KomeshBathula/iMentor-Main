@@ -1,0 +1,150 @@
+{
+  "subtopic_id": "time_series",
+  "subtopic_name": "Time series",
+  "topic_name": "Forecasting & Anomaly Detection",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary purpose of using a moving average in time series analysis?",
+      "options": [
+        "A) To smooth out short-term fluctuations and highlight longer-term trends.",
+        "B) To predict future values with high accuracy.",
+        "C) To identify anomalies in the data.",
+        "D) To calculate the exact values of the time series at each point."
+      ],
+      "correct_option": "A",
+      "explanation": "A moving average is used to smooth out short-term fluctuations and highlight longer-term trends, making it easier to identify patterns and trends in the data.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a common method for detecting anomalies in time series data?",
+      "options": [
+        "A) Applying a moving average filter.",
+        "B) Using a simple linear regression.",
+        "C) Identifying outliers in the data.",
+        "D) Calculating the standard deviation of the time series."
+      ],
+      "correct_option": "C",
+      "explanation": "Outliers or points that significantly deviate from the norm are often considered anomalies in time series data.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of time series analysis, what does the term 'stationarity' refer to?",
+      "options": [
+        "A) The process of making a time series stationary by differencing.",
+        "B) The property of a time series where its statistical properties such as mean and variance are constant over time.",
+        "C) The method of forecasting future values using past values.",
+        "D) The technique of removing outliers from the data."
+      ],
+      "correct_option": "B",
+      "explanation": "A stationary time series has statistical properties that are constant over time, which is crucial for many time series analysis techniques.",
+      "difficulty": "advanced",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following models is most suitable for forecasting future values in a time series with a clear seasonal pattern?",
+      "options": [
+        "A) Simple moving average.",
+        "B) Exponential smoothing.",
+        "C) Seasonal ARIMA (SARIMA).",
+        "D) Linear regression."
+      ],
+      "correct_option": "C",
+      "explanation": "SARIMA models are designed to handle both trend and seasonality in time series data, making them ideal for forecasting in such scenarios.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "What is the main advantage of using a seasonal decomposition of time series data?",
+      "options": [
+        "A) It allows for the removal of outliers from the data.",
+        "B) It helps in identifying the underlying trend and seasonality in the data.",
+        "C) It simplifies the time series into a single value.",
+        "D) It increases the accuracy of the moving average filter."
+      ],
+      "correct_option": "B",
+      "explanation": "Seasonal decomposition separates the time series into trend, seasonal, and residual components, which is useful for understanding and forecasting.",
+      "difficulty": "beginner",
+      "bloom_level": "understand"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the concept of stationarity in time series analysis and why it is important.",
+      "model_answer": "Stationarity in time series analysis refers to the property where the statistical properties (such as mean and variance) of the series are constant over time. This is important because many time series analysis techniques, such as ARIMA, assume stationarity. If a time series is non-stationary, it can lead to misleading results and poor forecasts.",
+      "key_concepts": [
+        "stationarity",
+        "time series analysis",
+        "ARIMA"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Describe the process of detecting anomalies in a time series using statistical methods.",
+      "model_answer": "To detect anomalies in a time series, one can use statistical methods such as calculating the mean and standard deviation of the series. Points that lie outside a certain number of standard deviations from the mean (e.g., 3 standard deviations) can be flagged as potential anomalies. Additionally, techniques like Z-scores or the IQR method can be used to identify outliers.",
+      "key_concepts": [
+        "anomaly detection",
+        "standard deviation",
+        "Z-scores",
+        "IQR method"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Compare and contrast the use of simple moving average and exponential smoothing in time series forecasting.",
+      "model_answer": "The simple moving average (SMA) is a straightforward method that calculates the average of a fixed number of past data points. It is easy to compute but can be slow to react to changes in the data. On the other hand, exponential smoothing assigns exponentially decreasing weights to past data points, making it more responsive to recent changes. SMA is better for smoothing out trends, while exponential smoothing is more adaptive to recent changes.",
+      "key_concepts": [
+        "simple moving average",
+        "exponential smoothing",
+        "response to changes"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Stationarity",
+      "back": "A property of a time series where its statistical properties (such as mean and variance) are constant over time. Important for many time series analysis techniques.",
+      "hint": "Think of a stable, predictable series."
+    },
+    {
+      "id": "fc_2",
+      "front": "Autocorrelation",
+      "back": "A measure of the correlation between observations in a time series at different time lags. Used to identify patterns and dependencies in the data.",
+      "hint": "Correlation over time."
+    },
+    {
+      "id": "fc_3",
+      "front": "Seasonality",
+      "back": "A pattern in time series data where values exhibit regular and predictable fluctuations over a specific period. Often seen in data with seasonal trends.",
+      "hint": "Repeating patterns over time."
+    },
+    {
+      "id": "fc_4",
+      "front": "ARIMA",
+      "back": "Autoregressive Integrated Moving Average model, used for forecasting time series data. Combines autoregression, differencing, and moving average components.",
+      "hint": "Forecasting with past values."
+    },
+    {
+      "id": "fc_5",
+      "front": "Anomaly",
+      "back": "A data point that significantly deviates from the norm in a time series. Often identified through statistical methods such as Z-scores or IQR.",
+      "hint": "Outlier detection."
+    }
+  ],
+  "topic_id": "forecasting_&_anomaly_detection"
+}

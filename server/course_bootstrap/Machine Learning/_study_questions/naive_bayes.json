@@ -1,0 +1,150 @@
+{
+  "subtopic_id": "naive_bayes",
+  "subtopic_name": "Naive Bayes",
+  "topic_name": "Bayesian Classifier",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary assumption made by Naive Bayes?",
+      "options": [
+        "A) Features are independent.",
+        "B) Features are dependent.",
+        "C) All features have equal weight.",
+        "D) The model is non-probabilistic."
+      ],
+      "correct_option": "A",
+      "explanation": "The primary assumption of Naive Bayes is that the features are independent. This simplifies the calculations and often leads to good performance.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a key advantage of using Naive Bayes?",
+      "options": [
+        "A) It requires a large dataset.",
+        "B) It is computationally expensive.",
+        "C) It is simple and efficient.",
+        "D) It guarantees accurate predictions."
+      ],
+      "correct_option": "C",
+      "explanation": "Naive Bayes is simple and efficient, making it easy to implement and often outperforming more complex models in practice.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of spam filtering, which feature would likely be considered in a Naive Bayes classifier?",
+      "options": [
+        "A) The length of the email.",
+        "B) The color of the email.",
+        "C) The presence of a link.",
+        "D) The sender's email address."
+      ],
+      "correct_option": "C",
+      "explanation": "The presence of a link is a common feature used in spam filtering. Naive Bayes can use this feature to predict the likelihood of an email being spam.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following scenarios would likely violate the independence assumption of Naive Bayes?",
+      "options": [
+        "A) Predicting the weather based on temperature and humidity.",
+        "B) Classifying emails based on the presence of certain keywords.",
+        "C) Identifying spam based on the frequency of certain characters.",
+        "D) Detecting fraud based on transaction amounts and times."
+      ],
+      "correct_option": "A",
+      "explanation": "Predicting the weather based on temperature and humidity would likely violate the independence assumption because these features are often correlated.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a limitation of Naive Bayes?",
+      "options": [
+        "A) It cannot handle categorical data.",
+        "B) It assumes all features are independent, which is often not the case.",
+        "C) It is too complex to implement.",
+        "D) It requires extensive training data."
+      ],
+      "correct_option": "B",
+      "explanation": "The main limitation of Naive Bayes is that it assumes all features are independent, which is often not the case in real-world data.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain how the Naive Bayes classifier works in a spam filter.",
+      "model_answer": "The Naive Bayes classifier works by calculating the probability of an email being spam based on the presence of certain features, such as the presence of a link, special characters, and high word count. It assumes that these features are independent and uses Bayes' theorem to update the probability of the email being spam. If the probability exceeds a certain threshold, the email is classified as spam.",
+      "key_concepts": [
+        "Naive Bayes",
+        "Bayes' theorem",
+        "spam filtering",
+        "independent features"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the implications of the independence assumption in Naive Bayes.",
+      "model_answer": "The independence assumption in Naive Bayes simplifies the model, making it computationally efficient. However, it often leads to inaccurate predictions because real-world data is rarely independent. Despite this, Naive Bayes often performs well in practice, suggesting that the assumption is often a good approximation in many cases.",
+      "key_concepts": [
+        "independence assumption",
+        "computational efficiency",
+        "real-world data"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "sa_3",
+      "question": "How does the Naive Bayes classifier handle categorical data?",
+      "model_answer": "Naive Bayes can handle categorical data by treating each category as a separate feature. For example, in spam filtering, the presence of certain keywords can be treated as categorical data. The classifier calculates the probability of each category being present in spam emails and uses these probabilities to make predictions.",
+      "key_concepts": [
+        "categorical data",
+        "feature treatment",
+        "spam filtering"
+      ],
+      "difficulty": "beginner",
+      "bloom_level": "understand"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Naive Bayes",
+      "back": "A simple probabilistic classifier that assumes independence between features. It uses Bayes' theorem to predict the probability of each class.",
+      "hint": "Think of it as a simplified Bayesian classifier."
+    },
+    {
+      "id": "fc_2",
+      "front": "Bayes' Theorem",
+      "back": "$P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}$ - The probability of A given B is proportional to the probability of B given A, times the prior probability of A, divided by the probability of B.",
+      "hint": "Remember the structure: Probability of A given B."
+    },
+    {
+      "id": "fc_3",
+      "front": "Feature Independence",
+      "back": "The assumption that the presence of one feature does not affect the probability of another feature being present. This simplifies the calculations in Naive Bayes.",
+      "hint": "Think of it as each feature being unrelated to the others."
+    },
+    {
+      "id": "fc_4",
+      "front": "Spam Filtering",
+      "back": "A common application of Naive Bayes where emails are classified as spam or not spam based on certain features such as the presence of links, special characters, and word count.",
+      "hint": "Consider emails with suspicious content."
+    },
+    {
+      "id": "fc_5",
+      "front": "Sentiment Analysis",
+      "back": "Another application of Naive Bayes where text is classified based on sentiment (positive, negative, neutral) using features such as word choice and tone.",
+      "hint": "Analyze text for emotional content."
+    }
+  ],
+  "topic_id": "bayesian_classifier"
+}

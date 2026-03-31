@@ -1,0 +1,151 @@
+{
+  "subtopic_id": "active__learning",
+  "subtopic_name": "active  Learning",
+  "topic_name": "Learning Paradigms II",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary goal of active learning in machine learning?",
+      "options": [
+        "A) To minimize the number of labeled examples needed for training.",
+        "B) To increase the accuracy of the model on the training set.",
+        "C) To reduce the computational complexity of the model.",
+        "D) To enhance the model's ability to generalize to unseen data."
+      ],
+      "correct_option": "A",
+      "explanation": "Active learning aims to select the most informative examples to label, thereby reducing the number of labeled examples needed for training, which is the primary goal.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a key characteristic of active learning?",
+      "options": [
+        "A) The learner passively receives labeled examples.",
+        "B) The learner actively selects examples to label.",
+        "C) The learner randomly selects examples to label.",
+        "D) The learner only uses unlabeled data for training."
+      ],
+      "correct_option": "B",
+      "explanation": "In active learning, the learner actively selects examples to label, which is a key characteristic of this paradigm.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_3",
+      "question": "How does active learning improve the performance of a machine learning model?",
+      "options": [
+        "A) By increasing the size of the training dataset.",
+        "B) By reducing the number of labeled examples needed for training.",
+        "C) By enhancing the model's feature extraction capabilities.",
+        "D) By improving the model's regularization techniques."
+      ],
+      "correct_option": "B",
+      "explanation": "Active learning improves the performance of a machine learning model by reducing the number of labeled examples needed for training, which can lead to better performance with fewer labeled examples.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which scenario best illustrates the concept of active learning?",
+      "options": [
+        "A) A model is trained on a large dataset of labeled examples.",
+        "B) A model is trained on a small dataset of labeled examples, and the learner actively selects examples to label.",
+        "C) A model is trained on a dataset of unlabeled examples.",
+        "D) A model is trained on a dataset of partially labeled examples."
+      ],
+      "correct_option": "B",
+      "explanation": "A model being trained on a small dataset of labeled examples, and the learner actively selecting examples to label, is the best scenario to illustrate the concept of active learning.",
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "mcq_5",
+      "question": "What is the main advantage of active learning over passive learning?",
+      "options": [
+        "A) Passive learning requires more labeled examples.",
+        "B) Passive learning is more computationally efficient.",
+        "C) Active learning can achieve better performance with fewer labeled examples.",
+        "D) Active learning is easier to implement."
+      ],
+      "correct_option": "C",
+      "explanation": "The main advantage of active learning over passive learning is that it can achieve better performance with fewer labeled examples, making it more efficient.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain how active learning can be used in a real-world application such as sentiment analysis.",
+      "model_answer": "In sentiment analysis, active learning can be used to select the most ambiguous or representative texts for labeling. By focusing on these examples, the model can improve its understanding of sentiment nuances, leading to better performance with fewer labeled examples. This is particularly useful when labeling data is costly or time-consuming.",
+      "key_concepts": [
+        "active learning",
+        "sentiment analysis",
+        "ambiguous texts"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Compare and contrast active learning with passive learning in terms of efficiency and performance.",
+      "model_answer": "Active learning is generally more efficient than passive learning because it focuses on selecting the most informative examples to label, reducing the number of labeled examples needed for training. This can lead to better performance with fewer labeled examples. In contrast, passive learning uses a fixed set of labeled examples, which may not be the most informative, leading to potentially worse performance with the same amount of labeled data.",
+      "key_concepts": [
+        "active learning",
+        "passive learning",
+        "efficiency",
+        "performance"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Design a scenario where active learning could be particularly beneficial and explain why.",
+      "model_answer": "In a scenario where labeling data is extremely costly or time-consuming, such as in medical imaging or legal document review, active learning can be particularly beneficial. By focusing on the most informative examples to label, it can significantly reduce the number of labeled examples needed, making the process more efficient and cost-effective. This is because the model can learn more effectively from a smaller, more representative set of labeled data.",
+      "key_concepts": [
+        "costly labeling",
+        "time-consuming labeling",
+        "active learning",
+        "representative examples"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Active Learning",
+      "back": "A machine learning paradigm where the learner actively selects examples to label, aiming to reduce the number of labeled examples needed for training, thereby improving model performance.",
+      "hint": "Think of it as a more efficient way to learn."
+    },
+    {
+      "id": "fc_2",
+      "front": "Labeled Examples",
+      "back": "Examples in a dataset that have been manually annotated with the correct output, used for training machine learning models.",
+      "hint": "These are the 'answers' in your training data."
+    },
+    {
+      "id": "fc_3",
+      "front": "Model Selection",
+      "back": "The process of choosing the next set of examples to label based on the model's predictions, aiming to maximize the information gained from each labeled example.",
+      "hint": "It's like choosing the most informative questions to ask."
+    },
+    {
+      "id": "fc_4",
+      "front": "Iterative Process",
+      "back": "A cycle where the model makes predictions, selects the next set of examples to label, and then uses the new labeled data to improve its predictions, repeating this cycle until convergence.",
+      "hint": "Think of it as a loop that improves over time."
+    },
+    {
+      "id": "fc_5",
+      "front": "Sentiment Analysis",
+      "back": "A task in natural language processing where the model predicts the sentiment (positive, negative, or neutral) of a given text, often using active learning to select the most ambiguous texts for labeling.",
+      "hint": "It's like grading essays to improve your understanding of the subject."
+    }
+  ],
+  "topic_id": "learning_paradigms_ii"
+}

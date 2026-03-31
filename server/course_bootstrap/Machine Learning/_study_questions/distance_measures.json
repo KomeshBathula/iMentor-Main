@@ -1,0 +1,146 @@
+{
+  "subtopic_id": "distance_measures",
+  "subtopic_name": "Distance measures",
+  "topic_name": "Metric Learning & Problem Formulation",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following properties must a valid distance measure satisfy?",
+      "options": [
+        "A) $d(x,y) \\geq 0$ and $d(x,y) = 0$ if and only if $x = y$",
+        "B) $d(x,y) = -d(y,x)$",
+        "C) $d(x,y) = d(y,x)$",
+        "D) $d(x,y) + d(y,z) \\geq d(x,z)$"
+      ],
+      "correct_option": "A",
+      "explanation": "Option A correctly identifies the non-negativity and identity of indiscernibles properties of a valid distance measure.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is NOT a valid distance measure?",
+      "options": [
+        "A) Euclidean distance: $d(x,y) = \\sqrt{\\sum_{i=1}^{n}(x_i - y_i)^2}$",
+        "B) Manhattan distance: $d(x,y) = \\sum_{i=1}^{n}|x_i - y_i|$",
+        "C) Cosine similarity: $d(x,y) = 1 - \\cos(\theta)$",
+        "D) Chebyshev distance: $d(x,y) = \\max_{i=1}^{n}|x_i - y_i|$"
+      ],
+      "correct_option": "C",
+      "explanation": "Option C is not a distance measure because it does not satisfy the non-negativity and identity of indiscernibles properties.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following statements is true regarding the triangle inequality?",
+      "options": [
+        "A) $d(x,y) + d(y,z) < d(x,z)$",
+        "B) $d(x,y) + d(y,z) \\leq d(x,z)$",
+        "C) $d(x,y) + d(y,z) \\geq d(x,z)$",
+        "D) $d(x,y) + d(y,z) = d(x,z)$"
+      ],
+      "correct_option": "C",
+      "explanation": "Option C correctly states the triangle inequality, which is a fundamental property of distance measures.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following is a valid distance measure for comparing text documents?",
+      "options": [
+        "A) Jaccard similarity: $d(x,y) = 1 - \frac{|x \\cap y|}{|x \\cup y|}$",
+        "B) Cosine similarity: $d(x,y) = 1 - \\cos(\theta)$",
+        "C) Euclidean distance: $d(x,y) = \\sqrt{\\sum_{i=1}^{n}(x_i - y_i)^2}$",
+        "D) Manhattan distance: $d(x,y) = \\sum_{i=1}^{n}|x_i - y_i|$"
+      ],
+      "correct_option": "A",
+      "explanation": "Option A correctly identifies the Jaccard similarity as a valid distance measure for comparing text documents.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a valid distance measure for comparing images?",
+      "options": [
+        "A) Euclidean distance: $d(x,y) = \\sqrt{\\sum_{i=1}^{n}(x_i - y_i)^2}$",
+        "B) Manhattan distance: $d(x,y) = \\sum_{i=1}^{n}|x_i - y_i|$",
+        "C) Cosine similarity: $d(x,y) = 1 - \\cos(\theta)$",
+        "D) Chebyshev distance: $d(x,y) = \\max_{i=1}^{n}|x_i - y_i|$"
+      ],
+      "correct_option": "D",
+      "explanation": "Option D correctly identifies the Chebyshev distance as a valid distance measure for comparing images.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the significance of the identity of indiscernibles property in distance measures.",
+      "model_answer": "The identity of indiscernibles property ensures that the distance between a point and itself is zero, and the distance between two distinct points is positive. This property is crucial for maintaining the integrity of the distance measure and ensuring that it accurately reflects the dissimilarity between points.",
+      "key_concepts": [
+        "identity of indiscernibles",
+        "distance measure"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Compare and contrast the Euclidean distance and Manhattan distance in the context of machine learning applications.",
+      "model_answer": "Euclidean distance and Manhattan distance are both commonly used in machine learning. Euclidean distance is the straight-line distance between two points, while Manhattan distance is the sum of the absolute differences of their coordinates. Euclidean distance is more suitable for high-dimensional spaces and continuous data, whereas Manhattan distance is more appropriate for low-dimensional spaces and discrete data. In practice, the choice between these two depends on the specific application and the nature of the data.",
+      "key_concepts": [
+        "Euclidean distance",
+        "Manhattan distance"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Design a new distance measure for comparing text documents and justify its validity.",
+      "model_answer": "A new distance measure for comparing text documents could be the Jaccard similarity, defined as $d(x,y) = 1 - \frac{|x \\cap y|}{|x \\cup y|}$. This measure is valid because it satisfies the non-negativity, identity of indiscernibles, and symmetry properties. It also adheres to the triangle inequality, making it a suitable choice for comparing text documents. The Jaccard similarity focuses on the overlap between sets of words, making it a robust measure for text comparison.",
+      "key_concepts": [
+        "Jaccard similarity",
+        "valid distance measure"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Euclidean distance",
+      "back": "The Euclidean distance between two points $x$ and $y$ in an $n$-dimensional space is given by $d(x,y) = \\sqrt{\\sum_{i=1}^{n}(x_i - y_i)^2}$. It measures the straight-line distance between the points.",
+      "hint": "Think of a ruler measuring the distance between two points."
+    },
+    {
+      "id": "fc_2",
+      "front": "Manhattan distance",
+      "back": "The Manhattan distance between two points $x$ and $y$ in an $n$-dimensional space is given by $d(x,y) = \\sum_{i=1}^{n}|x_i - y_i|$. It measures the distance between the points when only axis-aligned paths are allowed.",
+      "hint": "Imagine moving only horizontally and vertically on a grid."
+    },
+    {
+      "id": "fc_3",
+      "front": "Cosine similarity",
+      "back": "The cosine similarity between two vectors $x$ and $y$ is given by $d(x,y) = 1 - \\cos(\theta)$, where $\theta$ is the angle between the vectors. It measures the cosine of the angle between the vectors, which is a measure of their orientation rather than their magnitude.",
+      "hint": "Think of the angle between two vectors in a vector space."
+    },
+    {
+      "id": "fc_4",
+      "front": "Identity of indiscernibles",
+      "back": "A property of a valid distance measure stating that $d(x,y) = 0$ if and only if $x = y$. This ensures that the distance between identical points is zero and that distinct points have a positive distance.",
+      "hint": "Ensure that the distance between identical points is zero."
+    },
+    {
+      "id": "fc_5",
+      "front": "Triangle inequality",
+      "back": "A property of a valid distance measure stating that $d(x,y) + d(y,z) \\geq d(x,z)$. This ensures that the direct path between two points is never longer than any indirect path.",
+      "hint": "The shortest path between two points is a straight line."
+    }
+  ],
+  "topic_id": "metric_learning_&_problem_formulation"
+}

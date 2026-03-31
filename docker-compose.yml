@@ -1,0 +1,220 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Chatbot AutoResearch — Docker Compose 
+# Re-configured linearly to avoid port & volume collisions with the primary app.
+# Hosts an isolated swarm environment.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  mongo:
+    image: mongo:7
+    container_name: chatbot-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017" # Shifted from 27017
+    volumes:
+      - chatbot_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: chatbot-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379" # Shifted from 6379
+    volumes:
+      - chatbot_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  neo4j:
+    image: neo4j:5
+    container_name: chatbot-neo4j
+    restart: unless-stopped
+    ports:
+      - "7475:7474"   # Shifted from 7474
+      - "7688:7687"   # Shifted from 7687
+    environment:
+      NEO4J_AUTH: neo4j/password
+      NEO4J_PLUGINS: '["apoc"]'
+    volumes:
+      - chatbot_neo4j_data:/data
+      - chatbot_neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p password 'RETURN 1' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: chatbot-qdrant
+    restart: unless-stopped
+    ports:
+      - "6335:6333"   # Shifted from 6333
+      - "6336:6334"   # Shifted from 6334
+    volumes:
+      - chatbot_qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.13.0
+    container_name: chatbot-elastic
+    restart: unless-stopped
+    ports:
+      - "9201:9200"   # Shifted from 9200
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - chatbot_elastic_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SGLANG (Commented out purposely — utilizing host's shared port 8000)
+  # ═══════════════════════════════════════════════════════════════════════════
+  # As per instructions: SGLang is the ONLY common instance running on port 8000. 
+  # This avoids 4.5GB VRAM downloading collision. The node 'server' is already 
+  # configured to hit http://host.docker.internal:8000 below.
+  #
+  # sglang:
+  #   image: lmsysorg/sglang:latest
+  #   container_name: chatbot-sglang
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MONITORING
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: chatbot-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - chatbot_prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: chatbot-grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - chatbot_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # APPLICATION SERVICES
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+    container_name: chatbot-server
+    restart: unless-stopped
+    ports:
+      - "5005:5005"   # Shifted from 5001
+    env_file:
+      - ./server/.env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/chatbot_autoresearch
+      REDIS_URL: redis://redis:6379/1
+      NEO4J_URI: bolt://neo4j:7687
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_HOST: qdrant
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      PYTHON_RAG_SERVICE_URL: http://rag:2005
+      SGLANG_ENABLED: "true"
+      # Point to host's SGLang server across OS layer boundary
+      SGLANG_CHAT_URL: http://host.docker.internal:8000/v1
+      SGLANG_REASON_URL: http://host.docker.internal:8000/v1
+      SGLANG_HEAVY_URL: http://host.docker.internal:8000/v1
+      USE_CREWAI_RESEARCH: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    working_dir: /app/server
+    command: ["node", "server.js"]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend
+    container_name: chatbot-frontend
+    restart: unless-stopped
+    ports:
+      - "3005:3005"   # Shifted from 3000
+    working_dir: /app/frontend
+    command: ["npx", "vite", "--host", "0.0.0.0", "--port", "3005"]
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # NGINX REVERSE PROXY 
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  nginx:
+    image: nginx:alpine
+    container_name: chatbot-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"     # Shifted from 80
+      - "8443:443"    # Shifted from 443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - server
+      - frontend
+    profiles:
+      - production
+
+# ═══════════════════════════════════════════════════════════════════════════
+# NAMED VOLUMES
+# ═══════════════════════════════════════════════════════════════════════════
+
+volumes:
+  chatbot_mongo_data:
+  chatbot_redis_data:
+  chatbot_neo4j_data:
+  chatbot_neo4j_logs:
+  chatbot_qdrant_data:
+  chatbot_elastic_data:
+  chatbot_prometheus_data:
+  chatbot_grafana_data:
+  huggingface_cache:

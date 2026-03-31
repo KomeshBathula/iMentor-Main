@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+qdrant-client>=1.7.0
+sentence-transformers
+python-multipart
+google-generativeai
+pypdf
+python-dotenv

@@ -1,0 +1,22 @@
+{
+  "concept": "An end-to-end machine learning (ML) pipeline encompasses all stages from data collection and preprocessing to model training, evaluation, and deployment. This is a supporting concept that aids in understanding the practical application of ML techniques.",
+  "key_points": [
+    "Data collection and preprocessing",
+    "Feature extraction and selection",
+    "Model training and validation",
+    "Evaluation and testing",
+    "Deployment and monitoring"
+  ],
+  "math": "",
+  "worked_example": "Consider a scenario where we are building a spam email detection system. We start by collecting emails, then preprocess them by removing stop words and converting text to lowercase. Next, we extract features using techniques like TF-IDF and train a model using algorithms such as Naive Bayes. We validate the model using cross-validation and test it on unseen data. Finally, we deploy the model and continuously monitor its performance.",
+  "misconceptions": [
+    "The end-to-end ML pipeline is a one-time process that does not require ongoing maintenance.",
+    "Data preprocessing is not as important as the choice of machine learning algorithm."
+  ],
+  "teaching_context": "An end-to-end machine learning pipeline is a comprehensive process that covers all aspects of developing and deploying a machine learning model. It starts with gathering and preparing the data, which is crucial for the success of the model. Feature extraction and selection are then performed to identify the most relevant information for the model. The next step is training the model, where we use various algorithms to learn from the data. Evaluation and testing ensure that the model performs well on unseen data. Finally, the model is deployed in a real-world application, and its performance is continuously monitored to ensure it remains effective. This concept is important because it provides a structured approach to building and maintaining an ML system, which is essential for practical applications. While there are no prerequisites identified for this concept, it builds on foundational knowledge of data handling, machine learning algorithms, and model evaluation techniques. Understanding the end-to-end pipeline helps students appreciate the complexity and iterative nature of developing an effective ML system.",
+  "course": "Machine Learning",
+  "topic_id": "course_wrap_up",
+  "topic_name": "Course Wrap-Up",
+  "subtopic_id": "end_to_end_ml_pipeline",
+  "subtopic_name": "End-to-end ML pipeline"
+}

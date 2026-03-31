@@ -1,0 +1,173 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 100vh;
+                 background-color: #0D0D1A;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": {"background": "#1565C0", "border": "#0D47A1", "highlight": {"background": "#1E88E5", "border": "#0D47A1"}}, "font": {"color": "#ECEFF1"}, "id": "1", "label": "Machine Learning\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 50, "title": "\u003cb\u003eMachine Learning\u003c/b\u003e\u003cbr\u003e\u003ci\u003eCORE\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe study of algorithms that allow computer programs to automatically improve through experience.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#1565C0", "border": "#0D47A1", "highlight": {"background": "#1E88E5", "border": "#0D47A1"}}, "font": {"color": "#ECEFF1"}, "id": "2", "label": "Computer Algorithms\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 50, "title": "\u003cb\u003eComputer Algorithms\u003c/b\u003e\u003cbr\u003e\u003ci\u003eCORE\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eAlgorithms designed to solve specific problems or perform tasks.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#1565C0", "border": "#0D47A1", "highlight": {"background": "#1E88E5", "border": "#0D47A1"}}, "font": {"color": "#ECEFF1"}, "id": "3", "label": "Experience-Based Improvement\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 50, "title": "\u003cb\u003eExperience-Based Improvement\u003c/b\u003e\u003cbr\u003e\u003ci\u003eCORE\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe process by which algorithms improve their performance through exposure to data.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "4", "label": "Statistical Concepts\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eStatistical Concepts\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eBasic statistical principles and methods.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "5", "label": "Artificial Intelligence\n(L1, L3, L5, L6)", "shape": "dot", "size": 34, "title": "\u003cb\u003eArtificial Intelligence\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe study of intelligent agents and their capabilities.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 3, Lecture 5, Lecture 6\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "6", "label": "Information Theory\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eInformation Theory\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe study of quantifying information and its transmission.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "7", "label": "Philosophical Perspectives\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003ePhilosophical Perspectives\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eTheoretical and philosophical foundations of machine learning.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "8", "label": "Biology\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eBiology\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eBiological principles and their relevance to machine learning.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "9", "label": "Cognitive Science\n(L1, L3, L4, L5, L6)", "shape": "dot", "size": 37, "title": "\u003cb\u003eCognitive Science\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe study of the mind and its processes.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 3, Lecture 4, Lecture 5, Lecture 6\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "10", "label": "Computational Complexity\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eComputational Complexity\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe study of the resources required to solve computational problems.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "11", "label": "Control Theory\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eControl Theory\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe study of systems and their control mechanisms.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "12", "label": "Data Mining\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eData Mining\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe process of discovering patterns in large data sets.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "13", "label": "Fraud Detection\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eFraud Detection\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eSystems that learn to detect fraudulent activities.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "14", "label": "Information Filtering\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eInformation Filtering\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eSystems that learn to filter and prioritize information.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "15", "label": "Autonomous Vehicles\n(L1, L2, L3, L5, L6, L7)", "shape": "dot", "size": 40, "title": "\u003cb\u003eAutonomous Vehicles\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eSystems that learn to operate vehicles autonomously.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#1565C0", "border": "#0D47A1", "highlight": {"background": "#1E88E5", "border": "#0D47A1"}}, "font": {"color": "#ECEFF1"}, "id": "16", "label": "Learning Algorithms\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 50, "title": "\u003cb\u003eLearning Algorithms\u003c/b\u003e\u003cbr\u003e\u003ci\u003eCORE\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eAlgorithms that enable learning from data.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#1565C0", "border": "#0D47A1", "highlight": {"background": "#1E88E5", "border": "#0D47A1"}}, "font": {"color": "#ECEFF1"}, "id": "17", "label": "Theoretical Issues\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 50, "title": "\u003cb\u003eTheoretical Issues\u003c/b\u003e\u003cbr\u003e\u003ci\u003eCORE\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eConcepts and questions related to the theoretical foundations of machine learning.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "18", "label": "Training Examples\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eTraining Examples\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eData used to train learning algorithms.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "19", "label": "Learning Tasks\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eLearning Tasks\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eTypes of problems that can be solved using machine learning.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "20", "label": "Algorithm Implementation\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eAlgorithm Implementation\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe practical application of learning algorithms.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "21", "label": "Online Data Sets\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eOnline Data Sets\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eData available for use in learning algorithms.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "22", "label": "Statistical Learning Theory\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eStatistical Learning Theory\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eThe theoretical framework for understanding statistical learning.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "23", "label": "Bayesian Learning\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eBayesian Learning\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA statistical approach to learning based on Bayesian inference.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "24", "label": "Reinforcement Learning\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eReinforcement Learning\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA type of learning where an agent learns to take actions to maximize a reward.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "25", "label": "Supervised Learning\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eSupervised Learning\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA type of learning where the system learns from labeled data.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "26", "label": "Unsupervised Learning\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eUnsupervised Learning\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA type of learning where the system learns from unlabeled data.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "27", "label": "Recurrent Neural Networks\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eRecurrent Neural Networks\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA type of neural network that can process sequences of inputs.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "28", "label": "Convolutional Neural Networks\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eConvolutional Neural Networks\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA type of neural network that is particularly good at image recognition.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "29", "label": "Decision Trees\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eDecision Trees\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA type of machine learning model that uses a tree-like structure.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}, {"color": {"background": "#E65100", "border": "#BF360C", "highlight": {"background": "#FB8C00", "border": "#BF360C"}}, "font": {"color": "#ECEFF1"}, "id": "30", "label": "Random Forests\n(L1, L2, L3, L4, L5, L6, L7)", "shape": "dot", "size": 43, "title": "\u003cb\u003eRandom Forests\u003c/b\u003e\u003cbr\u003e\u003ci\u003eSUPPORTING\u003c/i\u003e\u003cbr\u003e\u003cbr\u003eA type of machine learning model that combines multiple decision trees.\u003cbr\u003e\u003cbr\u003e\ud83d\udcd0 Involves math/formulas\u003cbr\u003e\u003cbr\u003e\ud83d\udcd6 Covered in: Lecture 1, Lecture 2, Lecture 3, Lecture 4, Lecture 5, Lecture 6, Lecture 7\u003cbr\u003e\u003cbr\u003e\ud83d\udd17 \u003cb\u003eCross-lecture concept\u003c/b\u003e"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Computer Algorithms", "title": "includes", "to": "2"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Experience-Based Improvement", "title": "includes", "to": "3"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Statistical Concepts", "title": "includes", "to": "4"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Artificial Intelligence", "title": "includes", "to": "5"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Information Theory", "title": "includes", "to": "6"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Philosophical Perspectives", "title": "includes", "to": "7"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Biology", "title": "includes", "to": "8"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Cognitive Science", "title": "includes", "to": "9"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Computational Complexity", "title": "includes", "to": "10"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Control Theory", "title": "includes", "to": "11"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Data Mining", "title": "includes", "to": "12"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Fraud Detection", "title": "includes", "to": "13"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Information Filtering", "title": "includes", "to": "14"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Autonomous Vehicles", "title": "includes", "to": "15"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Learning Algorithms", "title": "includes", "to": "16"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "1", "label": "Machine Learning includes Theoretical Issues", "title": "includes", "to": "17"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "16", "label": "Learning Algorithms include Training Examples", "title": "includes", "to": "18"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "16", "label": "Learning Algorithms include Learning Tasks", "title": "includes", "to": "19"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "16", "label": "Learning Algorithms include Algorithm Implementation", "title": "includes", "to": "20"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "16", "label": "Learning Algorithms include Online Data Sets", "title": "includes", "to": "21"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "17", "label": "Theoretical Issues include Statistical Learning Theory", "title": "includes", "to": "22"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "17", "label": "Theoretical Issues include Bayesian Learning", "title": "includes", "to": "23"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "17", "label": "Theoretical Issues include Reinforcement Learning", "title": "includes", "to": "24"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "17", "label": "Theoretical Issues include Supervised Learning", "title": "includes", "to": "25"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "17", "label": "Theoretical Issues include Unsupervised Learning", "title": "includes", "to": "26"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "25", "label": "Supervised Learning includes Recurrent Neural Networks", "title": "includes", "to": "27"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "25", "label": "Supervised Learning includes Convolutional Neural Networks", "title": "includes", "to": "28"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "25", "label": "Supervised Learning includes Decision Trees", "title": "includes", "to": "29"}, {"arrows": "to", "color": {"color": "#546E7A", "opacity": 0.8}, "from": "25", "label": "Supervised Learning includes Random Forests", "title": "includes", "to": "30"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"nodes": {"shape": "dot", "font": {"size": 14, "color": "#ECEFF1", "face": "monospace"}, "borderWidth": 2, "shadow": {"enabled": true}}, "edges": {"arrows": {"to": {"enabled": true, "scaleFactor": 0.7}}, "smooth": {"type": "curvedCW", "roundness": 0.15}, "font": {"size": 10, "color": "#B0BEC5", "strokeWidth": 0}}, "physics": {"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -80, "centralGravity": 0.01, "springLength": 160, "springConstant": 0.05, "avoidOverlap": 0.5}, "stabilization": {"iterations": 250}}, "interaction": {"hover": true, "navigationButtons": true, "keyboard": true}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        if (typeof network === 'undefined') return;
+
+        // Build search box
+        var box = document.createElement('div');
+        box.style.cssText = 'position:fixed;top:12px;left:12px;z-index:9999;' +
+            'background:rgba(13,13,26,.95);padding:12px;border-radius:8px;' +
+            'border:1px solid #334;font-family:monospace;min-width:220px;';
+        box.innerHTML = '<div style="color:#90CAF9;font-size:13px;font-weight:bold;margin-bottom:8px;">🗺 Concept Map</div>' +
+            '<input id="cm-search" type="text" placeholder="Search concept…" ' +
+            'style="width:100%;padding:6px;border-radius:4px;border:1px solid #445;' +
+            'background:#1E1E2E;color:#ECE;font-size:12px;box-sizing:border-box;" ' +
+            'oninput="cmSearch(this.value)">' +
+            '<div id="cm-stats" style="color:#546E7A;font-size:10px;margin-top:6px;"></div>';
+        document.body.appendChild(box);
+
+        // Stats
+        var ns = network.body.data.nodes.get().length;
+        var es = network.body.data.edges.get().length;
+        document.getElementById('cm-stats').textContent = ns + ' concepts · ' + es + ' relationships';
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/') { e.preventDefault(); document.getElementById('cm-search').focus(); }
+            if (e.key === 'Escape') { document.getElementById('cm-search').value=''; cmSearch(''); }
+        });
+    }, 600);
+});
+
+function cmSearch(q) {
+    q = q.toLowerCase().trim();
+    var nodes = network.body.data.nodes.get();
+    network.body.data.nodes.update(nodes.map(function(n) {
+        var match = !q || (n.label||'').toLowerCase().includes(q) || (n.title||'').toLowerCase().includes(q);
+        return { id: n.id, opacity: match ? 1 : 0.08 };
+    }));
+    if (q) {
+        var first = nodes.find(function(n) { return (n.label||'').toLowerCase().includes(q); });
+        if (first) network.focus(first.id, { scale: 1.4, animation: { duration: 400 } });
+    }
+}
+</script>
+
+</body>
+</html>

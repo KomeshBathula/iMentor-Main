@@ -1,0 +1,14 @@
+node_modules/
+rag_service/myVenv/
+logs/*.log
+code.txt
+o.txt
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+**/.env
+**/server/.env
+**/frontend/.env
+dump.rdb

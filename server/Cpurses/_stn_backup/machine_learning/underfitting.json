@@ -1,0 +1,21 @@
+{
+  "concept": "Underfitting occurs when a model is too simple to capture the underlying pattern of the data, leading to poor performance on both the training and testing sets. This is a core issue in model selection and evaluation.",
+  "key_points": [
+    "Underfitting results in a model that is not flexible enough to capture the complexity of the data.",
+    "Underfitted models perform poorly on both training and testing data.",
+    "Increasing model complexity can help mitigate underfitting.",
+    "Cross-validation can be used to detect underfitting."
+  ],
+  "math": "",
+  "worked_example": "Consider a dataset with a quadratic relationship between input and output. A linear model would underfit this data, failing to capture the curvature. Training such a model would result in high bias, as seen in the large residuals between the model's predictions and the actual data points.",
+  "misconceptions": [
+    "Underfitting is often confused with overfitting, where the model is too complex and captures noise in the training data.",
+    "Increasing the size of the training dataset can always solve underfitting."
+  ],
+  "teaching_context": "Underfitting is a fundamental concept in machine learning that occurs when a model is too simplistic to capture the underlying patterns in the data. This can be intuitively understood by considering a simple linear model trying to fit a highly curved relationship in the data. Such a model will perform poorly on both the training and testing sets, indicating that it is not capturing the essential features of the data. To build intuition, consider a scenario where you are trying to predict housing prices based on features like the number of rooms and square footage. A linear model might fail to capture the non-linear relationship between these features and the price, leading to underfitting. Cross-validation can help identify underfitting by showing consistent poor performance across different subsets of the data. Increasing the complexity of the model, such as using polynomial regression or adding more features, can help mitigate underfitting. This concept is crucial for understanding model selection and evaluation, as it highlights the importance of choosing an appropriate model complexity.",
+  "course": "Machine Learning",
+  "topic_id": "bias_variance_tradeoff",
+  "topic_name": "Bias-Variance Tradeoff",
+  "subtopic_id": "underfitting",
+  "subtopic_name": "underfitting"
+}

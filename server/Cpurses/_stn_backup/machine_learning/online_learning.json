@@ -1,0 +1,21 @@
+{
+  "concept": "Online Learning is a paradigm where the model is updated incrementally as new data points arrive, rather than being trained on a fixed dataset. This approach is crucial for applications where data is continuously generated and the model needs to adapt in real-time.",
+  "key_points": [
+    "Models are updated sequentially with each new data point.",
+    "Efficient algorithms are used to update parameters without retraining the entire model.",
+    "Adapts to new data without forgetting old information (optional).",
+    "Suitable for streaming data and dynamic environments."
+  ],
+  "math": "\\text{Update Rule: } \\theta_{t+1} = \\theta_t + \\alpha \\cdot (y_t - \\hat{y}_t) \\cdot x_t",
+  "worked_example": "Consider a stock price prediction model. Each day, the model receives new stock prices and updates its parameters to better predict future prices. The update rule is applied to the current stock price and the prediction error.",
+  "misconceptions": [
+    "Online Learning is the same as incremental learning, but it specifically refers to updating the model with each new data point.",
+    "Online Learning requires storing all past data points, but it only needs to update the model parameters."
+  ],
+  "teaching_context": "Online Learning is a fundamental concept in machine learning that allows models to adapt to new data in real-time. Since there are no prerequisites identified, we can start by building an intuitive understanding of why this is important. Imagine a scenario where a company needs to predict stock prices. The stock market is highly dynamic, and new data points are constantly generated. If the company uses a traditional offline learning approach, it would need to retrain the model periodically, which is inefficient and impractical. Online Learning, on the other hand, allows the model to be updated incrementally as new data arrives, making it highly suitable for such dynamic environments. Mathematically, the update rule shows how the model parameters are adjusted based on the prediction error. This concept is crucial for understanding how models can continuously improve in real-time, making it a core topic in machine learning.",
+  "course": "Machine Learning",
+  "topic_id": "learning_paradigms_ii",
+  "topic_name": "Learning Paradigms II",
+  "subtopic_id": "online_learning",
+  "subtopic_name": "Online Learning"
+}

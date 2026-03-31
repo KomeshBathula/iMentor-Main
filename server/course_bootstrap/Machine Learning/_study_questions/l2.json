@@ -1,0 +1,99 @@
+{
+  "subtopic_id": "l2",
+  "subtopic_name": "L2",
+  "topic_name": "Regularization Techniques",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the L2 regularization term in the context of linear regression?",
+      "options": [
+        "A) $\\lambda \\sum_{i=1}^{n} w_i^2$",
+        "B) $\\lambda \\sum_{i=1}^{n} w_i$",
+        "C) $\\lambda \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2$",
+        "D) $\\lambda \\sum_{i=1}^{n} (y_i - \\hat{y}_i)$"
+      ],
+      "correct_option": "A",
+      "explanation": "The correct term is $\\lambda \\sum_{i=1}^{n} w_i^2$, which penalizes the squared magnitude of the weights.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following best describes the effect of increasing the regularization parameter $\\lambda$ in L2 regularization?",
+      "options": [
+        "A) It increases the magnitude of the weights.",
+        "B) It decreases the magnitude of the weights.",
+        "C) It increases the number of features used in the model.",
+        "D) It decreases the number of features used in the model."
+      ],
+      "correct_option": "B",
+      "explanation": "Increasing $\\lambda$ increases the penalty on the weights, thus reducing their magnitude.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of L2 regularization, what is the trade-off between bias and variance?",
+      "options": [
+        "A) Increasing regularization decreases both bias and variance.",
+        "B) Increasing regularization increases bias and decreases variance.",
+        "C) Increasing regularization decreases bias and increases variance.",
+        "D) Increasing regularization has no effect on bias and variance."
+      ],
+      "correct_option": "B",
+      "explanation": "Increasing regularization increases bias and decreases variance, as it penalizes the weights more heavily.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the concept of L2 regularization and how it affects the model parameters.",
+      "model_answer": "L2 regularization adds a penalty term to the loss function that is proportional to the square of the magnitude of the weights. This penalty term encourages the model parameters to be smaller, thus reducing the complexity of the model and helping to prevent overfitting. The effect is that the model becomes less sensitive to the training data, leading to a trade-off between bias and variance.",
+      "key_concepts": [
+        "L2 regularization",
+        "penalty term",
+        "model complexity",
+        "overfitting",
+        "bias-variance trade-off"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "L2 Regularization",
+      "back": "A technique that adds a penalty term to the loss function, proportional to the square of the magnitude of the model parameters. It helps to prevent overfitting by reducing the complexity of the model.",
+      "hint": "Think of it as adding a 'weight' to the model parameters."
+    },
+    {
+      "id": "fc_2",
+      "front": "Regularization Parameter ($\\lambda$)",
+      "back": "A hyperparameter that controls the strength of the regularization. Increasing $\\lambda$ increases the penalty on the weights, thus reducing their magnitude.",
+      "hint": "The higher the $\\lambda$, the stronger the regularization."
+    },
+    {
+      "id": "fc_3",
+      "front": "Bias-Variance Trade-off",
+      "back": "A fundamental concept in machine learning where increasing the model complexity (by reducing regularization) can decrease variance but increase bias, and vice versa. L2 regularization helps to manage this trade-off by reducing the model's complexity.",
+      "hint": "Balance between fitting the data well and not overfitting."
+    },
+    {
+      "id": "fc_4",
+      "front": "Penalty Term",
+      "back": "$\\lambda \\sum_{i=1}^{n} w_i^2$, where $\\lambda$ is the regularization parameter and $w_i$ are the model parameters. This term is added to the loss function to penalize large weights.",
+      "hint": "It's like adding a 'tax' on the weights."
+    },
+    {
+      "id": "fc_5",
+      "front": "Overfitting",
+      "back": "A situation where a model performs well on the training data but poorly on unseen data. L2 regularization helps to prevent overfitting by reducing the complexity of the model.",
+      "hint": "Think of it as making the model 'smarter' but not too smart."
+    }
+  ],
+  "topic_id": "regularization_techniques"
+}

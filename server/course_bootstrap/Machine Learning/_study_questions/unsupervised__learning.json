@@ -1,0 +1,153 @@
+{
+  "subtopic_id": "unsupervised__learning",
+  "subtopic_name": "unsupervised  Learning",
+  "topic_name": "Learning Paradigms I",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following is an example of unsupervised learning?",
+      "options": [
+        "A) Training a model to classify emails as spam or not spam.",
+        "B) Clustering customer data into segments based on purchasing behavior.",
+        "C) Using a dataset with labeled images to train a model to recognize objects.",
+        "D) Predicting stock prices based on historical data."
+      ],
+      "correct_option": "B",
+      "explanation": "Clustering is a form of unsupervised learning where the model identifies patterns in the data without labeled responses.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "In which scenario would you use k-means clustering?",
+      "options": [
+        "A) When you need to classify emails into spam and not spam.",
+        "B) When you want to predict the price of a house based on its features.",
+        "C) When you have labeled data and want to train a model.",
+        "D) When you want to group customers into segments based on their purchasing behavior."
+      ],
+      "correct_option": "D",
+      "explanation": "K-means clustering is used for grouping data points into clusters without any labeled responses, making it suitable for segmenting customers.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following is a key challenge in unsupervised learning?",
+      "options": [
+        "A) Finding the correct labels for the data.",
+        "B) Determining the optimal number of clusters.",
+        "C) Ensuring the model is trained on a large dataset.",
+        "D) Avoiding overfitting the model to the training data."
+      ],
+      "correct_option": "B",
+      "explanation": "Determining the optimal number of clusters is a common challenge in unsupervised learning as it requires domain expertise and can significantly impact the clustering results.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which algorithm is best suited for anomaly detection in unsupervised learning?",
+      "options": [
+        "A) Linear Regression",
+        "B) Decision Trees",
+        "C) K-means Clustering",
+        "D) Isolation Forest"
+      ],
+      "correct_option": "D",
+      "explanation": "Isolation Forest is specifically designed for anomaly detection in large datasets without labeled responses.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a limitation of using PCA for dimensionality reduction in unsupervised learning?",
+      "options": [
+        "A) It can handle categorical data.",
+        "B) It can reduce the dimensionality of the data.",
+        "C) It can be used for clustering.",
+        "D) It does not preserve the class structure of the data."
+      ],
+      "correct_option": "D",
+      "explanation": "PCA reduces dimensionality by projecting the data onto a lower-dimensional space, but it does not preserve the class structure, which can be a limitation in unsupervised learning.",
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between clustering and classification in unsupervised learning.",
+      "model_answer": "Clustering is a form of unsupervised learning where the model groups data points into clusters based on their similarities, without any labeled responses. In contrast, classification is a supervised learning task where the model is trained on labeled data to predict the category of new instances. Clustering does not require labeled data, whereas classification does.",
+      "key_concepts": [
+        "clustering",
+        "classification",
+        "unsupervised learning",
+        "supervised learning"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the importance of choosing the right number of clusters in k-means clustering.",
+      "model_answer": "Choosing the right number of clusters is crucial in k-means clustering as it directly impacts the quality of the clustering. If the number of clusters is too low, the clusters may be too broad, missing important subgroups. Conversely, if the number of clusters is too high, the clusters may be too specific, leading to overfitting. Techniques such as the elbow method or silhouette score can help in determining the optimal number of clusters.",
+      "key_concepts": [
+        "k-means clustering",
+        "elbow method",
+        "silhouette score",
+        "overfitting"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Compare and contrast PCA and t-SNE in the context of unsupervised learning.",
+      "model_answer": "PCA and t-SNE are both techniques used for dimensionality reduction in unsupervised learning. PCA is a linear method that projects the data onto a lower-dimensional space while preserving the variance. It is computationally efficient but may not capture the non-linear structure of the data. On the other hand, t-SNE is a non-linear method that focuses on preserving the local structure of the data, making it better at capturing the non-linear relationships. However, t-SNE is computationally expensive and can be prone to overfitting. The choice between PCA and t-SNE depends on the specific requirements of the task, such as computational efficiency and the need to capture non-linear structures.",
+      "key_concepts": [
+        "PCA",
+        "t-SNE",
+        "dimensionality reduction",
+        "non-linear structure",
+        "overfitting"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Unsupervised Learning",
+      "back": "A type of machine learning where the model learns from data without labeled responses, aiming to discover hidden patterns or groupings in the data.",
+      "hint": "Think of clustering and anomaly detection."
+    },
+    {
+      "id": "fc_2",
+      "front": "Clustering",
+      "back": "A method of unsupervised learning that groups data points into clusters based on their similarities, without any labeled responses.",
+      "hint": "Think of k-means and hierarchical clustering."
+    },
+    {
+      "id": "fc_3",
+      "front": "K-means Clustering",
+      "back": "An iterative algorithm for clustering data points into k clusters by minimizing the within-cluster sum of squares.",
+      "hint": "Think of the centroid and the objective function."
+    },
+    {
+      "id": "fc_4",
+      "front": "PCA (Principal Component Analysis)",
+      "back": "A linear dimensionality reduction technique that transforms the data into a lower-dimensional space while preserving the maximum variance.",
+      "hint": "Think of eigenvalues and eigenvectors."
+    },
+    {
+      "id": "fc_5",
+      "front": "t-SNE (t-Distributed Stochastic Neighbor Embedding)",
+      "back": "A non-linear dimensionality reduction technique that focuses on preserving the local structure of the data, making it better at capturing non-linear relationships.",
+      "hint": "Think of probability distributions and local similarities."
+    }
+  ],
+  "topic_id": "learning_paradigms_i"
+}

@@ -1,0 +1,147 @@
+{
+  "subtopic_id": "recall",
+  "subtopic_name": "recall",
+  "topic_name": "Performance Metrics",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What does the term 'recall' refer to in the context of machine learning?",
+      "options": [
+        "A) The proportion of positive instances correctly identified",
+        "B) The proportion of negative instances incorrectly identified",
+        "C) The proportion of positive instances incorrectly identified",
+        "D) The proportion of negative instances correctly identified"
+      ],
+      "correct_option": "A",
+      "explanation": "Recall is the proportion of positive instances that were correctly identified by the model. It is calculated as $\\frac{TP}{TP + FN}$, where TP is the number of true positives and FN is the number of false negatives.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following best describes the relationship between precision and recall?",
+      "options": [
+        "A) Precision and recall are always equal",
+        "B) Precision and recall are inversely related",
+        "C) Precision and recall are directly related",
+        "D) Precision and recall are unrelated"
+      ],
+      "correct_option": "B",
+      "explanation": "Precision and recall are often inversely related. Increasing one can decrease the other. This is because precision focuses on the accuracy of positive predictions, while recall focuses on the completeness of identifying all positives.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In a binary classification problem, if the model predicts all instances as negative, what would be the recall?",
+      "options": [
+        "A) 1",
+        "B) 0.5",
+        "C) 0",
+        "D) Cannot be determined without more information"
+      ],
+      "correct_option": "C",
+      "explanation": "If the model predicts all instances as negative, it will miss all positive instances, resulting in a recall of 0. Recall is calculated as $\\frac{TP}{TP + FN}$, and with no true positives ($TP = 0$) and all false negatives ($FN = TP$), the recall is 0.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which scenario would likely result in a high recall but potentially low precision?",
+      "options": [
+        "A) A model that predicts all instances as positive",
+        "B) A model that predicts all instances as negative",
+        "C) A model that predicts only the most confident instances as positive",
+        "D) A model that predicts only the most confident instances as negative"
+      ],
+      "correct_option": "A",
+      "explanation": "Predicting all instances as positive would ensure that all actual positives are identified, resulting in a high recall. However, this approach would likely predict many false positives, leading to a low precision.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "In a dataset with a highly imbalanced class distribution, which metric would be most useful to evaluate the model's performance?",
+      "options": [
+        "A) Accuracy",
+        "B) Precision",
+        "C) Recall",
+        "D) F1 Score"
+      ],
+      "correct_option": "C",
+      "explanation": "In an imbalanced dataset, accuracy may be misleading because it does not account for the imbalance. Precision and recall are more informative. Recall is particularly useful for identifying the proportion of actual positives that were correctly identified, which is crucial in imbalanced datasets.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the relationship between precision and recall in the context of a machine learning model.",
+      "model_answer": "Precision and recall are complementary metrics that evaluate different aspects of a model's performance. Precision focuses on the accuracy of positive predictions, while recall focuses on the completeness of identifying all positive instances. They are often inversely related, meaning that improving one can come at the cost of the other. For example, a model that predicts more instances as positive will likely have higher recall but potentially lower precision.",
+      "key_concepts": [
+        "precision",
+        "recall"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Describe a scenario where a model might have high recall but low precision.",
+      "model_answer": "A model that predicts all instances as positive would have a high recall because it would identify all actual positives. However, this approach would also predict many false positives, resulting in a low precision. This scenario is often seen in imbalanced datasets where the model is overly cautious in predicting positives to avoid missing any, but at the cost of many incorrect predictions.",
+      "key_concepts": [
+        "high recall",
+        "low precision"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the trade-offs between precision and recall in the context of a medical diagnosis model.",
+      "model_answer": "In a medical diagnosis model, high precision is crucial to avoid misdiagnosing patients. However, this can sometimes come at the cost of lower recall, meaning that some actual cases of the disease might be missed. Conversely, a model with high recall might identify more cases but at the risk of misdiagnosing healthy patients. The trade-off between these metrics is a critical consideration in medical applications, where the consequences of false positives and false negatives can be severe.",
+      "key_concepts": [
+        "precision",
+        "recall",
+        "medical diagnosis"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Recall",
+      "back": "The proportion of positive instances that were correctly identified by the model. Calculated as $\\frac{TP}{TP + FN}$.",
+      "hint": "Think of it as the model's ability to catch all positives."
+    },
+    {
+      "id": "fc_2",
+      "front": "Precision",
+      "back": "The proportion of positive predictions that were actually correct. Calculated as $\\frac{TP}{TP + FP}$.",
+      "hint": "Focus on the accuracy of positive predictions."
+    },
+    {
+      "id": "fc_3",
+      "front": "F1 Score",
+      "back": "The harmonic mean of precision and recall, providing a balanced measure of both metrics. Calculated as $\\frac{2 \\times Precision \\times Recall}{Precision + Recall}$.",
+      "hint": "A single metric that integrates precision and recall."
+    },
+    {
+      "id": "fc_4",
+      "front": "True Positive (TP)",
+      "back": "The number of instances correctly predicted as positive. Part of the numerator in both precision and recall calculations.",
+      "hint": "Correctly identified positives."
+    },
+    {
+      "id": "fc_5",
+      "front": "False Negative (FN)",
+      "back": "The number of instances incorrectly predicted as negative. Part of the denominator in recall calculation and the numerator in the false discovery rate.",
+      "hint": "Missed positives."
+    }
+  ],
+  "topic_id": "performance_metrics"
+}

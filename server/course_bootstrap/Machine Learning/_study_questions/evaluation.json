@@ -1,0 +1,149 @@
+{
+  "subtopic_id": "evaluation",
+  "subtopic_name": "evaluation",
+  "topic_name": "ML Design Practices",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary reason for separating data into training and testing sets in machine learning?",
+      "options": [
+        "A) To ensure the model can generalize to unseen data",
+        "B) To speed up the training process",
+        "C) To increase the model's accuracy",
+        "D) To reduce the size of the training dataset"
+      ],
+      "correct_option": "A",
+      "explanation": "Separating data into training and testing sets is crucial for evaluating how well the model generalizes to unseen data, ensuring that the model is not overfitting to the training data.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following metrics is NOT commonly used for evaluating classification models?",
+      "options": [
+        "A) Accuracy",
+        "B) Precision",
+        "C) Recall",
+        "D) Mean Squared Error"
+      ],
+      "correct_option": "D",
+      "explanation": "Mean Squared Error is typically used for regression tasks, not classification tasks. Accuracy, Precision, and Recall are all used for evaluating classification models.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of machine learning, what does the term 'cross-validation' refer to?",
+      "options": [
+        "A) A method for splitting data into training and testing sets",
+        "B) A technique for evaluating model performance by averaging results from multiple runs",
+        "C) A process for optimizing hyperparameters",
+        "D) A way to reduce the size of the training dataset"
+      ],
+      "correct_option": "B",
+      "explanation": "Cross-validation is a technique for evaluating model performance by averaging results from multiple runs, providing a more robust estimate of the model's performance.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following scenarios would require the use of cross-validation?",
+      "options": [
+        "A) When the dataset is very small and needs to be used efficiently",
+        "B) When the model is highly complex and needs to be validated thoroughly",
+        "C) When the model is simple and only needs basic evaluation",
+        "D) When the dataset is too large to be processed in one go"
+      ],
+      "correct_option": "B",
+      "explanation": "Cross-validation is particularly useful for validating highly complex models to ensure they generalize well to unseen data.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following statements is true regarding the evaluation of machine learning models?",
+      "options": [
+        "A) A model with high accuracy is always the best choice",
+        "B) Precision and recall are only relevant for binary classification tasks",
+        "C) Cross-validation can help reduce the variance in model evaluation",
+        "D) The choice of evaluation metric does not affect the model's performance"
+      ],
+      "correct_option": "C",
+      "explanation": "Cross-validation helps reduce the variance in model evaluation by providing a more robust estimate of the model's performance across multiple subsets of the data.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between accuracy and precision in the context of evaluating a classification model.",
+      "model_answer": "Accuracy is the proportion of correct predictions (both true positives and true negatives) out of all predictions. Precision, on the other hand, is the proportion of true positive predictions out of all positive predictions (true positives and false positives). While accuracy gives an overall sense of the model's performance, precision focuses on the reliability of positive predictions.",
+      "key_concepts": [
+        "accuracy",
+        "precision"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the importance of using cross-validation in the evaluation of machine learning models.",
+      "model_answer": "Cross-validation is crucial because it provides a more reliable estimate of a model's performance by averaging results from multiple runs. This helps to reduce the variance in the evaluation, ensuring that the model's performance is not overly optimistic or pessimistic. It is particularly important for models that are complex or have limited data, as it helps to ensure that the model generalizes well to unseen data.",
+      "key_concepts": [
+        "cross-validation",
+        "model evaluation",
+        "generalization"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Why is it important to consider both accuracy and other metrics (such as precision and recall) when evaluating a machine learning model?",
+      "model_answer": "While accuracy is a useful overall measure, it does not provide a complete picture of the model's performance. Precision and recall are particularly important for understanding the model's performance in terms of true positives and false positives. By considering multiple metrics, we can get a more nuanced understanding of the model's strengths and weaknesses, especially in scenarios where the classes are imbalanced or the cost of different types of errors is different.",
+      "key_concepts": [
+        "accuracy",
+        "precision",
+        "recall",
+        "imbalanced classes"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Training set",
+      "back": "The portion of the dataset used to train the machine learning model. It is used to fit the model's parameters.",
+      "hint": "Think of it as the data the model learns from."
+    },
+    {
+      "id": "fc_2",
+      "front": "Testing set",
+      "back": "The portion of the dataset that is held out and used to evaluate the model's performance. It is not used during the training process.",
+      "hint": "Think of it as the unseen data the model is tested on."
+    },
+    {
+      "id": "fc_3",
+      "front": "Cross-validation",
+      "back": "A technique for evaluating model performance by averaging results from multiple runs, each using a different subset of the data for training and testing.",
+      "hint": "It helps to reduce the variance in model evaluation."
+    },
+    {
+      "id": "fc_4",
+      "front": "Precision",
+      "back": "$\frac{\text{True Positives}}{\text{True Positives} + \text{False Positives}}$ - The proportion of true positive predictions out of all positive predictions.",
+      "hint": "Focus on the reliability of positive predictions."
+    },
+    {
+      "id": "fc_5",
+      "front": "Recall",
+      "back": "$\frac{\text{True Positives}}{\text{True Positives} + \text{False Negatives}}$ - The proportion of true positive predictions out of all actual positives.",
+      "hint": "Focus on the ability to find all positive cases."
+    }
+  ],
+  "topic_id": "ml_design_practices"
+}

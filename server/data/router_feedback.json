@@ -1,0 +1,23 @@
+[
+  {
+    "query": "Should social media platforms be legally responsible for user-generated misinformation? Argue both sides.",
+    "semanticConf": 0.5,
+    "resolvedIntent": "ACADEMIC_SEARCH",
+    "resolvedBy": "routing_waterfall",
+    "timestamp": "2026-03-25T19:17:54.984Z"
+  },
+  {
+    "query": "Critically evaluate whether standardized testing is an effective measure of student intelligence.",
+    "semanticConf": 0.5,
+    "resolvedIntent": "ACADEMIC_SEARCH",
+    "resolvedBy": "routing_waterfall",
+    "timestamp": "2026-03-26T06:38:47.173Z"
+  },
+  {
+    "query": "Is nuclear energy a viable solution to climate change? Evaluate the evidence.",
+    "semanticConf": 0.5,
+    "resolvedIntent": "ACADEMIC_SEARCH",
+    "resolvedBy": "routing_waterfall",
+    "timestamp": "2026-03-29T19:25:47.844Z"
+  }
+]

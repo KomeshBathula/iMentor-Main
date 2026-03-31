@@ -1,0 +1,26 @@
+[
+  {
+    "instruction": "What is the definition of cinema?",
+    "output": "According to Module 1 Lecture 1, the definition of cinema is discussed under the subtopics 'Definition of cinema; Evolution of films; Importance of movies in society' in the Movie PDF Sec 1."
+  },
+  {
+    "instruction": "What are the different stages of evolution in the development of the film industry?",
+    "output": "Based on Module 1 Lecture 2, the evolution of the film industry is described as having early cinema, silent films, the introduction of sound, color films, and the digital transformation, as mentioned in the Movie PDF Sec 2."
+  },
+  {
+    "instruction": "What are the different movie genres discussed in Module 2?",
+    "output": "Module 2 Lecture 3 covers the various movie genres, including action, drama, comedy, thriller, science fiction, romance, and documentary, as listed in Movie PDF Sec 3."
+  },
+  {
+    "instruction": "What is 3D animation?",
+    "output": "3D animation refers to the technique of creating the illusion of three-dimensional objects and environments on a two-dimensional surface, such as a screen. This is achieved through the use of computer software and algorithms that simulate the movement and lighting of objects in space."
+  },
+  {
+    "instruction": "How is digital editing used in the film industry?",
+    "output": "Digital editing involves the use of computer software to edit and manipulate film footage. This includes tasks such as cutting, trimming, and arranging scenes, as well as adding visual effects and color correction. Digital editing allows filmmakers to make precise changes and work efficiently, saving time and effort compared to traditional editing methods."
+  },
+  {
+    "instruction": "What is the role of streaming platforms in the distribution of movies?",
+    "output": "Streaming platforms are online services that allow users to watch movies and TV shows on-demand, without the need for physical media or traditional broadcast schedules. These platforms provide a convenient and accessible way for audiences to discover and enjoy content, and have changed the way movies are distributed and consumed in the modern era."
+  }
+]

@@ -1,0 +1,159 @@
+{
+  "subtopic_id": "k_means",
+  "subtopic_name": "K-means",
+  "topic_name": "Clustering",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary goal of the K-means algorithm?",
+      "options": [
+        "A) To maximize the distance between clusters.",
+        "B) To minimize the distance of each point to its cluster's centroid.",
+        "C) To create clusters with the highest possible variance.",
+        "D) To ensure all clusters have an equal number of points."
+      ],
+      "correct_option": "B",
+      "explanation": "The primary goal of K-means is to minimize the within-cluster sum of squares (WCSS), which is achieved by minimizing the distance of each point to its cluster's centroid.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a potential drawback of the K-means algorithm?",
+      "options": [
+        "A) It can handle large datasets efficiently.",
+        "B) It requires the number of clusters to be specified in advance.",
+        "C) It is not sensitive to outliers.",
+        "D) It can automatically determine the optimal number of clusters."
+      ],
+      "correct_option": "B",
+      "explanation": "K-means requires the number of clusters to be specified in advance, which can be a drawback if the true number of clusters is unknown.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_3",
+      "question": "What happens if the initial centroids are chosen poorly in K-means?",
+      "options": [
+        "A) The algorithm will run faster.",
+        "B) The algorithm will converge to the global minimum.",
+        "C) The algorithm may converge to a local minimum.",
+        "D) The algorithm will automatically adjust the number of clusters."
+      ],
+      "correct_option": "C",
+      "explanation": "Choosing poor initial centroids can lead the K-means algorithm to converge to a local minimum rather than the global minimum.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following is a valid reason for using K-means in real-world applications?",
+      "options": [
+        "A) It can handle non-linear data.",
+        "B) It is the most efficient algorithm for large datasets.",
+        "C) It can be used for customer segmentation.",
+        "D) It guarantees to find the optimal clustering solution."
+      ],
+      "correct_option": "C",
+      "explanation": "K-means is often used for customer segmentation, among other applications, due to its simplicity and effectiveness in grouping similar data points.",
+      "difficulty": "advanced",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_5",
+      "question": "What is the role of the within-cluster sum of squares (WCSS) in K-means?",
+      "options": [
+        "A) It is used to determine the optimal number of clusters.",
+        "B) It is minimized to find the best clustering solution.",
+        "C) It is a measure of the distance between clusters.",
+        "D) It is used to initialize the centroids randomly."
+      ],
+      "correct_option": "B",
+      "explanation": "The within-cluster sum of squares (WCSS) is minimized in K-means to find the best clustering solution, where each point is as close as possible to its cluster's centroid.",
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain how the choice of initial centroids can affect the outcome of the K-means algorithm.",
+      "model_answer": "The choice of initial centroids can significantly affect the outcome of the K-means algorithm. If the initial centroids are chosen poorly, the algorithm may converge to a local minimum rather than the global minimum. This can result in suboptimal clustering, where data points are not grouped as effectively as they could be. Proper initialization techniques, such as k-means++, can help mitigate this issue by providing better initial centroids.",
+      "key_concepts": [
+        "initial centroids",
+        "local minimum",
+        "global minimum",
+        "k-means++"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the limitations of the K-means algorithm and suggest ways to overcome them.",
+      "model_answer": "The K-means algorithm has several limitations, including the need to specify the number of clusters in advance, sensitivity to outliers, and potential to converge to a local minimum. To overcome these limitations, one can use techniques such as cross-validation to determine the optimal number of clusters, apply robust methods to handle outliers, and use initialization techniques like k-means++ to improve convergence. Additionally, alternative clustering algorithms or ensemble methods can be used to provide more robust and accurate clustering results.",
+      "key_concepts": [
+        "number of clusters",
+        "outliers",
+        "local minimum",
+        "cross-validation",
+        "k-means++",
+        "alternative clustering algorithms",
+        "ensemble methods"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Compare and contrast the K-means algorithm with hierarchical clustering.",
+      "model_answer": "K-means and hierarchical clustering are both clustering algorithms, but they differ in their approach and characteristics. K-means is a partitioning method that divides the data into a fixed number of clusters based on minimizing the within-cluster sum of squares. In contrast, hierarchical clustering builds a tree-like structure (dendrogram) by merging or splitting clusters recursively. K-means is generally faster and more efficient for large datasets, while hierarchical clustering can provide more detailed insights into the hierarchical structure of the data. However, hierarchical clustering can be computationally expensive for large datasets, and K-means may require specifying the number of clusters in advance.",
+      "key_concepts": [
+        "partitioning method",
+        "fixed number of clusters",
+        "within-cluster sum of squares",
+        "tree-like structure",
+        "dendrogram",
+        "recursive merging",
+        "computational efficiency",
+        "number of clusters"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "K-means",
+      "back": "A clustering algorithm that partitions data into $k$ clusters by minimizing the within-cluster sum of squares (WCSS), where each point is assigned to the nearest centroid.",
+      "hint": "Think of it as grouping similar data points."
+    },
+    {
+      "id": "fc_2",
+      "front": "Centroid",
+      "back": "The mean position of all the points in a cluster, used as the reference point for assigning data points to clusters in K-means.",
+      "hint": "It's the average of the points."
+    },
+    {
+      "id": "fc_3",
+      "front": "WCSS",
+      "back": "Within-cluster sum of squares, a measure of the total squared distance between each data point and its corresponding centroid, used to evaluate the quality of clustering in K-means.",
+      "hint": "Sum of squared distances."
+    },
+    {
+      "id": "fc_4",
+      "front": "Initialization",
+      "back": "The process of selecting initial centroids for the K-means algorithm, which can significantly affect the final clustering result.",
+      "hint": "Choosing starting points."
+    },
+    {
+      "id": "fc_5",
+      "front": "Local Minimum",
+      "back": "A suboptimal solution in the K-means algorithm where the algorithm converges to a local minimum rather than the global minimum, potentially leading to poor clustering.",
+      "hint": "Not the best solution."
+    }
+  ],
+  "topic_id": "clustering"
+}

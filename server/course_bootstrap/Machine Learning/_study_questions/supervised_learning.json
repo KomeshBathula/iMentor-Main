@@ -1,0 +1,155 @@
+{
+  "subtopic_id": "supervised_learning",
+  "subtopic_name": "Supervised Learning",
+  "topic_name": "Learning Paradigms I",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary goal of supervised learning?",
+      "options": [
+        "A) To classify data into predefined categories.",
+        "B) To predict continuous values based on input features.",
+        "C) To cluster similar data points together.",
+        "D) To reduce the dimensionality of the input data."
+      ],
+      "correct_option": "A",
+      "explanation": "The primary goal of supervised learning is to classify data into predefined categories, which is achieved through various classification algorithms.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a common example of supervised learning?",
+      "options": [
+        "A) Recommending products based on user behavior.",
+        "B) Segmenting customers into different groups.",
+        "C) Grouping emails into spam and non-spam.",
+        "D) Identifying outliers in a dataset."
+      ],
+      "correct_option": "A",
+      "explanation": "Recommending products based on user behavior is a common example of supervised learning, as it involves predicting a specific outcome (product recommendation) based on input features (user behavior).",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In supervised learning, what does the term 'label' refer to?",
+      "options": [
+        "A) The output variable that the model predicts.",
+        "B) The input features used to make predictions.",
+        "C) The algorithm used to train the model.",
+        "D) The accuracy of the model's predictions."
+      ],
+      "correct_option": "A",
+      "explanation": "In supervised learning, the 'label' refers to the output variable that the model predicts based on the input features.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following scenarios would require a regression model in supervised learning?",
+      "options": [
+        "A) Predicting the price of a house based on its features.",
+        "B) Classifying emails as spam or not spam.",
+        "C) Grouping customers into segments based on their behavior.",
+        "D) Identifying fraudulent transactions in a dataset."
+      ],
+      "correct_option": "A",
+      "explanation": "Predicting the price of a house based on its features is a regression problem, as it involves predicting a continuous value.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "What is the main difference between classification and regression in supervised learning?",
+      "options": [
+        "A) Classification predicts categorical labels, while regression predicts numerical values.",
+        "B) Classification uses linear models, while regression uses non-linear models.",
+        "C) Classification is unsupervised, while regression is supervised.",
+        "D) Classification requires labeled data, while regression does not."
+      ],
+      "correct_option": "A",
+      "explanation": "The main difference between classification and regression in supervised learning is that classification predicts categorical labels, while regression predicts numerical values.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the process of training a supervised learning model.",
+      "model_answer": "The process of training a supervised learning model involves several steps: 1) Collecting and preparing a labeled dataset, 2) Selecting and preprocessing the input features, 3) Choosing an appropriate model architecture, 4) Training the model using the labeled data, and 5) Evaluating the model's performance using validation and test datasets.",
+      "key_concepts": [
+        "labeled dataset",
+        "input features",
+        "model architecture",
+        "training",
+        "evaluation"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Compare and contrast classification and regression in supervised learning.",
+      "model_answer": "Classification and regression are both types of supervised learning, but they differ in their goals and outputs. Classification is used to predict categorical labels, while regression is used to predict continuous numerical values. The models used for classification are typically decision trees, support vector machines, or neural networks, while regression models include linear regression, polynomial regression, or support vector regression. The evaluation metrics for classification include accuracy, precision, recall, and F1 score, while for regression, metrics like mean squared error (MSE) and R-squared are commonly used.",
+      "key_concepts": [
+        "classification",
+        "regression",
+        "categorical labels",
+        "continuous values",
+        "evaluation metrics"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the importance of feature selection in supervised learning.",
+      "model_answer": "Feature selection is crucial in supervised learning because it helps to improve the model's performance by reducing the dimensionality of the input data. By selecting the most relevant features, we can enhance the model's ability to generalize and reduce overfitting. Additionally, feature selection can lead to more interpretable models, making it easier to understand the relationships between the input features and the output labels. Techniques for feature selection include filter methods, wrapper methods, and embedded methods, each with its own advantages and disadvantages.",
+      "key_concepts": [
+        "feature selection",
+        "dimensionality reduction",
+        "generalization",
+        "overfitting",
+        "interpretability"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Supervised Learning",
+      "back": "A type of machine learning where the model is trained on a labeled dataset to predict the output for new, unseen data. The goal is to learn the mapping from input features to the corresponding labels.",
+      "hint": "Think of labeled examples."
+    },
+    {
+      "id": "fc_2",
+      "front": "Label",
+      "back": "In supervised learning, the label is the output variable that the model predicts based on the input features. It can be categorical (for classification) or continuous (for regression).",
+      "hint": "Output of the model."
+    },
+    {
+      "id": "fc_3",
+      "front": "Training Set",
+      "back": "A subset of the labeled dataset used to train the supervised learning model. The model learns from this data to generalize to new, unseen data.",
+      "hint": "Data for learning."
+    },
+    {
+      "id": "fc_4",
+      "front": "Validation Set",
+      "back": "A subset of the labeled dataset used to evaluate the performance of the supervised learning model during training. It helps to tune hyperparameters and avoid overfitting.",
+      "hint": "Data for evaluation."
+    },
+    {
+      "id": "fc_5",
+      "front": "Test Set",
+      "back": "A subset of the labeled dataset that is completely separate from the training and validation sets. It is used to evaluate the final performance of the supervised learning model.",
+      "hint": "Data for final evaluation."
+    }
+  ],
+  "topic_id": "learning_paradigms_i"
+}

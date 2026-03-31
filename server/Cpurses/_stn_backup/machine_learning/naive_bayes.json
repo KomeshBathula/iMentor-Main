@@ -1,0 +1,21 @@
+{
+  "concept": "Naive Bayes is a simple yet powerful probabilistic classifier based on applying Bayes' theorem with strong (naive) independence assumptions between the features. It is supporting and aids in understanding the core concepts of Bayesian classifiers.",
+  "key_points": [
+    "Uses Bayes' theorem to predict the probability of each class.",
+    "Assumes that the features are independent of each other.",
+    "Efficient and easy to implement, often outperforms more complex models.",
+    "Can be used for both classification and regression tasks, though it is primarily used for classification."
+  ],
+  "math": "\\[P(C|X) = \\frac{P(X|C)P(C)}{P(X)}\\]",
+  "worked_example": "Given a dataset with features [age, income] and classes [low, high], we can calculate the probability of a new instance being in the 'high' class as: \\[P(high|X) = \\frac{P(X|high)P(high)}{P(X)}\\] Where \\[P(X|high) = P(age|high) \\times P(income|high)\\] and \\[P(high)\\] is the prior probability of the class 'high'.",
+  "misconceptions": [
+    "The features are not truly independent, but the model assumes they are to simplify calculations.",
+    "Naive Bayes is not suitable for all types of data, especially when the independence assumption is violated."
+  ],
+  "teaching_context": "Naive Bayes is a simple yet powerful probabilistic classifier that builds on the core concepts of Bayesian classifiers. It is based on applying Bayes' theorem with the assumption that the features are independent of each other. This assumption simplifies the calculations and makes the model easy to implement. The intuition behind Naive Bayes is that the probability of a class can be estimated by multiplying the probabilities of each feature given that class. This concept is supporting and aids in understanding the core concepts of Bayesian classifiers. Mathematically, it involves calculating the posterior probability of a class given the features, which is proportional to the product of the likelihood of the features given the class and the prior probability of the class. Naive Bayes is widely used in text classification, spam filtering, and recommendation systems, among others. It is a good starting point for understanding more complex models and is a valuable tool in the data scientist's toolkit.",
+  "course": "Machine Learning",
+  "topic_id": "bayesian_classifier",
+  "topic_name": "Bayesian Classifier",
+  "subtopic_id": "naive_bayes",
+  "subtopic_name": "Naive Bayes"
+}

@@ -1,0 +1,150 @@
+{
+  "subtopic_id": "precision",
+  "subtopic_name": "Precision",
+  "topic_name": "Performance Metrics",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following best describes Precision?",
+      "options": [
+        "A) The ratio of true positives to the sum of true positives and false positives.",
+        "B) The ratio of true positives to the sum of true positives and false negatives.",
+        "C) The ratio of true positives to the sum of true positives and true negatives.",
+        "D) The ratio of true positives to the sum of true positives and false positives."
+      ],
+      "correct_option": "A",
+      "explanation": "Precision is defined as the ratio of true positives to the sum of true positives and false positives. This is the correct definition of precision.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "In a binary classification problem, if a model predicts 100 instances as positive, and 80 of them are actually positive, what is the Precision?",
+      "options": [
+        "A) 0.8",
+        "B) 0.6",
+        "C) 0.4",
+        "D) 0.2"
+      ],
+      "correct_option": "A",
+      "explanation": "Precision is calculated as TP / (TP + FP), where TP is the number of true positives and FP is the number of false positives. Here, TP = 80 and FP = 20, so Precision = 80 / (80 + 20) = 0.8.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following scenarios would likely result in a high Precision?",
+      "options": [
+        "A) A model that frequently predicts positive but is mostly correct.",
+        "B) A model that rarely predicts positive but is mostly correct.",
+        "C) A model that frequently predicts positive and is mostly incorrect.",
+        "D) A model that rarely predicts positive and is mostly incorrect."
+      ],
+      "correct_option": "B",
+      "explanation": "A model that rarely predicts positive but is mostly correct would have a high Precision because it minimizes false positives.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "If a model has a Precision of 0.7, what does this indicate about the model’s performance?",
+      "options": [
+        "A) 70% of the positive predictions are correct.",
+        "B) 70% of the actual positives are predicted correctly.",
+        "C) 30% of the actual positives are predicted correctly.",
+        "D) 30% of the positive predictions are correct."
+      ],
+      "correct_option": "A",
+      "explanation": "Precision of 0.7 means that 70% of the positive predictions made by the model are correct.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_5",
+      "question": "In a scenario where Precision is very low, what might be a potential cause?",
+      "options": [
+        "A) The model is overfitting.",
+        "B) The model is underfitting.",
+        "C) The model is predicting too many positives.",
+        "D) The model is predicting too many negatives."
+      ],
+      "correct_option": "C",
+      "explanation": "A low Precision indicates that the model is predicting too many positives, many of which are incorrect.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the relationship between Precision and Recall.",
+      "model_answer": "Precision and Recall are two important metrics in evaluating the performance of a classifier. Precision measures the proportion of true positives among all predicted positives, while Recall measures the proportion of true positives among all actual positives. A high Precision indicates that the model is making few false positives, but it might miss some true positives, leading to a lower Recall. Conversely, a high Recall indicates that the model is catching most of the true positives, but it might also include many false positives, leading to a lower Precision. The trade-off between Precision and Recall is a common challenge in model evaluation.",
+      "key_concepts": [
+        "Precision",
+        "Recall"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "How would you improve the Precision of a model without significantly reducing its Recall?",
+      "model_answer": "To improve Precision without significantly reducing Recall, you can consider the following strategies: 1) Adjust the threshold for positive predictions to be more stringent, 2) Use techniques like cost-sensitive learning to penalize false positives more heavily, 3) Incorporate more relevant features that help distinguish between true and false positives, and 4) Implement ensemble methods to combine multiple models, which can often improve both Precision and Recall. However, you should carefully evaluate the trade-offs to ensure that the improvements in Precision do not negatively impact Recall.",
+      "key_concepts": [
+        "Precision",
+        "Recall",
+        "threshold adjustment",
+        "cost-sensitive learning",
+        "ensemble methods"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_3",
+      "question": "Describe a scenario where a high Precision is crucial for a model’s performance.",
+      "model_answer": "A high Precision is crucial in scenarios where the cost of a false positive is extremely high. For example, in medical diagnosis, a model predicting a disease when it is not present can lead to unnecessary treatments, anxiety, and potential harm to the patient. In such cases, ensuring that the model is highly precise in its positive predictions is essential to avoid these costly errors. Therefore, in applications where the consequences of a false positive are severe, a model with high Precision is vital.",
+      "key_concepts": [
+        "Precision",
+        "false positives",
+        "medical diagnosis"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Precision",
+      "back": "Precision is the ratio of true positives to the sum of true positives and false positives. Mathematically, Precision = $\\frac{TP}{TP + FP}$, where TP is the number of true positives and FP is the number of false positives.",
+      "hint": "Think of it as the accuracy of positive predictions."
+    },
+    {
+      "id": "fc_2",
+      "front": "Recall",
+      "back": "Recall is the ratio of true positives to the sum of true positives and false negatives. Mathematically, Recall = $\\frac{TP}{TP + FN}$, where TP is the number of true positives and FN is the number of false negatives.",
+      "hint": "Think of it as the completeness of positive predictions."
+    },
+    {
+      "id": "fc_3",
+      "front": "False Positive Rate (FPR)",
+      "back": "The False Positive Rate is the ratio of false positives to the sum of false positives and true negatives. Mathematically, FPR = $\\frac{FP}{FP + TN}$, where FP is the number of false positives and TN is the number of true negatives.",
+      "hint": "Think of it as the error rate of predicting positives."
+    },
+    {
+      "id": "fc_4",
+      "front": "True Positive Rate (TPR)",
+      "back": "The True Positive Rate is the same as Recall. Mathematically, TPR = $\\frac{TP}{TP + FN}$, where TP is the number of true positives and FN is the number of false negatives.",
+      "hint": "Think of it as the completeness of positive predictions."
+    },
+    {
+      "id": "fc_5",
+      "front": "Confusion Matrix",
+      "back": "A Confusion Matrix is a table used to describe the performance of a classification model. It shows the number of true positives, true negatives, false positives, and false negatives. The Precision is calculated from the Confusion Matrix as $\\frac{TP}{TP + FP}$.",
+      "hint": "It’s a grid that shows the model’s performance."
+    }
+  ],
+  "topic_id": "performance_metrics"
+}

@@ -1,0 +1,41 @@
+{
+  "name": "imentor-platform",
+  "version": "2.0.0",
+  "description": "iMentor AI Tutor Platform - Complete Suite",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:server": "cd server && npm test",
+    "test:all": "npm run test:server && npm run test",
+    "test:load": "artillery run artillery.yml --output artillery-report.json",
+    "test:load:report": "artillery report artillery-report.json --output artillery-report.html",
+    "test:lighthouse": "lhci autorun",
+    "cleanup:dev": "bash deployment_cleanup.sh",
+    "audit:security": "npm audit --audit-level=moderate && cd server && npm audit --audit-level=moderate && cd ../frontend && npm audit --audit-level=moderate",
+    "audit:deps": "echo '=== Server Dependencies ===' && npx depcheck server && echo '=== Frontend Dependencies ===' && npx depcheck frontend",
+    "audit:unused": "npx unimported",
+    "build:frontend": "cd frontend && npm run build",
+    "start:dev": "docker compose up -d",
+    "start:prod": "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d",
+    "stop": "docker compose down",
+    "logs": "docker compose logs -f",
+    "logs:server": "docker compose logs -f server",
+    "logs:rag": "docker compose logs -f rag",
+    "health": "curl http://localhost:5001/health && curl http://localhost:2001/health",
+    "deploy:staging": "npm run cleanup:dev && npm run build:frontend && npm run start:dev",
+    "deploy:prod": "npm run test:all && npm run audit:security && npm run cleanup:dev && npm run build:frontend && npm run start:prod"
+  },
+  "keywords": [
+    "ai-tutor",
+    "education",
+    "chatbot",
+    "rag",
+    "llm"
+  ],
+  "author": "iMentor Team",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "concept": "Stochastic Gradient Descent (SGD) is an optimization algorithm used to minimize a function by iteratively moving in the direction of the steepest descent as determined by the subgradient of the function at the current point. It is a supporting concept in machine learning, aiding in the understanding of how models are trained.",
+  "key_points": [
+    "SGD updates model parameters using the gradient of the loss function with respect to a single training example at each iteration.",
+    "It is computationally efficient and can handle large datasets.",
+    "SGD can escape local minima, making it more robust than batch gradient descent.",
+    "The learning rate controls the step size at each iteration, and it can be adjusted dynamically."
+  ],
+  "math": "$\\theta_{t+1} = \\theta_t - \\eta \\nabla_{\\theta} L(\\theta; x^{(i)}, y^{(i)})$",
+  "worked_example": "Given a simple linear regression model with a loss function $L(\\theta) = \\frac{1}{2}(y - \\theta x)^2$, SGD would update the parameter $\\theta$ using the gradient of the loss with respect to a single data point $(x^{(i)}, y^{(i)})$. For example, if $x^{(i)} = 2$, $y^{(i)} = 4$, and the current estimate of $\\theta$ is 1, the update would be $\\theta_{t+1} = 1 - \\eta (4 - 1*2) = 1 - 2\\eta$.",
+  "misconceptions": [
+    "SGD always finds the global minimum, which is incorrect as it can get stuck in local minima.",
+    "SGD is more computationally expensive than batch gradient descent, which is false as it is more efficient for large datasets."
+  ],
+  "teaching_context": "Stochastic Gradient Descent (SGD) is a powerful optimization technique that helps in training machine learning models. At its core, SGD is a method for finding the minimum of a function by taking small steps in the direction of the negative gradient of the function at each iteration. This concept builds on the understanding of gradient descent, where the gradient is calculated using the entire dataset. However, SGD uses only a single training example to calculate the gradient at each step, making it computationally more efficient and scalable for large datasets. The intuition behind SGD is that by taking small, random steps, the model can escape local minima and potentially find a better solution. Mathematically, the update rule for SGD is $\\theta_{t+1} = \\theta_t - \\eta \\nabla_{\\theta} L(\\theta; x^{(i)}, y^{(i)})$, where $\\eta$ is the learning rate, and $L(\\theta; x^{(i)}, y^{(i)})$ is the loss function evaluated at a single data point. In practice, SGD is widely used in training deep learning models, such as neural networks, due to its efficiency and ability to handle large datasets. The concept of SGD is crucial for understanding how models are trained and optimized, and it is a supporting concept in the broader context of machine learning.",
+  "course": "Machine Learning",
+  "topic_id": "loss_functions_&_optimizers",
+  "topic_name": "Loss Functions & Optimizers",
+  "subtopic_id": "sgd",
+  "subtopic_name": "SGD"
+}

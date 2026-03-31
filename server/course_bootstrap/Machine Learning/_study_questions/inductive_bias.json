@@ -1,0 +1,149 @@
+{
+  "subtopic_id": "inductive_bias",
+  "subtopic_name": "inductive bias",
+  "topic_name": "Inductive Learning & Bias",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is inductive bias?",
+      "options": [
+        "A) The tendency of a model to make predictions based on a limited set of data.",
+        "B) The preference of a model to make predictions based on prior knowledge.",
+        "C) The error rate of a model when it encounters unseen data.",
+        "D) The accuracy of a model on training data."
+      ],
+      "correct_option": "B",
+      "explanation": "Inductive bias refers to the assumptions a model makes about the data, which are not explicitly stated in the training data. This is a core concept in understanding how models generalize from training data to unseen data.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is an example of inductive bias in machine learning?",
+      "options": [
+        "A) A model that always predicts the most common class.",
+        "B) A model that predicts based on the exact input values.",
+        "C) A model that requires all input features to be present.",
+        "D) A model that uses all available data for each prediction."
+      ],
+      "correct_option": "A",
+      "explanation": "Choosing the most common class is a form of inductive bias, as it assumes that the most frequent outcome is the most likely to occur in the future. This is a common strategy to reduce uncertainty in predictions.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Why is inductive bias important in machine learning?",
+      "options": [
+        "A) It helps in reducing the computational cost of training models.",
+        "B) It ensures that the model will perform perfectly on all unseen data.",
+        "C) It allows models to make predictions based on assumptions about the data distribution.",
+        "D) It guarantees that the model will not overfit the training data."
+      ],
+      "correct_option": "C",
+      "explanation": "Inductive bias is crucial because it enables models to make predictions by making assumptions about the underlying data distribution. Without inductive bias, models would be unable to generalize from the training data to unseen data.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following scenarios demonstrates a high inductive bias?",
+      "options": [
+        "A) A model that predicts house prices based on the average prices in the neighborhood.",
+        "B) A model that predicts house prices based on the exact square footage of the house.",
+        "C) A model that predicts house prices based on the exact number of rooms.",
+        "D) A model that predicts house prices based on the exact location of the house."
+      ],
+      "correct_option": "A",
+      "explanation": "Predicting house prices based on the average prices in the neighborhood is a high inductive bias approach, as it assumes that the average price is a good predictor of individual house prices. This is a form of inductive reasoning based on the distribution of prices.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is an example of a high inductive bias in a machine learning model?",
+      "options": [
+        "A) A model that predicts the next word in a sentence based on the previous words.",
+        "B) A model that predicts the next word in a sentence based on the entire document.",
+        "C) A model that predicts the next word in a sentence based on the average word frequency in the language.",
+        "D) A model that predicts the next word in a sentence based on the exact sequence of words in the training data."
+      ],
+      "correct_option": "C",
+      "explanation": "Predicting the next word based on the average word frequency in the language is a high inductive bias approach, as it makes assumptions about the language distribution without relying on the exact sequence of words in the training data.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the concept of inductive bias in machine learning.",
+      "model_answer": "Inductive bias in machine learning refers to the assumptions or preferences that a model makes about the data, which are not explicitly stated in the training data. These assumptions allow the model to generalize from the training data to unseen data. Inductive bias is crucial because it enables models to make predictions by making assumptions about the underlying data distribution. Examples of inductive bias include predicting based on the average values, making assumptions about the data distribution, or using prior knowledge.",
+      "key_concepts": [
+        "inductive bias",
+        "generalization",
+        "assumptions"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "How does inductive bias affect the performance of a machine learning model?",
+      "model_answer": "Inductive bias can positively or negatively affect the performance of a machine learning model. Positive inductive bias can lead to better generalization and more accurate predictions by making reasonable assumptions about the data. However, if the inductive bias is incorrect or overly restrictive, it can lead to poor generalization and overfitting. The key is to choose the right inductive bias that aligns with the underlying data distribution.",
+      "key_concepts": [
+        "generalization",
+        "overfitting",
+        "underfitting"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "sa_3",
+      "question": "Design a machine learning model that incorporates a high inductive bias and explain its implications.",
+      "model_answer": "A high inductive bias model might predict house prices based on the average prices in the neighborhood. This approach assumes that the average price is a good predictor of individual house prices. The implications of this inductive bias are that the model will likely perform well in predicting average prices but may struggle with outliers or unique properties of individual houses. This model would be more robust to general trends but less accurate for specific cases.",
+      "key_concepts": [
+        "high inductive bias",
+        "generalization",
+        "outliers"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Inductive Bias",
+      "back": "The assumptions or preferences that a model makes about the data, which are not explicitly stated in the training data. Enables models to generalize from training data to unseen data.",
+      "hint": "Think of it as a model's 'prior knowledge'."
+    },
+    {
+      "id": "fc_2",
+      "front": "Generalization",
+      "back": "The ability of a model to perform well on unseen data, based on its inductive bias. Balancing between underfitting and overfitting.",
+      "hint": "Key to successful machine learning."
+    },
+    {
+      "id": "fc_3",
+      "front": "Overfitting",
+      "back": "A model that performs well on training data but poorly on unseen data. Occurs when the model is too complex and captures noise in the training data.",
+      "hint": "Avoid by using simpler models or regularization."
+    },
+    {
+      "id": "fc_4",
+      "front": "Underfitting",
+      "back": "A model that performs poorly on both training and unseen data. Occurs when the model is too simple and fails to capture the underlying patterns in the data.",
+      "hint": "Avoid by using more complex models or feature engineering."
+    },
+    {
+      "id": "fc_5",
+      "front": "Bias-Variance Tradeoff",
+      "back": "The balance between a model's bias (its inductive bias) and variance (its sensitivity to the training data). Finding the right balance is key to good generalization.",
+      "hint": "Key concept in machine learning."
+    }
+  ],
+  "topic_id": "inductive_learning_&_bias"
+}

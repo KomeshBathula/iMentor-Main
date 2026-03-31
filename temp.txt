@@ -1,0 +1,17 @@
+ have deleted the courses also in server folder. Now copied new courses. so  
+  delete the old courses graphs and lecture notes etc. Start the SGLANg,        
+  Check the process of creting the Knowledge graph, shortntes, FQA, skill tree  
+  QA, Tutotot questions with material. etc . The process shoule be a synergy    
+  between syllabus, knowledge graph , course material etc. The raw material
+  should be deleted if needed only converted markdown before converting to      
+  short notes can be retianed in different name,   Start ai services and
+  server, Convert the course matter into all the target information lijw KG
+  via neo4j (topics and subtopics with jelp of syllabus and course materual
+  shotrtnotes), Knowoledge base via qdrat for rag, Short notes with
+  interactive mind maps and images for all topics and subtopic .... the code
+  for majority of the tasks are already created. Test of all the services are
+  achieved and courses are properly parses into different knwoeldge forms...
+  The code base is designed such a way that a single file / fucntion or
+  command will trigger this whole process in the name of offlinejobs    So a
+  single instruciton like npm offlinejobs.js whould check for all chagnes in
+  teh courses and create the corresponding things

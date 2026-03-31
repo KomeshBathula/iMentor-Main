@@ -1,0 +1,146 @@
+{
+  "subtopic_id": "feature_scaling",
+  "subtopic_name": "Feature scaling",
+  "topic_name": "Data Representation & Preprocessing",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "Which of the following is a method of feature scaling?",
+      "options": [
+        "A) Normalization",
+        "B) Standardization",
+        "C) Clustering",
+        "D) Regression"
+      ],
+      "correct_option": "A",
+      "explanation": "Normalization is a method of scaling features to a range of [0, 1], which is a form of feature scaling.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "What is the primary purpose of feature scaling in machine learning?",
+      "options": [
+        "A) To increase the computational complexity of models",
+        "B) To ensure all features contribute equally to the model",
+        "C) To reduce the number of features",
+        "D) To improve the accuracy of clustering algorithms"
+      ],
+      "correct_option": "B",
+      "explanation": "Feature scaling ensures that all features contribute equally to the model, preventing any single feature from dominating due to its scale.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which of the following is true about standardization?",
+      "options": [
+        "A) It scales the features to a range of [0, 1]",
+        "B) It transforms the features to have a mean of 0 and a standard deviation of 1",
+        "C) It is used for categorical data",
+        "D) It is a form of dimensionality reduction"
+      ],
+      "correct_option": "B",
+      "explanation": "Standardization transforms the features to have a mean of 0 and a standard deviation of 1, which is a key aspect of feature scaling.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which scenario would require normalization but not standardization?",
+      "options": [
+        "A) When the features are already on a similar scale",
+        "B) When the features are categorical",
+        "C) When the features are on a very large scale and need to be brought to a smaller range",
+        "D) When the features are on a very small scale and need to be brought to a larger range"
+      ],
+      "correct_option": "C",
+      "explanation": "Normalization is used to scale features to a range of [0, 1], which is particularly useful when the features are on a very large scale and need to be brought to a smaller range.",
+      "difficulty": "advanced",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Why is feature scaling important for distance-based algorithms?",
+      "options": [
+        "A) It ensures that all features contribute equally to the model",
+        "B) It prevents any single feature from dominating the model due to its scale",
+        "C) It increases the computational complexity of the algorithms",
+        "D) It reduces the number of features needed"
+      ],
+      "correct_option": "B",
+      "explanation": "Feature scaling ensures that no single feature dominates the model due to its scale, which is crucial for the performance of distance-based algorithms.",
+      "difficulty": "advanced",
+      "bloom_level": "understand"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between normalization and standardization in the context of feature scaling.",
+      "model_answer": "Normalization scales the features to a range of [0, 1], while standardization transforms them to have a mean of 0 and a standard deviation of 1. Normalization is useful when the features are on a very large scale and need to be brought to a smaller range, whereas standardization is more appropriate when the features are on a similar scale and need to be centered around zero.",
+      "key_concepts": [
+        "normalization",
+        "standardization"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Why is it important to scale features before applying regularization techniques?",
+      "model_answer": "Scaling features before applying regularization techniques ensures that each feature contributes equally to the model, preventing any single feature from dominating due to its scale. This is crucial for regularization, as it helps in controlling the complexity of the model and improving its generalization ability.",
+      "key_concepts": [
+        "feature scaling",
+        "regularization"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the impact of not scaling features in a dataset with a wide range of values on a machine learning model.",
+      "model_answer": "Not scaling features in a dataset with a wide range of values can lead to poor model performance. Features with larger values can dominate the model, skewing the learning process and potentially leading to suboptimal solutions. Scaling the features ensures that each feature contributes equally to the model, improving the convergence speed and the overall performance of the model.",
+      "key_concepts": [
+        "feature scaling",
+        "model performance"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Normalization",
+      "back": "A method of scaling features to a range of [0, 1]. Useful when the features are on a very large scale and need to be brought to a smaller range.",
+      "hint": "Think of it as squeezing the data into a smaller range."
+    },
+    {
+      "id": "fc_2",
+      "front": "Standardization",
+      "back": "A method of transforming features to have a mean of 0 and a standard deviation of 1. Useful when the features are on a similar scale and need to be centered around zero.",
+      "hint": "Think of it as centering the data around zero with unit variance."
+    },
+    {
+      "id": "fc_3",
+      "front": "Feature Scaling",
+      "back": "A process of ensuring all features in a dataset are on a similar scale, which is crucial for the performance of many machine learning models. It helps in improving the convergence speed and ensures that no single feature dominates the model due to its scale.",
+      "hint": "Think of it as making all features play on the same 'field'."
+    },
+    {
+      "id": "fc_4",
+      "front": "Distance-Based Algorithms",
+      "back": "Algorithms like K-Nearest Neighbors and Support Vector Machines that rely on the distance between data points. Feature scaling is essential to ensure that the distance metric is not skewed by the scale of the features.",
+      "hint": "Think of it as making sure all players are judged by the same criteria."
+    },
+    {
+      "id": "fc_5",
+      "front": "Regularization",
+      "back": "A technique used to control the complexity of a model and improve its generalization ability. Scaling features is crucial before applying regularization to ensure that each feature contributes equally to the model.",
+      "hint": "Think of it as balancing the model's complexity and feature contributions."
+    }
+  ],
+  "topic_id": "data_representation_&_preprocessing"
+}

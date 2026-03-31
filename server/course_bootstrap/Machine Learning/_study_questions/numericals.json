@@ -1,0 +1,147 @@
+{
+  "subtopic_id": "numericals",
+  "subtopic_name": "Numericals",
+  "topic_name": "Module 2 Review",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the mean of the dataset [1, 2, 3, 4, 5]?",
+      "options": [
+        "A) 3",
+        "B) 2.5",
+        "C) 4",
+        "D) 3.5"
+      ],
+      "correct_option": "A",
+      "explanation": "The mean is calculated by summing all values and dividing by the number of values. Here, $(1+2+3+4+5)/5 = 3$.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "If the standard deviation of a dataset is 0, what can be inferred about the dataset?",
+      "options": [
+        "A) All values are the same",
+        "B) The dataset has no outliers",
+        "C) The mean is 0",
+        "D) The dataset is normally distributed"
+      ],
+      "correct_option": "A",
+      "explanation": "A standard deviation of 0 indicates that all values in the dataset are identical.",
+      "difficulty": "beginner",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Given the dataset [10, 20, 30, 40, 50], what is the median?",
+      "options": [
+        "A) 20",
+        "B) 30",
+        "C) 25",
+        "D) 35"
+      ],
+      "correct_option": "B",
+      "explanation": "The median is the middle value in an ordered dataset. Here, the middle value is 30.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following represents the formula for calculating the variance of a dataset?",
+      "options": [
+        "A) $\\frac{1}{n}\\sum_{i=1}^{n}(x_i - \\mu)^2$",
+        "B) $\\frac{1}{n-1}\\sum_{i=1}^{n}(x_i - \\mu)^2$",
+        "C) $\\frac{1}{n}\\sum_{i=1}^{n}x_i^2 - \\mu^2$",
+        "D) $\\frac{1}{n-1}\\sum_{i=1}^{n}x_i^2 - \\mu^2$"
+      ],
+      "correct_option": "B",
+      "explanation": "The formula for calculating the variance of a dataset is $\\frac{1}{n-1}\\sum_{i=1}^{n}(x_i - \\mu)^2$.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_5",
+      "question": "If the standard deviation of a dataset is 5, what is the variance of the same dataset?",
+      "options": [
+        "A) 25",
+        "B) 10",
+        "C) 5",
+        "D) 15"
+      ],
+      "correct_option": "A",
+      "explanation": "Variance is the square of the standard deviation. Here, $5^2 = 25$.",
+      "difficulty": "advanced",
+      "bloom_level": "apply"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between mean and median in the context of a dataset.",
+      "model_answer": "The mean is the average value of a dataset, calculated by summing all values and dividing by the number of values. The median is the middle value in an ordered dataset. In a skewed distribution, the mean can be influenced by outliers, while the median remains a better measure of central tendency.",
+      "key_concepts": [
+        "mean",
+        "median"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "How does the standard deviation of a dataset relate to its variance?",
+      "model_answer": "The standard deviation is the square root of the variance. Variance is a measure of the spread of the data, while the standard deviation provides a more interpretable scale of the spread.",
+      "key_concepts": [
+        "standard deviation",
+        "variance"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the implications of a high standard deviation in a dataset for machine learning applications.",
+      "model_answer": "A high standard deviation indicates a large spread of data, which can imply significant variability or noise in the dataset. In machine learning, this can affect the model's performance, as it may struggle to generalize well if the data is highly variable. Techniques such as feature scaling or removing outliers may be necessary to improve model accuracy.",
+      "key_concepts": [
+        "standard deviation",
+        "machine learning",
+        "data variability"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Mean",
+      "back": "The average value of a dataset, calculated as $\\frac{1}{n}\\sum_{i=1}^{n}x_i$.",
+      "hint": "Think of it as the 'middle' of the data."
+    },
+    {
+      "id": "fc_2",
+      "front": "Median",
+      "back": "The middle value in an ordered dataset. If the dataset has an even number of values, the median is the average of the two middle values.",
+      "hint": "It's the 'middle' value, not the average."
+    },
+    {
+      "id": "fc_3",
+      "front": "Variance",
+      "back": "A measure of the spread of a dataset, calculated as $\\frac{1}{n}\\sum_{i=1}^{n}(x_i - \\mu)^2$.",
+      "hint": "It's the 'spread' of the data."
+    },
+    {
+      "id": "fc_4",
+      "front": "Standard Deviation",
+      "back": "The square root of the variance, providing a measure of the spread of the data in the same units as the data.",
+      "hint": "It's the 'square root' of the variance."
+    },
+    {
+      "id": "fc_5",
+      "front": "Outlier",
+      "back": "A data point that is significantly different from other data points in the dataset, potentially affecting the mean and standard deviation.",
+      "hint": "It's the 'odd one out'."
+    }
+  ],
+  "topic_id": "module_2_review"
+}

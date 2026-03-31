@@ -1,0 +1,21 @@
+{
+  "concept": "K-means is a clustering algorithm that partitions data into K distinct clusters based on the closest mean point. It is a simple and effective method for grouping similar data points together.",
+  "key_points": [
+    "Initializes K cluster centers randomly or using a heuristic method.",
+    "Assigns each data point to the nearest cluster center.",
+    "Updates the cluster centers to be the mean of the points assigned to them.",
+    "Repeats the assignment and update steps until convergence or a maximum number of iterations is reached."
+  ],
+  "math": "$C_i = \\frac{1}{|C_i|} \\sum_{x \\in C_i} x$ where $C_i$ is the set of points in cluster $i$ and $C_i$ is the updated cluster center.",
+  "worked_example": "Given points (1, 2), (2, 1), (4, 5), (5, 4), initialize K=2. Assign points to nearest mean, update means, and repeat until convergence.",
+  "misconceptions": [
+    "K-means always finds the global optimum, which is not true as it can get stuck in local minima.",
+    "K-means requires the number of clusters to be specified in advance, which is often unknown."
+  ],
+  "teaching_context": "K-means is a fundamental clustering algorithm that helps in understanding how to group similar data points together. It builds on basic concepts of distance and mean calculation. The intuition is to find the 'center' of each group of points and then refine these centers until the points are optimally grouped. Mathematically, it involves calculating the mean of points in each cluster and updating these means iteratively. This concept is crucial for understanding more complex clustering algorithms and is widely applicable in fields such as data mining, image processing, and customer segmentation. While it is simple, it requires careful consideration of the number of clusters and the initial placement of cluster centers to avoid getting stuck in local minima.",
+  "course": "Machine Learning",
+  "topic_id": "clustering",
+  "topic_name": "Clustering",
+  "subtopic_id": "k_means",
+  "subtopic_name": "K-means"
+}

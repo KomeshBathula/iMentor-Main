@@ -1,0 +1,21 @@
+{
+  "concept": "Binary classification is a type of supervised learning problem where the goal is to predict one of two possible outcomes (e.g., yes/no, true/false) based on input features. This is a core concept in machine learning and forms the basis for understanding more complex models.",
+  "key_points": [
+    "The output is a binary value (0 or 1) or a probability between 0 and 1.",
+    "Logistic regression is used to model the probability of the default class (usually class 1).",
+    "The decision boundary is determined by the logistic function, which maps any real-valued number into the range [0, 1].",
+    "The model can be interpreted probabilistically, making it useful for risk assessment and decision-making."
+  ],
+  "math": "$P(y=1|x) = \\frac{1}{1 + e^{-(\\beta_0 + \\beta_1 x)}}$",
+  "worked_example": "Given a dataset of patients with features such as age, blood pressure, and cholesterol levels, logistic regression can be used to predict the probability of a patient having a heart attack. For a patient with age 50, blood pressure 140, and cholesterol 200, the logistic regression model might output a probability of 0.7, indicating a high risk of a heart attack.",
+  "misconceptions": [
+    "Logistic regression is a linear classifier, which is incorrect since it uses a logistic function to model the probability.",
+    "The output of logistic regression is a binary value, which is a common misconception as the output is actually a probability."
+  ],
+  "teaching_context": "Binary classification is a fundamental concept in machine learning that involves predicting one of two possible outcomes based on input features. This concept builds on basic understanding of supervised learning and probability. The intuition behind binary classification is to understand the relationship between input features and the probability of a certain outcome. For example, in medical diagnosis, we might want to predict whether a patient has a disease based on their symptoms. The logistic regression model is particularly useful because it can provide a probability of the event occurring, which can be interpreted as a risk level. This model uses the logistic function, which maps any real-valued number into the range [0, 1], to estimate the probability of the positive class. By understanding the logistic function and its interpretation, students can gain a deeper understanding of how to apply logistic regression in real-world scenarios, such as risk assessment and decision-making.",
+  "course": "Machine Learning",
+  "topic_id": "logistic_regression",
+  "topic_name": "Logistic Regression",
+  "subtopic_id": "binary_classification",
+  "subtopic_name": "binary classification"
+}

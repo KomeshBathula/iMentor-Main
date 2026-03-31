@@ -1,0 +1,21 @@
+{
+  "concept": "Active learning is a method where the learner actively participates in the learning process, often by making predictions or providing feedback, which is then used to refine the model. This approach is particularly useful in scenarios where labeled data is scarce or expensive to obtain.",
+  "key_points": [
+    "The learner actively participates in the learning process.",
+    "Feedback from the learner is used to refine the model.",
+    "Effective in scenarios with limited labeled data.",
+    "Can significantly reduce the need for labeled data."
+  ],
+  "math": "",
+  "worked_example": "Suppose we have a binary classification problem where we want to classify emails as spam or not spam. Initially, we have a small set of labeled emails. Using an active learning approach, we can query the learner (a human in this case) to label a few emails. Based on the learner's feedback, we update our model and then query the learner again for more labels. This iterative process continues until the model achieves satisfactory performance.",
+  "misconceptions": [
+    "Active learning is the same as interactive learning, where the learner is simply asked questions.",
+    "Active learning always requires human intervention."
+  ],
+  "teaching_context": "Active learning is a powerful technique that enhances the learning process by involving the learner in the decision-making process. In the context of machine learning, this means that the learner can provide feedback or make predictions, which are then used to improve the model. This approach is particularly useful in scenarios where labeled data is scarce or expensive to obtain, such as in medical diagnosis or natural language processing. By actively participating, the learner can help the model learn more efficiently, reducing the need for large amounts of labeled data. This concept builds on the understanding of supervised learning, where labeled data is used to train the model. However, in active learning, the learner's feedback is used to refine the model, making it a more efficient and effective learning process. The real-world relevance of active learning is evident in applications such as personalized medicine, where the learner's feedback can help tailor the treatment to the individual patient.",
+  "course": "Machine Learning",
+  "topic_id": "learning_paradigms_ii",
+  "topic_name": "Learning Paradigms II",
+  "subtopic_id": "active__learning",
+  "subtopic_name": "active  Learning"
+}

@@ -1,0 +1,151 @@
+{
+  "subtopic_id": "sgd",
+  "subtopic_name": "SGD",
+  "topic_name": "Loss Functions & Optimizers",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary advantage of using Stochastic Gradient Descent (SGD) over Gradient Descent (GD)?",
+      "options": [
+        "A) It requires less memory to store the gradient.",
+        "B) It can escape local minima more effectively.",
+        "C) It is computationally less intensive for large datasets.",
+        "D) It guarantees to find the global minimum of the function."
+      ],
+      "correct_option": "C",
+      "explanation": "SGD is computationally less intensive for large datasets because it uses only a single training example to calculate the gradient at each step, making it more scalable.",
+      "difficulty": "beginner",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following best describes the update rule for SGD?",
+      "options": [
+        "A) $\theta_{t+1} = \theta_t - \\eta \nabla_{\theta} L(\theta; x^{(i)}, y^{(i)})$",
+        "B) $\theta_{t+1} = \theta_t + \\eta \nabla_{\theta} L(\theta; x^{(i)}, y^{(i)})$",
+        "C) $\theta_{t+1} = \theta_t - \\eta \nabla_{\theta} L(\theta; x^{(1)}, y^{(1)})$",
+        "D) $\theta_{t+1} = \theta_t + \\eta \nabla_{\theta} L(\theta; x^{(1)}, y^{(1)})$"
+      ],
+      "correct_option": "A",
+      "explanation": "The correct update rule for SGD is $\theta_{t+1} = \theta_t - \\eta \nabla_{\theta} L(\theta; x^{(i)}, y^{(i)})$, where $\\eta$ is the learning rate and $L(\theta; x^{(i)}, y^{(i)})$ is the loss function evaluated at a single data point.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of SGD, what does the term 'stochastic' imply?",
+      "options": [
+        "A) The algorithm is random and unpredictable.",
+        "B) The algorithm uses a single data point to update the parameters.",
+        "C) The algorithm updates parameters based on the entire dataset.",
+        "D) The algorithm is deterministic and follows a fixed path."
+      ],
+      "correct_option": "B",
+      "explanation": "The term 'stochastic' in SGD implies that the algorithm uses a single data point to update the parameters at each step, making the process inherently random and less predictable.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Why might SGD struggle to find the global minimum of a function?",
+      "options": [
+        "A) Because it uses the entire dataset to calculate the gradient.",
+        "B) Because it updates parameters based on a single data point, which can lead to oscillations and not converge to the global minimum.",
+        "C) Because it is computationally too intensive.",
+        "D) Because it does not use the concept of learning rate."
+      ],
+      "correct_option": "B",
+      "explanation": "SGD might struggle to find the global minimum because it updates parameters based on a single data point, which can lead to oscillations and not converge to the global minimum, especially in complex landscapes with many local minima.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a plausible reason for using SGD in training deep learning models?",
+      "options": [
+        "A) It guarantees to find the global minimum.",
+        "B) It is computationally efficient and scalable for large datasets.",
+        "C) It requires more memory to store the gradient.",
+        "D) It is less prone to overfitting than other optimization techniques."
+      ],
+      "correct_option": "B",
+      "explanation": "SGD is computationally efficient and scalable for large datasets, making it a preferred choice for training deep learning models, especially when dealing with large datasets.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain how SGD can help in escaping local minima during the training of a machine learning model.",
+      "model_answer": "SGD helps in escaping local minima by taking small, random steps in the direction of the negative gradient at each iteration. This randomness can help the model explore different regions of the loss landscape, potentially leading to the discovery of a better solution than a local minimum. The small steps also allow the model to avoid getting stuck in narrow valleys, which are characteristic of local minima.",
+      "key_concepts": [
+        "local minima",
+        "negative gradient",
+        "random steps"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Compare and contrast SGD with Gradient Descent in terms of their computational efficiency and scalability.",
+      "model_answer": "SGD is computationally more efficient and scalable for large datasets because it uses only a single data point to calculate the gradient at each step. In contrast, Gradient Descent calculates the gradient using the entire dataset, which can be computationally expensive and less scalable. SGD's efficiency and scalability make it a preferred choice for training large-scale machine learning models, especially in the context of deep learning.",
+      "key_concepts": [
+        "computational efficiency",
+        "scalability",
+        "large datasets"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Discuss the potential drawbacks of using SGD and propose strategies to mitigate them.",
+      "model_answer": "Potential drawbacks of SGD include the risk of oscillations and not converging to the global minimum, especially in complex landscapes with many local minima. To mitigate these issues, strategies such as adjusting the learning rate dynamically, using momentum, or employing more sophisticated optimization techniques like Adam can be employed. These strategies help in stabilizing the training process and improving convergence to a better solution.",
+      "key_concepts": [
+        "oscillations",
+        "global minimum",
+        "learning rate",
+        "momentum",
+        "Adam"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Stochastic Gradient Descent (SGD)",
+      "back": "A variant of gradient descent that uses a single training example to calculate the gradient at each step, making it computationally more efficient and scalable for large datasets. The update rule is $\theta_{t+1} = \theta_t - \\eta \nabla_{\theta} L(\theta; x^{(i)}, y^{(i)})$, where $\\eta$ is the learning rate and $L(\theta; x^{(i)}, y^{(i)})$ is the loss function evaluated at a single data point.",
+      "hint": "Think of SGD as a 'greedy' approach that takes small, random steps."
+    },
+    {
+      "id": "fc_2",
+      "front": "Loss Function",
+      "back": "A function that measures the discrepancy between the predicted output and the true output of a model. In the context of SGD, the loss function is evaluated at a single data point to calculate the gradient.",
+      "hint": "Remember that the loss function quantifies the error."
+    },
+    {
+      "id": "fc_3",
+      "front": "Learning Rate ($\\eta$)",
+      "back": "A hyperparameter that controls the size of the steps taken during the optimization process. A smaller learning rate means smaller steps, while a larger learning rate means larger steps. Properly setting the learning rate is crucial for the convergence of SGD.",
+      "hint": "Think of the learning rate as the 'speed' of the optimization process."
+    },
+    {
+      "id": "fc_4",
+      "front": "Gradient",
+      "back": "The vector of partial derivatives of the loss function with respect to the model parameters. In SGD, the gradient is calculated using a single data point, making it an approximation of the true gradient.",
+      "hint": "The gradient points in the direction of the steepest ascent of the loss function."
+    },
+    {
+      "id": "fc_5",
+      "front": "Local Minimum",
+      "back": "A point in the loss landscape where the gradient is zero, and the function value is lower than at neighboring points. SGD can struggle to find the global minimum because it may get stuck in a local minimum, especially in complex landscapes with many local minima.",
+      "hint": "Local minima are like 'valleys' in the loss landscape."
+    }
+  ],
+  "topic_id": "loss_functions_&_optimizers"
+}

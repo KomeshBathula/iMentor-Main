@@ -1,0 +1,151 @@
+{
+  "subtopic_id": "dimensionality_reduction",
+  "subtopic_name": "Dimensionality reduction",
+  "topic_name": "Principal Component Analysis",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary goal of dimensionality reduction in machine learning?",
+      "options": [
+        "A) To increase the number of features for better model accuracy.",
+        "B) To reduce the number of features and improve model performance.",
+        "C) To enhance the complexity of the model.",
+        "D) To increase the computational time for better results."
+      ],
+      "correct_option": "B",
+      "explanation": "Dimensionality reduction aims to reduce the number of features while retaining the most important information, which can improve model performance and reduce computational complexity.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a key step in performing Principal Component Analysis (PCA)?",
+      "options": [
+        "A) Calculating the mean of the dataset.",
+        "B) Finding the eigenvalues and eigenvectors of the covariance matrix.",
+        "C) Increasing the number of features.",
+        "D) Reducing the number of samples in the dataset."
+      ],
+      "correct_option": "B",
+      "explanation": "PCA involves calculating the covariance matrix of the data and finding its eigenvalues and eigenvectors to identify the principal components.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In PCA, what does the term 'principal component' refer to?",
+      "options": [
+        "A) The original feature with the highest variance.",
+        "B) The eigenvector corresponding to the largest eigenvalue.",
+        "C) The smallest eigenvalue of the covariance matrix.",
+        "D) The mean value of the dataset."
+      ],
+      "correct_option": "B",
+      "explanation": "A principal component is the eigenvector corresponding to the largest eigenvalue of the covariance matrix, which captures the most variance in the data.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Why is it important to normalize the data before performing PCA?",
+      "options": [
+        "A) To increase the number of features.",
+        "B) To ensure that each feature contributes equally to the variance calculation.",
+        "C) To reduce the number of samples.",
+        "D) To enhance the complexity of the model."
+      ],
+      "correct_option": "B",
+      "explanation": "Normalization ensures that each feature contributes equally to the variance calculation, which is crucial for PCA to identify the principal components accurately.",
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following scenarios would benefit most from dimensionality reduction?",
+      "options": [
+        "A) A dataset with a small number of features and a large number of samples.",
+        "B) A dataset with a large number of features and a small number of samples.",
+        "C) A dataset with a small number of features and a small number of samples.",
+        "D) A dataset with a large number of samples and a large number of features."
+      ],
+      "correct_option": "D",
+      "explanation": "Dimensionality reduction is particularly useful when dealing with a large number of features and a large number of samples, as it can help in reducing the complexity and improving model performance.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain how PCA helps in reducing the dimensionality of a dataset.",
+      "model_answer": "PCA reduces the dimensionality of a dataset by transforming the original features into a new set of orthogonal features (principal components) that capture the most variance in the data. This transformation is achieved by calculating the covariance matrix, finding its eigenvalues and eigenvectors, and selecting the top components. By retaining only the principal components that capture the most variance, PCA reduces the number of features while preserving the most important information, which can improve model performance and reduce computational complexity.",
+      "key_concepts": [
+        "covariance matrix",
+        "eigenvalues",
+        "eigenvectors",
+        "principal components"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the importance of selecting the right number of principal components in PCA.",
+      "model_answer": "Selecting the right number of principal components in PCA is crucial because it determines the trade-off between retaining as much variance as possible and reducing the dimensionality of the data. Choosing too many components can lead to overfitting, while choosing too few can result in loss of important information. A common approach is to select the number of components that explain a certain percentage of the total variance, often around 95%. This ensures that the model retains most of the relevant information while reducing the dimensionality, which can improve both model performance and computational efficiency.",
+      "key_concepts": [
+        "variance retention",
+        "overfitting",
+        "computational efficiency"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Compare PCA with other dimensionality reduction techniques such as t-SNE and autoencoders.",
+      "model_answer": "PCA, t-SNE, and autoencoders are all techniques used for dimensionality reduction, but they differ in their approach and application. PCA is a linear method that aims to find the principal components that capture the most variance in the data. It is computationally efficient and suitable for large datasets. t-SNE, on the other hand, is a nonlinear method that focuses on preserving the local structure of the data, making it more effective for visualizing high-dimensional data in a 2D or 3D space. Autoencoders are neural network-based methods that learn to reconstruct the input data, effectively reducing the dimensionality by encoding the data into a lower-dimensional latent space. Each technique has its strengths and is suited to different types of data and tasks.",
+      "key_concepts": [
+        "PCA",
+        "t-SNE",
+        "autoencoders",
+        "linear vs. nonlinear methods"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Dimensionality Reduction",
+      "back": "A technique that simplifies complex data by reducing the number of variables under consideration, improving model performance and reducing computational complexity. It involves transforming the original data into a lower-dimensional space using principal components that capture the most variance in the data.",
+      "hint": "Think of it as compressing data without losing important information."
+    },
+    {
+      "id": "fc_2",
+      "front": "Principal Component",
+      "back": "An eigenvector corresponding to the largest eigenvalue of the covariance matrix, which captures the most variance in the data. Principal components are used in PCA to reduce the dimensionality of the data.",
+      "hint": "The most important feature that retains the most information."
+    },
+    {
+      "id": "fc_3",
+      "front": "Covariance Matrix",
+      "back": "A matrix that shows the covariance between each pair of features in the dataset. It is used in PCA to identify the principal components that capture the most variance in the data.",
+      "hint": "Measures how much two variables vary together."
+    },
+    {
+      "id": "fc_4",
+      "front": "Eigenvalues and Eigenvectors",
+      "back": "Eigenvalues represent the variance along the principal components, and eigenvectors represent the direction of the principal components. They are used in PCA to identify the principal components that capture the most variance in the data.",
+      "hint": "Key to understanding PCA."
+    },
+    {
+      "id": "fc_5",
+      "front": "Variance Retention",
+      "back": "The percentage of the total variance in the data that is retained by the selected principal components. Choosing the right number of components is crucial to balance between retaining important information and reducing dimensionality.",
+      "hint": "Balance between information and simplicity."
+    }
+  ],
+  "topic_id": "principal_component_analysis"
+}

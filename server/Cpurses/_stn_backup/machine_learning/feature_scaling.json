@@ -1,0 +1,21 @@
+{
+  "concept": "Feature scaling is the process of standardizing the range of independent variables or features of data. It is a core concept in machine learning that ensures all features contribute equally to the model’s output, preventing certain features from dominating due to their scale.",
+  "key_points": [
+    "Normalization scales the features to a range of [0, 1].",
+    "Standardization transforms features to have zero mean and unit variance.",
+    "Feature scaling is crucial for distance-based algorithms like K-Nearest Neighbors and Support Vector Machines.",
+    "It improves the convergence speed of iterative algorithms."
+  ],
+  "math": "$x' = \\frac{x - \\min(x)}{\\max(x) - \\min(x)}$ for normalization; $z = \\frac{x - \\mu}{\\sigma}$ for standardization, where $\\mu$ is the mean and $\\sigma$ is the standard deviation.",
+  "worked_example": "Consider a dataset with two features: Age (ranging from 20 to 80) and Income (ranging from 20,000 to 200,000). After normalization, Age and Income will both range from 0 to 1. For standardization, Age and Income will have zero mean and unit variance.",
+  "misconceptions": [
+    "Feature scaling is only necessary for linear models.",
+    "All machine learning models require feature scaling."
+  ],
+  "teaching_context": "Feature scaling is a fundamental concept that ensures all features in a dataset are on a similar scale, which is crucial for many machine learning algorithms. It helps in improving the performance and convergence of models, especially those that rely on distance measures. Since there are no prerequisites for this topic, we can start by understanding why scaling is necessary. For example, if one feature has a much larger scale than others, it can dominate the model's output, leading to poor performance. Normalization and standardization are two common methods to scale features. Normalization scales the features to a range of [0, 1], while standardization transforms them to have zero mean and unit variance. Both methods are essential for ensuring that all features contribute equally to the model's output. In real-world applications, feature scaling is often used in data preprocessing pipelines to prepare data for machine learning models. This concept is core and must be understood thoroughly to build a strong foundation in machine learning.",
+  "course": "Machine Learning",
+  "topic_id": "data_representation_&_preprocessing",
+  "topic_name": "Data Representation & Preprocessing",
+  "subtopic_id": "feature_scaling",
+  "subtopic_name": "Feature scaling"
+}

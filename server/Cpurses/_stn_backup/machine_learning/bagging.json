@@ -1,0 +1,21 @@
+{
+  "concept": "Bagging, or Bootstrap Aggregating, is a technique used in ensemble learning to reduce variance and improve the accuracy of predictive models by averaging the results of multiple models trained on different subsets of the data.",
+  "key_points": [
+    "Bootstrap sampling is used to create multiple subsets of the original data.",
+    "Each subset is used to train a separate model.",
+    "The final prediction is made by averaging the predictions of all the models.",
+    "This process reduces the variance of the model and improves its stability."
+  ],
+  "math": "",
+  "worked_example": "Consider a dataset with 100 observations. We create 10 bootstrap samples, each of size 100, by randomly selecting with replacement. For each sample, we train a decision tree model. After training, we use each tree to predict the target variable for a new observation. The final prediction is the average of the predictions from all 10 trees.",
+  "misconceptions": [
+    "Bagging combines models by averaging their parameters, not their predictions.",
+    "Bagging does not reduce bias; it reduces variance."
+  ],
+  "teaching_context": "Bagging is a fundamental technique in ensemble learning that helps in reducing the variance of predictive models. It builds on the concept of bootstrap sampling, where multiple subsets of the data are created by randomly selecting with replacement. Each subset is then used to train a separate model, typically a decision tree. The final prediction is made by averaging the predictions of all the models. This process is particularly useful in improving the stability and accuracy of models, especially when dealing with noisy or complex data. Since there are no prerequisites for this concept, we can focus on building intuition through examples and visualizations. For instance, we can use a simple dataset to demonstrate how different subsets can lead to different models, and how averaging their predictions leads to a more stable and accurate result. This technique is widely applicable in various fields, from finance to healthcare, where predictive models need to be robust and reliable.",
+  "course": "Machine Learning",
+  "topic_id": "random_forests",
+  "topic_name": "Random Forests",
+  "subtopic_id": "bagging",
+  "subtopic_name": "Bagging"
+}

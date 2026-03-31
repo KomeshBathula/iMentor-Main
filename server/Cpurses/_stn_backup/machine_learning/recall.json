@@ -1,0 +1,21 @@
+{
+  "concept": "Recall is a measure of a model's ability to find all the relevant cases within a dataset. It is defined as the ratio of true positive predictions to the total number of actual positives.",
+  "key_points": [
+    "Recall is the proportion of actual positives that are correctly identified.",
+    "It is calculated as $\\text{Recall} = \\frac{\\text{True Positives}}{\\text{True Positives} + \\text{False Negatives}}$.",
+    "Recall focuses on the model's ability to avoid missing any important cases.",
+    "It is often used in conjunction with precision to evaluate model performance."
+  ],
+  "math": "$\\text{Recall} = \\frac{\\text{True Positives}}{\\text{True Positives} + \\text{False Negatives}}$",
+  "worked_example": "Consider a dataset of 100 emails, where 20 are spam. A model predicts 15 emails as spam, out of which 10 are actually spam. The recall would be $\\text{Recall} = \\frac{10}{10 + (20 - 10)} = 0.5$.",
+  "misconceptions": [
+    "Recall is the same as precision, which is incorrect. Precision focuses on the accuracy of positive predictions, while recall focuses on the ability to find all relevant cases.",
+    "Recall is only concerned with true positives, which is misleading. Recall also takes into account false negatives."
+  ],
+  "teaching_context": "Recall is a crucial performance metric in machine learning, especially in scenarios where missing important cases (false negatives) is undesirable. Since no prerequisites are identified, we can start by building an intuitive understanding of what recall means. Imagine a scenario where a model is used to detect spam emails. If the model misses some spam emails (false negatives), its recall would be lower. Conversely, if the model correctly identifies most of the spam emails, its recall would be higher. Mathematically, recall is calculated as the ratio of true positives to the sum of true positives and false negatives. This metric is particularly useful in applications such as medical diagnosis, where missing a positive case (a patient with a disease) can have severe consequences. By understanding recall, students can better evaluate the effectiveness of their models in identifying relevant cases, ensuring that no important information is overlooked.",
+  "course": "Machine Learning",
+  "topic_id": "performance_metrics",
+  "topic_name": "Performance Metrics",
+  "subtopic_id": "recall",
+  "subtopic_name": "recall"
+}

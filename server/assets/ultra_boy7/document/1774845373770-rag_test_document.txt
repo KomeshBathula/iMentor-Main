@@ -1,0 +1,29 @@
+# Introduction to Quantum Computing for Beginners
+
+## What is Quantum Computing?
+Quantum computing is a type of computation that harnesses quantum mechanical phenomena such as superposition, entanglement, and interference. Unlike classical computers that use bits (0 or 1), quantum computers use quantum bits or qubits that can exist in multiple states simultaneously.
+
+## Key Concepts
+
+### Superposition
+A qubit can be in a state of 0, 1, or any quantum superposition of these states. This means that a quantum computer with n qubits can represent 2^n states simultaneously, giving it exponential processing power for certain problems.
+
+### Entanglement
+When two qubits become entangled, the state of one qubit is directly correlated with the state of the other, regardless of the distance between them. Einstein famously called this "spooky action at a distance." Entanglement is crucial for quantum algorithms like quantum teleportation and superdense coding.
+
+### Quantum Gates
+Quantum gates are the basic building blocks of quantum circuits. Common gates include the Hadamard gate (H), which creates superposition, the CNOT gate, which creates entanglement, and the Pauli-X gate, which flips a qubit state.
+
+## Applications
+Quantum computing has potential applications in:
+- Drug discovery and molecular simulation
+- Cryptography and code breaking (Shor's algorithm)
+- Optimization problems (Grover's algorithm)
+- Machine learning and AI acceleration
+- Financial modeling and risk analysis
+
+## Current Challenges
+The main challenges facing quantum computing include decoherence (loss of quantum state), error correction overhead, and the difficulty of scaling up qubit count while maintaining coherence. Current quantum computers from IBM, Google, and others operate with 50-1000+ qubits but require extensive error correction.
+
+## The Bloch Sphere
+The Bloch sphere is a geometrical representation of the pure state space of a two-level quantum mechanical system (qubit). Any pure state |ψ⟩ of a qubit can be written as |ψ⟩ = cos(θ/2)|0⟩ + e^(iφ)sin(θ/2)|1⟩, where θ and φ are the polar and azimuthal angles on the Bloch sphere respectively.

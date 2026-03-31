@@ -1,0 +1,149 @@
+{
+  "subtopic_id": "normalization",
+  "subtopic_name": "normalization",
+  "topic_name": "Data Representation & Preprocessing",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary purpose of normalization in machine learning?",
+      "options": [
+        "A) To ensure all features contribute equally to the model’s output.",
+        "B) To increase the computational complexity of the model.",
+        "C) To reduce the number of features in the dataset.",
+        "D) To enhance the visual appeal of the data visualization."
+      ],
+      "correct_option": "A",
+      "explanation": "Normalization ensures that each feature contributes equally to the model’s output, which is crucial for algorithms that rely on distance measures, such as k-Nearest Neighbors and Support Vector Machines.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which of the following is a benefit of normalizing data in machine learning?",
+      "options": [
+        "A) It can improve the performance of models that rely on distance measures.",
+        "B) It can increase the bias in the model’s predictions.",
+        "C) It can reduce the accuracy of the model.",
+        "D) It can make the data more difficult to visualize."
+      ],
+      "correct_option": "A",
+      "explanation": "Normalization can improve the performance of models that rely on distance measures, such as k-Nearest Neighbors and Support Vector Machines, by ensuring that each feature contributes equally to the model’s output.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_3",
+      "question": "Which normalization technique scales the data to have a unit norm?",
+      "options": [
+        "A) Min-Max Scaling",
+        "B) Z-Score Standardization",
+        "C) L1 Normalization",
+        "D) L2 Normalization"
+      ],
+      "correct_option": "D",
+      "explanation": "L2 normalization scales the data to have a unit norm, which is particularly useful for algorithms that rely on distance measures.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Why is normalization important for algorithms like Support Vector Machines?",
+      "options": [
+        "A) It ensures that the model’s predictions are always positive.",
+        "B) It helps in avoiding biases that might arise from the scale of the features.",
+        "C) It increases the computational complexity of the model.",
+        "D) It reduces the number of support vectors needed."
+      ],
+      "correct_option": "B",
+      "explanation": "Normalization helps in avoiding biases that might arise from the scale of the features, which is crucial for algorithms like Support Vector Machines.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_5",
+      "question": "Which of the following is a key difference between Min-Max Scaling and L2 Normalization?",
+      "options": [
+        "A) Min-Max Scaling scales the data to a fixed range, while L2 Normalization scales the data to have a unit norm.",
+        "B) Min-Max Scaling is only used for categorical data, while L2 Normalization is for numerical data.",
+        "C) Min-Max Scaling is computationally more expensive, while L2 Normalization is faster.",
+        "D) Min-Max Scaling is less sensitive to outliers, while L2 Normalization is more sensitive."
+      ],
+      "correct_option": "A",
+      "explanation": "Min-Max Scaling scales the data to a fixed range, while L2 Normalization scales the data to have a unit norm, which is particularly useful for algorithms that rely on distance measures.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the importance of normalization in the context of Support Vector Machines (SVMs).",
+      "model_answer": "Normalization is crucial for SVMs because it helps in avoiding biases that might arise from the scale of the features. SVMs rely on distance measures to find the optimal hyperplane, and normalization ensures that each feature contributes equally to the model’s output, improving the performance and stability of the SVM.",
+      "key_concepts": [
+        "Support Vector Machines",
+        "Feature scaling",
+        "Distance measures"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Compare and contrast Min-Max Scaling and L2 Normalization in terms of their applications and advantages.",
+      "model_answer": "Min-Max Scaling is used to scale the data to a fixed range, which is particularly useful when the range of the data is known or when the data contains outliers. On the other hand, L2 Normalization scales the data to have a unit norm, which is particularly useful for algorithms that rely on distance measures. Both techniques have their advantages, but L2 Normalization is often preferred for its simplicity and effectiveness in avoiding biases.",
+      "key_concepts": [
+        "Min-Max Scaling",
+        "L2 Normalization",
+        "Feature scaling"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    },
+    {
+      "id": "sa_3",
+      "question": "Design a scenario where normalization would be particularly important and explain why.",
+      "model_answer": "Normalization would be particularly important in a scenario where a machine learning model is being used for image recognition. In this case, the pixel values of the images need to be standardized to improve the performance of the model. Normalization ensures that each pixel contributes equally to the model’s output, which is crucial for distance-based algorithms like k-Nearest Neighbors and Support Vector Machines.",
+      "key_concepts": [
+        "Image recognition",
+        "Normalization",
+        "Feature scaling"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Normalization",
+      "back": "A process of scaling the data to have a unit norm, ensuring that each feature contributes equally to the model’s output, which is particularly important for algorithms that rely on distance measures.",
+      "hint": "Think of it as making all features 'equal' in terms of their impact on the model."
+    },
+    {
+      "id": "fc_2",
+      "front": "L2 Normalization",
+      "back": "A type of normalization that scales the data to have a unit norm, often used in algorithms that rely on distance measures to ensure that each feature contributes equally to the model’s output.",
+      "hint": "Useful for maintaining numerical stability."
+    },
+    {
+      "id": "fc_3",
+      "front": "Min-Max Scaling",
+      "back": "A type of normalization that scales the data to a fixed range, often used when the range of the data is known or when the data contains outliers.",
+      "hint": "Useful for handling outliers."
+    },
+    {
+      "id": "fc_4",
+      "front": "Feature Scaling",
+      "back": "A broader term that encompasses various techniques to scale the data, including Min-Max Scaling and L2 Normalization, to ensure that each feature contributes equally to the model’s output.",
+      "hint": "Think of it as preparing the data for the model."
+    },
+    {
+      "id": "fc_5",
+      "front": "Distance Measures",
+      "back": "Quantitative measures of the difference between two points, often used in algorithms like k-Nearest Neighbors and Support Vector Machines to find the optimal hyperplane.",
+      "hint": "Key to understanding how models make decisions."
+    }
+  ],
+  "topic_id": "data_representation_&_preprocessing"
+}

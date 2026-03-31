@@ -1,0 +1,147 @@
+{
+  "subtopic_id": "faults",
+  "subtopic_name": "faults",
+  "topic_name": "Forecasting & Anomaly Detection",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary purpose of forecasting in the context of anomaly detection?",
+      "options": [
+        "A) To predict future trends in data",
+        "B) To identify outliers in the data",
+        "C) To classify data into different categories",
+        "D) To reduce the dimensionality of the data"
+      ],
+      "correct_option": "B",
+      "explanation": "Forecasting is used to identify outliers or anomalies in the data, which can then be flagged for further investigation.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which method is commonly used for forecasting in time series data?",
+      "options": [
+        "A) Linear regression",
+        "B) Decision trees",
+        "C) Random forests",
+        "D) ARIMA models"
+      ],
+      "correct_option": "D",
+      "explanation": "ARIMA (AutoRegressive Integrated Moving Average) models are widely used for forecasting time series data.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "In the context of anomaly detection, what does the term 'false positive' refer to?",
+      "options": [
+        "A) A correct identification of an anomaly",
+        "B) A correct identification of a normal data point",
+        "C) An incorrect identification of a normal data point as an anomaly",
+        "D) An incorrect identification of an anomaly as a normal data point"
+      ],
+      "correct_option": "C",
+      "explanation": "A false positive occurs when a normal data point is incorrectly flagged as an anomaly.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following is a key challenge in forecasting and anomaly detection?",
+      "options": [
+        "A) Ensuring the data is perfectly clean",
+        "B) Handling the curse of dimensionality",
+        "C) Dealing with non-stationary data",
+        "D) Avoiding overfitting in the model"
+      ],
+      "correct_option": "C",
+      "explanation": "Non-stationary data can pose a significant challenge in forecasting and anomaly detection because the statistical properties of the data change over time.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_5",
+      "question": "What is the primary reason for using ensemble methods in forecasting and anomaly detection?",
+      "options": [
+        "A) To increase the computational complexity of the model",
+        "B) To reduce the variance of the model predictions",
+        "C) To ensure the model is linear",
+        "D) To make the model more interpretable"
+      ],
+      "correct_option": "B",
+      "explanation": "Ensemble methods, such as random forests, are used to reduce the variance of model predictions, leading to more robust and accurate forecasts.",
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between a 'true positive' and a 'false positive' in the context of anomaly detection.",
+      "model_answer": "A true positive occurs when an actual anomaly is correctly identified, while a false positive occurs when a normal data point is incorrectly flagged as an anomaly. True positives are desirable as they help in identifying real issues, whereas false positives can lead to unnecessary investigations and resource wastage.",
+      "key_concepts": [
+        "true positive",
+        "false positive"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Discuss the importance of choosing the right forecasting model for anomaly detection.",
+      "model_answer": "Choosing the right forecasting model is crucial for effective anomaly detection. Different models have different strengths and weaknesses, and the choice should be based on the characteristics of the data, such as seasonality, trend, and noise. A model that accurately captures these characteristics will provide better forecasts and more reliable anomaly detection.",
+      "key_concepts": [
+        "forecasting model",
+        "anomaly detection"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "sa_3",
+      "question": "How can you improve the performance of an anomaly detection system in a non-stationary environment?",
+      "model_answer": "Improving the performance of an anomaly detection system in a non-stationary environment can be achieved by using adaptive models that can dynamically adjust to changes in the data. Techniques such as online learning, retraining the model periodically, and incorporating external factors that influence the data can help in maintaining the accuracy of the system. Additionally, using ensemble methods can also help in reducing the variance and improving the robustness of the model.",
+      "key_concepts": [
+        "non-stationary",
+        "adaptive models",
+        "online learning"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Anomaly Detection",
+      "back": "The process of identifying unusual patterns or outliers in data that do not conform to expected behavior. Techniques include statistical methods, machine learning models, and domain-specific knowledge.",
+      "hint": "Think of it as finding the 'odd one out' in a dataset."
+    },
+    {
+      "id": "fc_2",
+      "front": "False Positive",
+      "back": "A situation where a normal data point is incorrectly identified as an anomaly. This can lead to unnecessary investigations and resource wastage.",
+      "hint": "It's like a false alarm in a security system."
+    },
+    {
+      "id": "fc_3",
+      "front": "ARIMA Model",
+      "back": "A statistical model that uses past values to predict future values in a time series. It combines three components: AutoRegressive (AR), Integrated (I), and Moving Average (MA) models.",
+      "hint": "Think of it as predicting the future based on past trends."
+    },
+    {
+      "id": "fc_4",
+      "front": "Non-Stationary Data",
+      "back": "Data whose statistical properties, such as mean and variance, change over time. This makes forecasting and anomaly detection challenging.",
+      "hint": "It's like trying to predict weather patterns without knowing if the climate is changing."
+    },
+    {
+      "id": "fc_5",
+      "front": "Ensemble Methods",
+      "back": "A technique that combines multiple models to improve the overall performance. Common methods include random forests, bagging, and boosting.",
+      "hint": "It's like getting a group of experts to make a decision together."
+    }
+  ],
+  "topic_id": "forecasting_&_anomaly_detection"
+}

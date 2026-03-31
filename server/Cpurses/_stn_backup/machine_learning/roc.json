@@ -1,0 +1,21 @@
+{
+  "concept": "ROC stands for Receiver Operating Characteristic, a graphical representation of the performance of a binary classifier system as its discrimination threshold is varied. It plots the True Positive Rate (TPR) against the False Positive Rate (FPR) at various threshold settings.",
+  "key_points": [
+    "ROC curves visualize the trade-off between TPR and FPR.",
+    "The area under the ROC curve (AUC) is a measure of the classifier's overall performance.",
+    "The point (0,0) represents a random classifier, while (0,1) represents a perfect classifier.",
+    "The closer the ROC curve is to the top-left corner, the better the classifier."
+  ],
+  "math": "\\text{TPR} = \\frac{TP}{TP + FN}, \\quad \\text{FPR} = \\frac{FP}{FP + TN}",
+  "worked_example": "Consider a binary classifier that predicts whether a patient has a disease. At a certain threshold, the classifier predicts 100 true positives and 20 false positives, while 80 true negatives and 10 false negatives are observed. The TPR is \\frac{100}{100 + 10} = 0.91 and the FPR is \\frac{20}{20 + 80} = 0.20. Plotting these on the ROC curve gives the point (0.20, 0.91).",
+  "misconceptions": [
+    "ROC curves show the performance of a single threshold, not the entire range of thresholds.",
+    "A high AUC always indicates a perfect classifier."
+  ],
+  "teaching_context": "ROC curves are a powerful tool for evaluating the performance of binary classifiers. They help us understand how well a classifier can distinguish between classes at different thresholds. Since there are no prerequisites for this topic, we can start by building an intuitive understanding of what ROC curves represent. Imagine you have a test to diagnose a disease. At one extreme, you might diagnose everyone as having the disease, which would give you a high true positive rate (TPR) but also a high false positive rate (FPR). At the other extreme, you might diagnose no one as having the disease, which would give you a low TPR and a low FPR. The ROC curve shows all the possible combinations of TPR and FPR as the threshold for diagnosing the disease is varied. The closer the ROC curve is to the top-left corner, the better the classifier is at distinguishing between the two classes. The area under the ROC curve (AUC) is a single number that summarizes the overall performance of the classifier. An AUC of 1.0 indicates a perfect classifier, while an AUC of 0.5 indicates a classifier that performs no better than random guessing. In real-world applications, ROC curves are used to compare different classifiers, choose the best threshold for a classifier, and understand the trade-offs between sensitivity and specificity.",
+  "course": "Machine Learning",
+  "topic_id": "performance_metrics",
+  "topic_name": "Performance Metrics",
+  "subtopic_id": "roc",
+  "subtopic_name": "ROC"
+}

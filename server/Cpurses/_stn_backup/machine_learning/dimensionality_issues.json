@@ -1,0 +1,21 @@
+{
+  "concept": "Dimensionality issues in Machine Learning refer to the challenges and problems that arise when dealing with high-dimensional data, where the number of features (dimensions) is large relative to the number of observations.",
+  "key_points": [
+    "High-dimensional data can lead to overfitting, where the model learns the noise in the data rather than the underlying pattern.",
+    "The curse of dimensionality implies that as the number of dimensions increases, the volume of the space increases so rapidly that the available data become sparse, making it difficult to estimate the underlying distribution accurately.",
+    "Dimensionality reduction techniques can help mitigate these issues by reducing the number of random variables under consideration, while retaining as much information as possible.",
+    "Feature selection is a subset of dimensionality reduction techniques that specifically aims to identify and select the most relevant features for the model."
+  ],
+  "math": "",
+  "worked_example": "",
+  "misconceptions": [
+    "Increasing the number of features always improves model performance.",
+    "Dimensionality issues only affect classification tasks, not regression tasks."
+  ],
+  "teaching_context": "Dimensionality issues are a critical aspect of Machine Learning, especially when dealing with high-dimensional data. These issues arise because as the number of features increases, the complexity of the model also increases, which can lead to overfitting. Overfitting occurs when the model learns the noise in the data rather than the underlying pattern, resulting in poor generalization to new, unseen data. The curse of dimensionality further exacerbates this problem by making it difficult to estimate the underlying distribution accurately due to the sparsity of data in high-dimensional spaces. To address these challenges, various dimensionality reduction techniques are employed, including feature selection, which specifically aims to identify and retain the most relevant features. This concept builds on the understanding of model complexity and overfitting, and it is crucial for developing robust and generalizable models. In real-world applications, such as image recognition or genomic data analysis, dealing with high-dimensional data is common, and understanding dimensionality issues is essential for effective model design and evaluation.",
+  "course": "Machine Learning",
+  "topic_id": "feature_selection",
+  "topic_name": "Feature Selection",
+  "subtopic_id": "dimensionality_issues",
+  "subtopic_name": "Dimensionality issues"
+}

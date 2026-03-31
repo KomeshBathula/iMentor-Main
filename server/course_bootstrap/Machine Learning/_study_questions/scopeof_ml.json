@@ -1,0 +1,151 @@
+{
+  "subtopic_id": "scopeof_ml",
+  "subtopic_name": "scopeof ML",
+  "topic_name": "Introduction to Machine Learning",
+  "course": "Machine Learning",
+  "mcq": [
+    {
+      "id": "mcq_1",
+      "question": "What is the primary goal of Machine Learning?",
+      "options": [
+        "A) To create algorithms that can learn from data and improve performance.",
+        "B) To write explicit programming instructions for machines.",
+        "C) To automate data entry tasks.",
+        "D) To design user interfaces for software applications."
+      ],
+      "correct_option": "A",
+      "explanation": "The primary goal of Machine Learning is to develop algorithms that can learn from data and improve their performance over time, which aligns with the core concept of the field.",
+      "difficulty": "beginner",
+      "bloom_level": "remember"
+    },
+    {
+      "id": "mcq_2",
+      "question": "Which type of Machine Learning involves training a model on labeled data to make predictions?",
+      "options": [
+        "A) Supervised Learning",
+        "B) Unsupervised Learning",
+        "C) Reinforcement Learning",
+        "D) Deep Learning"
+      ],
+      "correct_option": "A",
+      "explanation": "Supervised Learning involves training a model on labeled data to make predictions, which is a core concept in the field.",
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "mcq_3",
+      "question": "What is the main difference between supervised and unsupervised learning?",
+      "options": [
+        "A) Supervised learning requires labeled data, while unsupervised learning does not.",
+        "B) Supervised learning is used for classification, while unsupervised learning is for regression.",
+        "C) Supervised learning is easier to implement, while unsupervised learning is more complex.",
+        "D) Supervised learning is for reinforcement tasks, while unsupervised learning is for prediction tasks."
+      ],
+      "correct_option": "A",
+      "explanation": "The main difference between supervised and unsupervised learning is that supervised learning requires labeled data, while unsupervised learning does not, which is a fundamental distinction in the field.",
+      "difficulty": "intermediate",
+      "bloom_level": "understand"
+    },
+    {
+      "id": "mcq_4",
+      "question": "Which of the following is NOT a type of Machine Learning?",
+      "options": [
+        "A) Supervised Learning",
+        "B) Unsupervised Learning",
+        "C) Reinforcement Learning",
+        "D) Artificial Intelligence"
+      ],
+      "correct_option": "D",
+      "explanation": "Artificial Intelligence is a broader field that includes Machine Learning, but it is not a specific type of Machine Learning.",
+      "difficulty": "advanced",
+      "bloom_level": "evaluate"
+    },
+    {
+      "id": "mcq_5",
+      "question": "In which scenario would you use reinforcement learning?",
+      "options": [
+        "A) When you need to classify images into categories.",
+        "B) When you want to cluster similar data points together.",
+        "C) When you want to train a model to make decisions in an environment to maximize a reward.",
+        "D) When you need to predict future stock prices based on historical data."
+      ],
+      "correct_option": "C",
+      "explanation": "Reinforcement learning is used to train models to make decisions in an environment to maximize a reward, which is a key application of the technique.",
+      "difficulty": "advanced",
+      "bloom_level": "create"
+    }
+  ],
+  "short_answer": [
+    {
+      "id": "sa_1",
+      "question": "Explain the difference between supervised and unsupervised learning in your own words.",
+      "model_answer": "Supervised learning involves training a model on labeled data, where each data point is associated with a label or output. The goal is to learn a mapping from inputs to outputs. In contrast, unsupervised learning deals with unlabeled data, and the goal is to find patterns or structure in the data without any predefined labels.",
+      "key_concepts": [
+        "supervised learning",
+        "unsupervised learning"
+      ],
+      "difficulty": "intermediate",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_2",
+      "question": "Describe a real-world application of reinforcement learning.",
+      "model_answer": "A common application of reinforcement learning is in autonomous vehicles, where the vehicle learns to navigate and make decisions in real-time to maximize safety and efficiency. The vehicle receives feedback in the form of rewards or penalties based on its actions, and it learns to optimize its behavior over time.",
+      "key_concepts": [
+        "reinforcement learning",
+        "autonomous vehicles"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "apply"
+    },
+    {
+      "id": "sa_3",
+      "question": "Compare and contrast supervised and unsupervised learning in terms of their goals and methods.",
+      "model_answer": "Supervised learning aims to learn a mapping from inputs to outputs based on labeled data, while unsupervised learning seeks to discover hidden patterns or structure in the data without any predefined labels. Supervised learning typically involves classification or regression tasks, whereas unsupervised learning can involve clustering, dimensionality reduction, or anomaly detection. The methods used in supervised learning often involve training a model on labeled data, while unsupervised learning methods may involve algorithms like k-means clustering or principal component analysis.",
+      "key_concepts": [
+        "supervised learning",
+        "unsupervised learning",
+        "classification",
+        "regression",
+        "clustering",
+        "dimensionality reduction",
+        "anomaly detection"
+      ],
+      "difficulty": "advanced",
+      "bloom_level": "analyze"
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "fc_1",
+      "front": "Machine Learning",
+      "back": "A field of study that gives computers the ability to learn without being explicitly programmed. It involves developing algorithms that can learn from data and improve their performance over time.",
+      "hint": "Think of learning as a process of improvement."
+    },
+    {
+      "id": "fc_2",
+      "front": "Supervised Learning",
+      "back": "A type of Machine Learning where the model is trained on labeled data, meaning each data point is associated with a label or output. The goal is to learn a mapping from inputs to outputs.",
+      "hint": "Labels are provided for training."
+    },
+    {
+      "id": "fc_3",
+      "front": "Unsupervised Learning",
+      "back": "A type of Machine Learning where the model is trained on unlabeled data, and the goal is to find patterns or structure in the data without any predefined labels.",
+      "hint": "No labels are provided for training."
+    },
+    {
+      "id": "fc_4",
+      "front": "Reinforcement Learning",
+      "back": "A type of Machine Learning where the model learns to make decisions in an environment to maximize a reward. The model receives feedback in the form of rewards or penalties based on its actions.",
+      "hint": "Learn by doing and getting feedback."
+    },
+    {
+      "id": "fc_5",
+      "front": "Labeled Data",
+      "back": "Data that includes both the input features and the corresponding output labels. Used in supervised learning to train models.",
+      "hint": "Includes both inputs and correct outputs."
+    }
+  ],
+  "topic_id": "introduction_to_machine_learning"
+}

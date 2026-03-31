@@ -1,0 +1,35 @@
+.deep-research-container {
+    background: #0f172a;
+    color: #f1f5f9;
+}
+
+.research-sidebar {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+.search-bar-container input::placeholder {
+    color: #475569;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.research-progress-overlay {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
