@@ -36,6 +36,15 @@ const UserFeedbackSchema = new mongoose.Schema(
             enum: ['open', 'acknowledged', 'resolved', 'wont-fix'],
             default: 'open'
         },
+        // Uploaded files (screenshots / attachments)
+        attachments: [
+            {
+                filename:     { type: String },
+                originalName: { type: String },
+                mimetype:     { type: String },
+                size:         { type: Number },
+            }
+        ],
         // Admin-facing fields
         adminNote: { type: String, default: '' },
         resolvedAt: { type: Date }

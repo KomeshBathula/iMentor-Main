@@ -23,6 +23,11 @@ build/
 .env
 /server/.env
 /frontend/.env
+.env.*
+/server/.env*
+/frontend/.env*
+!/server/.env.example
+!/frontend/.env.example
 *.sqlite3
 *.pyc
 
@@ -50,6 +55,9 @@ coverage/
 .coverage
 *.cover
 *.log
+playwright-report/
+test-results/
+screenshots/
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
@@ -58,6 +66,9 @@ coverage/
 *.log
 *.bak
 *.swp
+server/uploads/
+server/assets/test3/
+nginx/certs/
 
 # Archived files (cleanup 2026-02-24)
 archive/

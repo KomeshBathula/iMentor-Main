@@ -355,7 +355,7 @@ const ROUTE_ORCHESTRATORS = {
     },
     [ROUTES.STANDARD]: {
         handler:     'agentService.processAgenticRequest',
-        maxTokens:   4096,
+        maxTokens:   800,  // was 4096 — capped for 11 tok/s GPU (800 tok ≈ 70s)
         ragEnabled:  true,
         toolsEnabled: true,
         streamingSSE: false,
@@ -363,7 +363,7 @@ const ROUTE_ORCHESTRATORS = {
     },
     [ROUTES.TOT]: {
         handler:     'totOrchestrator.processQueryWithToT_Streaming',
-        maxTokens:   8192,
+        maxTokens:   2048, // was 8192
         ragEnabled:  true,
         toolsEnabled: true,
         streamingSSE: true,
@@ -374,7 +374,7 @@ const ROUTE_ORCHESTRATORS = {
     },
     [ROUTES.REACT]: {
         handler:     'toolReactOrchestrator.processQueryWithReAct',
-        maxTokens:   8192,
+        maxTokens:   2048, // was 8192
         ragEnabled:  true,
         toolsEnabled: true,
         streamingSSE: true,
@@ -383,7 +383,7 @@ const ROUTE_ORCHESTRATORS = {
     },
     [ROUTES.WEB_SEARCH]: {
         handler:     'webSearchHandler',
-        maxTokens:   4096,
+        maxTokens:   800,  // was 4096
         ragEnabled:  false,
         toolsEnabled: true, // web_search tool
         streamingSSE: false,
@@ -392,7 +392,7 @@ const ROUTE_ORCHESTRATORS = {
     },
     [ROUTES.TUTOR]: {
         handler:     'tutorHandler',
-        maxTokens:   4096,
+        maxTokens:   600,  // was 4096 — Socratic responses should be concise
         ragEnabled:  true,
         toolsEnabled: false,
         streamingSSE: false,
@@ -401,7 +401,7 @@ const ROUTE_ORCHESTRATORS = {
     },
     [ROUTES.QUIZ]: {
         handler:     'quizHandler',
-        maxTokens:   4096,
+        maxTokens:   800,  // was 4096
         ragEnabled:  false,
         toolsEnabled: false,
         streamingSSE: false,

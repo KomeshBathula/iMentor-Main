@@ -71,6 +71,7 @@ const SkillTreeGameMap = () => {
     const [showResults, setShowResults] = useState(false);
     const [currentGameId, setCurrentGameId] = useState(initialGameId);
     const [levelLoadError, setLevelLoadError] = useState('');
+    const [questionsFetching, setQuestionsFetching] = useState(false);
 
     // Data fetching
     useEffect(() => {
@@ -404,6 +405,7 @@ const SkillTreeGameMap = () => {
     };
 
     const fetchLevelQuestions = async (level) => {
+        setQuestionsFetching(true);
         try {
             const token = localStorage.getItem('authToken');
             const payload = {
@@ -417,7 +419,7 @@ const SkillTreeGameMap = () => {
             const response = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/gamification/skill-tree/level-questions`,
                 payload,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` }, timeout: 35000 }
             );
             
             if (response.data.aiQuotaExceeded || response.data.aiGenerationFailed) {
@@ -430,10 +432,15 @@ const SkillTreeGameMap = () => {
             return null;
         } catch (error) {
             console.error('[SkillTreeGameMap] Error fetching questions:', error);
+            const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
             const resp = error.response;
-            const msg = resp?.data?.message || 'Failed to load level questions. Please try again.';
+            const msg = isTimeout
+                ? 'Question generation timed out. Please try again.'
+                : (resp?.data?.message || 'Failed to load level questions. Please try again.');
             setLevelLoadError(msg);
             return msg;
+        } finally {
+            setQuestionsFetching(false);
         }
     };
 
@@ -556,6 +563,26 @@ const SkillTreeGameMap = () => {
         );
     }
 
+    // Loading overlay while questions are being fetched for a level
+    if (playingLevel && questionsFetching) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-black flex items-center justify-center p-6">
+                <div className="text-center">
+                    <div className="relative w-24 h-24 mx-auto mb-6">
+                        <Loader2 className="w-24 h-24 text-slate-400 animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-2xl">🧠</span>
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Preparing Questions</h2>
+                    <p className="text-slate-400 mb-1">Generating fresh questions for</p>
+                    <p className="text-slate-200 font-semibold">{playingLevel.name}</p>
+                    <p className="text-slate-500 text-sm mt-4">This may take a few seconds…</p>
+                </div>
+            </div>
+        );
+    }
+
     // Playing a level
     if (playingLevel && levelQuestions.length > 0) {
         const currentQuestion = levelQuestions[currentQuestionIndex];
@@ -563,6 +590,7 @@ const SkillTreeGameMap = () => {
         if (showResults) {
             const percentage = (finalScore / levelQuestions.length) * 100;
             const earnedStars = percentage >= 90 ? 3 : percentage >= 70 ? 2 : percentage >= 50 ? 1 : 0;
+            const isNearMiss = percentage >= 40 && percentage < 50; // 40-49% — encouraging near-miss tier
             
             return (
                 <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-black flex items-center justify-center p-6">
@@ -578,6 +606,7 @@ const SkillTreeGameMap = () => {
                             className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${
                                 earnedStars >= 2 ? 'bg-gradient-to-br from-slate-300 to-slate-400' :
                                 earnedStars === 1 ? 'bg-gradient-to-br from-blue-400 to-blue-500' :
+                                isNearMiss ? 'bg-gradient-to-br from-amber-500 to-orange-500' :
                                 'bg-gradient-to-br from-gray-500 to-gray-600'
                             }`}
                         >
@@ -585,18 +614,26 @@ const SkillTreeGameMap = () => {
                                 <Trophy className="w-12 h-12 text-white" />
                             ) : earnedStars === 1 ? (
                                 <CheckCircle2 className="w-12 h-12 text-white" />
+                            ) : isNearMiss ? (
+                                <Flame className="w-12 h-12 text-white" />
                             ) : (
                                 <Target className="w-12 h-12 text-white" />
                             )}
                         </div>
 
                         <h2 className="text-3xl font-bold text-white mb-2">
-                            {earnedStars >= 2 ? 'Excellent!' : earnedStars === 1 ? 'Good Job!' : 'Keep Trying!'}
+                            {earnedStars >= 2 ? 'Excellent!' : earnedStars === 1 ? 'Good Job!' : isNearMiss ? 'So Close!' : 'Keep Trying!'}
                         </h2>
+
+                        {isNearMiss && (
+                            <p className="text-amber-300 text-sm mb-2 font-medium">
+                                Just {Math.ceil(levelQuestions.length * 0.5) - finalScore} more correct answer{Math.ceil(levelQuestions.length * 0.5) - finalScore !== 1 ? 's' : ''} to pass — you can do it!
+                            </p>
+                        )}
 
                         <p className="text-slate-400 mb-4">{playingLevel.name} Complete</p>
                         
-                        <div className="flex justify-center mb-6">
+                        <div className="flex justify-center mb-6" data-testid="stars-earned" data-stars={earnedStars}>
                             {renderStars(earnedStars, 'lg')}
                         </div>
 
@@ -609,7 +646,7 @@ const SkillTreeGameMap = () => {
                                 <span>Accuracy</span>
                                 <span className="text-white font-bold">{Math.round(percentage)}%</span>
                             </div>
-                            {playingLevel.status !== 'completed' && earnedStars > 0 && (
+                            {earnedStars > 0 && (
                                 <div className="flex justify-between text-sm text-slate-400">
                                     <span>Credits Earned</span>
                                     <span className="text-blue-300 font-bold">+{earnedStars === 3 ? 10 : earnedStars === 2 ? 8 : 5} Credits</span>
@@ -627,20 +664,32 @@ const SkillTreeGameMap = () => {
                                 Back to Map
                             </button>
                             {earnedStars === 0 ? (
-                                // No stars - show Retry button
+                                // No stars (including near-miss) - show Retry button
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         setShowResults(false);
                                         setCurrentQuestionIndex(0);
                                         setScore(0);
                                         setFinalScore(0);
                                         setSelectedAnswer(null);
+                                        setLevelLoadError('');
+                                        // Re-fetch fresh questions so retry never repeats the same set
+                                        const errorMsg = await fetchLevelQuestions(playingLevel);
+                                        if (errorMsg) {
+                                            toast(errorMsg, {
+                                                icon: '⚠️',
+                                                style: { background: '#18181b', color: '#fff', border: '1px solid #ef4444', fontWeight: '500' }
+                                            });
+                                            setPlayingLevel(null);
+                                        }
                                     }}
-                                    className="flex-1 px-6 py-3 bg-gradient-to-r from-slate-500 to-slate-600 rounded-xl font-semibold text-white"
-                                   
-                                   
+                                    className={`flex-1 px-6 py-3 rounded-xl font-semibold text-white ${
+                                        isNearMiss
+                                            ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500'
+                                            : 'bg-gradient-to-r from-slate-500 to-slate-600'
+                                    }`}
                                 >
-                                    Retry
+                                    {isNearMiss ? '🔥 Try Again' : 'Retry'}
                                 </button>
                             ) : (
                                 // At least 1 star - show Next Level button
@@ -825,6 +874,8 @@ const SkillTreeGameMap = () => {
                         <svg
                             className="absolute inset-0 w-full h-full"
                             style={{ minHeight: `${levels.length * 100 + 100}px` }}
+                            viewBox={`0 0 100 ${levels.length * 100 + 100}`}
+                            preserveAspectRatio="none"
                         >
                             <defs>
                                 <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -851,8 +902,8 @@ const SkillTreeGameMap = () => {
                                             d={levels.slice(0, visibleEnd).map((_, idx) => {
                                                 const pos = getLevelPosition(idx, levels.length);
                                                 return idx === 0
-                                                    ? `M ${pos.x}% ${pos.y}`
-                                                    : `L ${pos.x}% ${pos.y}`;
+                                                    ? `M ${pos.x} ${pos.y}`
+                                                    : `L ${pos.x} ${pos.y}`;
                                             }).join(' ')}
                                             fill="none"
                                             stroke="url(#pathGradient)"
@@ -867,8 +918,8 @@ const SkillTreeGameMap = () => {
                                                 d={levels.slice(visibleEnd - 1).map((_, i) => {
                                                     const pos = getLevelPosition(visibleEnd - 1 + i, levels.length);
                                                     return i === 0
-                                                        ? `M ${pos.x}% ${pos.y}`
-                                                        : `L ${pos.x}% ${pos.y}`;
+                                                        ? `M ${pos.x} ${pos.y}`
+                                                        : `L ${pos.x} ${pos.y}`;
                                                 }).join(' ')}
                                                 fill="none"
                                                 stroke="rgba(100, 116, 139, 0.08)"
@@ -888,8 +939,8 @@ const SkillTreeGameMap = () => {
                                     d={levels.slice(0, levels.findIndex(l => l.status !== 'completed') + 1 || levels.length).map((_, idx) => {
                                         const pos = getLevelPosition(idx, levels.length);
                                         return idx === 0
-                                            ? `M ${pos.x}% ${pos.y}`
-                                            : `L ${pos.x}% ${pos.y}`;
+                                            ? `M ${pos.x} ${pos.y}`
+                                            : `L ${pos.x} ${pos.y}`;
                                     }).join(' ')}
                                     fill="none"
                                     stroke="rgba(255, 255, 255, 0.6)"

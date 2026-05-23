@@ -1,11 +1,37 @@
 // server/routes/user.js
 const express = require('express');
 const router = express.Router();
+const path    = require('path');
+const fs      = require('fs');
+const multer  = require('multer');
 const User = require('../models/User');
 const UserFeedback = require('../models/UserFeedback');
 const { redisClient } = require('../config/redisClient');
 const log = require('../utils/logger');
 const { auditLog } = require('../utils/logger');
+
+// ─── Feedback attachment upload config ───────────────────────────────────────
+const FEEDBACK_DIR = path.join(__dirname, '../uploads/feedback');
+if (!fs.existsSync(FEEDBACK_DIR)) fs.mkdirSync(FEEDBACK_DIR, { recursive: true });
+
+const feedbackStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, FEEDBACK_DIR),
+    filename:    (_req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+    },
+});
+
+const ALLOWED_MIME = ['image/jpeg','image/png','image/gif','image/webp','image/bmp','application/pdf'];
+
+const feedbackUpload = multer({
+    storage: feedbackStorage,
+    limits:  { fileSize: 5 * 1024 * 1024, files: 3 },
+    fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIME.includes(file.mimetype)) return cb(null, true);
+        cb(new Error('Only images (jpg, png, gif, webp) and PDF files are allowed.'));
+    },
+});
 
 router.get('/profile', async (req, res) => {
     try {
@@ -73,36 +99,57 @@ router.put('/profile', async (req, res) => {
 // ─── User Product Feedback ─────────────────────────────────────────────────────
 
 /**
+ * GET /api/user/feedback/attachment/:filename
+ * Serve a previously uploaded feedback attachment (auth-gated).
+ */
+router.get('/feedback/attachment/:filename', (req, res) => {
+    const { filename } = req.params;
+    if (!/^[\w.-]+$/.test(filename)) return res.status(400).json({ message: 'Invalid filename.' });
+    const filePath = path.join(FEEDBACK_DIR, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Attachment not found.' });
+    res.sendFile(filePath);
+});
+
+/**
  * POST /api/user/feedback
  * Submit product feedback (bugs, feature requests, general comments).
+ * Accepts multipart/form-data with optional 'attachments' files (up to 3).
  */
-router.post('/feedback', async (req, res) => {
-    const {type, category, message} = req.body;
+router.post('/feedback', feedbackUpload.array('attachments', 3), async (req, res) => {
+    const { type, category, message } = req.body;
 
-        if (!message || message.trim().length < 10) {
-        return res.status(400).json({message: 'Feedback message must be at least 10 characters.' });
+    if (!message || message.trim().length < 10) {
+        return res.status(400).json({ message: 'Feedback message must be at least 10 characters.' });
     }
     if (message.trim().length > 1000) {
-        return res.status(400).json({message: 'Feedback message must be 1000 characters or fewer.' });
+        return res.status(400).json({ message: 'Feedback message must be 1000 characters or fewer.' });
     }
-        const validTypes = ['bug', 'feature', 'general'];
-        const validCategories = ['UI', 'Performance', 'Content', 'AI Quality', 'Other'];
+    const validTypes      = ['bug', 'feature', 'general'];
+    const validCategories = ['UI', 'Performance', 'Content', 'AI Quality', 'Other'];
 
-        try {
+    const attachments = (req.files || []).map(f => ({
+        filename:     f.filename,
+        originalName: f.originalname,
+        mimetype:     f.mimetype,
+        size:         f.size,
+    }));
+
+    try {
         const feedback = await UserFeedback.create({
-            userId: req.user._id,
-        type: validTypes.includes(type) ? type : 'general',
-        category: validCategories.includes(category) ? category : 'Other',
-        message: message.trim()
+            userId:      req.user._id,
+            type:        validTypes.includes(type) ? type : 'general',
+            category:    validCategories.includes(category) ? category : 'Other',
+            message:     message.trim(),
+            attachments,
         });
-        log.info('USER', `Feedback submitted by ${req.user._id}: [${feedback.type}/${feedback.category}]`);
-        return res.status(201).json({message: 'Thank you for your feedback!', id: feedback._id });
+        log.info('USER', `Feedback submitted by ${req.user._id}: [${feedback.type}/${feedback.category}] attachments=${attachments.length}`);
+        return res.status(201).json({ message: 'Thank you for your feedback!', id: feedback._id });
     } catch (err) {
         if (err.name === 'ValidationError') {
-            return res.status(400).json({message: Object.values(err.errors).map(e => e.message).join('. ') });
+            return res.status(400).json({ message: Object.values(err.errors).map(e => e.message).join('. ') });
         }
         log.error('USER', `Feedback save error: ${err.message}`);
-        return res.status(500).json({message: 'Server error. Please try again.' });
+        return res.status(500).json({ message: 'Server error. Please try again.' });
     }
 });
 

@@ -21,22 +21,27 @@ const researchCacheSchema = new mongoose.Schema({
         enum: ['HYBRID', 'ONLINE_ONLY', 'LOCAL_ONLY', 'Default', 'Adaptive', 'Fallback'],
         default: 'Default'
     },
-    sources: [{
-        title: String,
-        content: String,
-        url: String,
-        sourceType: {
-            type: String,
-            enum: ['local', 'academic', 'web']
-        },
-        credibilityScore: Number,
-        publishedDate: Date
-    }],
+    sources: {
+        type: [mongoose.Schema.Types.Mixed],
+        default: []
+    },
     summary: {
         type: String
     },
     researchReport: {
-        type: mongoose.Schema.Types.Mixed, // Stores the full JSON structure (sections, executiveSummary, etc.)
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
+    },
+    evidenceProfile: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
+    },
+    providerBreakdown: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
+    },
+    citationGraphData: {
+        type: mongoose.Schema.Types.Mixed,
         default: {}
     },
     localSourceCount: {

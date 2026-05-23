@@ -28,41 +28,77 @@ import { useUserLevel } from '../../hooks/useUserLevel.jsx';
 import FeedbackWidget from './FeedbackWidget.jsx';
 
 // ─── Text Size Control ────────────────────────────────────────────────────────
-// Four steps match common accessibility needs:
-//   Compact (13 px) · Default (15 px) · Large (17 px) · XL / low-vision (20 px)
+// Eight steps: 2 below default · default (17px) · 5 above default
 // Persisted in localStorage so the preference survives page refresh.
 
 const FONT_SIZES = [
-    { label: 'A',  size: '13px', title: 'Compact'          },
-    { label: 'A',  size: '15px', title: 'Default'           },
-    { label: 'A',  size: '17px', title: 'Large'             },
-    { label: 'A',  size: '20px', title: 'Extra large (low-vision)' },
+    { size: '13px', title: 'Compact (smallest)' },
+    { size: '15px', title: 'Small'               },
+    { size: '17px', title: 'Default'             },  // ← index 2
+    { size: '19px', title: 'Large'               },
+    { size: '21px', title: 'Larger'              },
+    { size: '23px', title: 'Extra large'         },
+    { size: '25px', title: 'Huge'                },
+    { size: '27px', title: 'Maximum'             },
 ];
-const FS_STORAGE_KEY = 'imentor-font-base';
-const FS_DEFAULT     = '15px';
+const FS_STORAGE_KEY  = 'imentor-font-base';
+const FS_DEFAULT      = '17px';
+const FS_DEFAULT_IDX  = 2;  // index of FS_DEFAULT in FONT_SIZES
 
 function applyFontSize(size) {
     document.documentElement.style.setProperty('--font-base', size);
 }
 
 function TextSizeControl() {
-    const [active, setActive] = useState(() => {
-        return localStorage.getItem(FS_STORAGE_KEY) || FS_DEFAULT;
+    const [sizeIndex, setSizeIndex] = useState(() => {
+        const saved = localStorage.getItem(FS_STORAGE_KEY);
+        // Migrate: if user had old default (15px) saved, upgrade to new default (17px)
+        if (!saved || saved === '15px') return FS_DEFAULT_IDX;
+        const idx = FONT_SIZES.findIndex(f => f.size === saved);
+        return idx !== -1 ? idx : FS_DEFAULT_IDX;
     });
 
     // Apply on mount (restores preference after page load)
     useEffect(() => {
-        applyFontSize(active);
+        applyFontSize(FONT_SIZES[sizeIndex].size);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const choose = useCallback((size) => {
-        setActive(size);
-        applyFontSize(size);
-        localStorage.setItem(FS_STORAGE_KEY, size);
+    const decrease = useCallback(() => {
+        setSizeIndex(prev => {
+            const next = Math.max(0, prev - 1);
+            applyFontSize(FONT_SIZES[next].size);
+            localStorage.setItem(FS_STORAGE_KEY, FONT_SIZES[next].size);
+            return next;
+        });
     }, []);
 
-    // Visual sizes for the four "A" buttons — static px so they don't scale with page font
-    const displaySizes = ['11px', '13px', '15px', '18px'];
+    const resetDefault = useCallback(() => {
+        setSizeIndex(FS_DEFAULT_IDX);
+        applyFontSize(FS_DEFAULT);
+        localStorage.setItem(FS_STORAGE_KEY, FS_DEFAULT);
+    }, []);
+
+    const increase = useCallback(() => {
+        setSizeIndex(prev => {
+            const next = Math.min(FONT_SIZES.length - 1, prev + 1);
+            applyFontSize(FONT_SIZES[next].size);
+            localStorage.setItem(FS_STORAGE_KEY, FONT_SIZES[next].size);
+            return next;
+        });
+    }, []);
+
+    const btnBase = {
+        lineHeight: 1,
+        padding: '4px 6px',
+        borderRadius: '3px',
+        border: '1px solid transparent',
+        background: 'transparent',
+        cursor: 'pointer',
+        transition: 'color 0.15s, background 0.15s, border-color 0.15s',
+        minWidth: '24px',
+        textAlign: 'center',
+        userSelect: 'none',
+    };
 
     return (
         <div
@@ -71,52 +107,60 @@ function TextSizeControl() {
             aria-label="Text size"
             title="Adjust text size for readability"
         >
-            {/* Type icon — purely decorative label */}
             <Type
-                size={12}
+                size={14}
                 style={{ color: 'var(--vs-text-dim)' }}
                 aria-hidden="true"
                 className="mr-1 flex-shrink-0"
             />
-            {FONT_SIZES.map(({ label, size, title }, i) => (
-                <button
-                    key={size}
-                    onClick={() => choose(size)}
-                    title={title}
-                    aria-label={`Text size: ${title}`}
-                    aria-pressed={active === size}
-                    style={{
-                        fontSize: displaySizes[i],
-                        fontWeight: active === size ? 600 : 400,
-                        /* fixed px — must NOT scale with --font-base */
-                        lineHeight: 1,
-                        padding: '4px 5px',
-                        border: active === size
-                            ? '1px solid var(--vs-border-hi)'
-                            : '1px solid transparent',
-                        borderRadius: '3px',
-                        background: active === size
-                            ? 'var(--vs-active)'
-                            : 'transparent',
-                        color: active === size
-                            ? 'var(--vs-text)'
-                            : 'var(--vs-text-dim)',
-                        cursor: 'pointer',
-                        transition: 'color 0.15s, background 0.15s, border-color 0.15s',
-                        minWidth: '22px',
-                        textAlign: 'center',
-                        userSelect: 'none',
-                    }}
-                    onMouseEnter={e => {
-                        if (active !== size) e.currentTarget.style.color = 'var(--vs-text-lo)';
-                    }}
-                    onMouseLeave={e => {
-                        if (active !== size) e.currentTarget.style.color = 'var(--vs-text-dim)';
-                    }}
-                >
-                    {label}
-                </button>
-            ))}
+            {/* Decrease */}
+            <button
+                onClick={decrease}
+                disabled={sizeIndex === 0}
+                title={sizeIndex === 0 ? 'Smallest size reached' : `Smaller — ${FONT_SIZES[sizeIndex - 1]?.title}`}
+                aria-label="Decrease text size"
+                style={{
+                    ...btnBase,
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    color: sizeIndex === 0 ? 'var(--vs-text-dim)' : 'var(--vs-text-lo)',
+                    opacity: sizeIndex === 0 ? 0.4 : 1,
+                }}
+                onMouseEnter={e => { if (sizeIndex > 0) e.currentTarget.style.color = 'var(--vs-text)'; }}
+                onMouseLeave={e => { if (sizeIndex > 0) e.currentTarget.style.color = 'var(--vs-text-lo)'; }}
+            >A</button>
+            {/* Reset to default */}
+            <button
+                onClick={resetDefault}
+                title={`Reset to default (${FONT_SIZES[FS_DEFAULT_IDX]?.title})`}
+                aria-label="Reset text size to default"
+                style={{
+                    ...btnBase,
+                    fontSize: '14px',
+                    fontWeight: sizeIndex === FS_DEFAULT_IDX ? 700 : 500,
+                    color: sizeIndex === FS_DEFAULT_IDX ? 'var(--vs-text)' : 'var(--vs-text-lo)',
+                    border: sizeIndex === FS_DEFAULT_IDX ? '1px solid var(--vs-border-hi)' : '1px solid transparent',
+                    background: sizeIndex === FS_DEFAULT_IDX ? 'var(--vs-active)' : 'transparent',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--vs-text)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = sizeIndex === FS_DEFAULT_IDX ? 'var(--vs-text)' : 'var(--vs-text-lo)'; }}
+            >A</button>
+            {/* Increase */}
+            <button
+                onClick={increase}
+                disabled={sizeIndex === FONT_SIZES.length - 1}
+                title={sizeIndex === FONT_SIZES.length - 1 ? 'Largest size reached' : `Larger — ${FONT_SIZES[sizeIndex + 1]?.title}`}
+                aria-label="Increase text size"
+                style={{
+                    ...btnBase,
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    color: sizeIndex === FONT_SIZES.length - 1 ? 'var(--vs-text-dim)' : 'var(--vs-text-lo)',
+                    opacity: sizeIndex === FONT_SIZES.length - 1 ? 0.4 : 1,
+                }}
+                onMouseEnter={e => { if (sizeIndex < FONT_SIZES.length - 1) e.currentTarget.style.color = 'var(--vs-text)'; }}
+                onMouseLeave={e => { if (sizeIndex < FONT_SIZES.length - 1) e.currentTarget.style.color = 'var(--vs-text-lo)'; }}
+            >A</button>
         </div>
     );
 }
@@ -157,7 +201,7 @@ function TopNav({
         if (orchestratorStatus.status === 'ok') {
             return (
                 <Zap
-                    size={14}
+                    size={20}
                     style={{ color: 'var(--vs-text-lo)' }}
                     title={orchestratorStatus.message}
                 />
@@ -166,7 +210,7 @@ function TopNav({
         if (orchestratorStatus.status === 'loading') {
             return (
                 <div
-                    className="animate-spin rounded-full w-3.5 h-3.5 border-t border-b"
+                    className="animate-spin rounded-full w-5 h-5 border-t border-b"
                     style={{ borderColor: 'var(--vs-text-dim)' }}
                     title="Connecting..."
                 />
@@ -174,7 +218,7 @@ function TopNav({
         }
         return (
             <ServerCrash
-                size={14}
+                size={20}
                 style={{ color: 'var(--vs-text-dim)' }}
                 title={orchestratorStatus.message}
             />
@@ -289,13 +333,15 @@ function TopNav({
                 )}
 
                 {/* Right controls */}
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-4 flex-shrink-0">
 
                     {/* Orchestrator status dot */}
                     {StatusIndicator}
 
-                    {/* ── Text size control ── placed immediately before user icon */}
-                    <TextSizeControl />
+                    {/* ── Text size control — hidden on mobile (tap targets too small) */}
+                    <div className="hidden md:flex">
+                        <TextSizeControl />
+                    </div>
 
                     {/* User / profile area */}
                     <div className="relative" ref={profileDropdownRef}>
@@ -305,7 +351,7 @@ function TopNav({
                             {!levelLoading && level && (
                                 <RankBadge
                                     level={level}
-                                    size="sm"
+                                    size="md"
                                     showLabel={false}
                                     onClick={() => setIsXPModalOpen(true)}
                                 />
@@ -315,7 +361,7 @@ function TopNav({
                             <FeedbackWidget />
                             <button
                                 onClick={() => setIsProfileDropdownOpen(p => !p)}
-                                className="relative flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150"
+                                className="relative flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-150"
                                 style={{
                                     background:   'var(--vs-surface)',
                                     border:       '1px solid var(--vs-border-hi)',
@@ -324,7 +370,7 @@ function TopNav({
                                 aria-label="Open user menu"
                                 aria-expanded={isProfileDropdownOpen}
                             >
-                                <User size={14} />
+                                <User size={20} />
                                 {!levelLoading && level && (
                                     <div className="absolute -bottom-1 -right-1">
                                         <LevelBadge level={level} size="xs" />

@@ -26,7 +26,7 @@ export const AppStateProvider = ({ children }) => {
         }
         return stored;
     });
-    const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
+    const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
     const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
 
     const [currentSessionId, setCurrentSessionIdState] = useState(() => {

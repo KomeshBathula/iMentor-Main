@@ -112,7 +112,9 @@ const UserSchema = new mongoose.Schema({
       completedModules: [{ type: String }],
       completedSubtopics: [{ type: String }],
       quizResults: { type: Map, of: String, default: () => new Map() },
-      quizIndex: { type: Number, default: 0 }
+      quizIndex: { type: Number, default: 0 },
+      currentPosition: { type: mongoose.Schema.Types.Mixed, default: null },
+      lastActiveDate: { type: Date, default: null }
     }, { _id: false }),
     default: () => new Map()
   },

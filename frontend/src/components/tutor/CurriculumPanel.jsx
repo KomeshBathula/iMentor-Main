@@ -315,7 +315,9 @@ function CurriculumPanel({
             {!loading && curriculum && modules.length > 0 && (
                 <div className="px-4 py-2.5 border-t border-[#4a4a4a]/60 flex-shrink-0 flex items-center justify-between">
                     <span className="text-[11px] text-gray-500">
-                        Modules: <span className="text-gray-300">{completedModules.length}/{modules.length}</span>
+                        Modules: <span className="text-gray-300">
+                            {modules.filter(m => isModuleCompleted(m.id) || areAllTopicsCompleted(m.topics)).length}/{modules.length}
+                        </span>
                     </span>
                     <span className="text-[11px] text-gray-500">
                         Topics: <span className="text-teal-400 font-medium">{overallPct}%</span>

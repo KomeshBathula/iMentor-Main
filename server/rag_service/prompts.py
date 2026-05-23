@@ -247,7 +247,7 @@ TEACHING CONTEXT (authoritative source — all questions must align with this ma
 Generate a complete study question bank as VALID JSON ONLY — no prose outside the JSON.
 
 The bank must contain:
-  • 5 MCQ with 4 options each (exactly 1 correct, 3 plausible distractors). Mix difficulties: 2 beginner, 2 intermediate, 1 advanced.
+  • 15 MCQ with 4 options each (exactly 1 correct, 3 plausible distractors). Mix difficulties: 5 beginner, 6 intermediate, 4 advanced.
   • 3 short-answer questions that require conceptual explanation (not just recall). Mix: 1 beginner, 1 intermediate, 1 advanced.
   • 5 flashcards (key term / concept on front, precise definition or formula on back).
 

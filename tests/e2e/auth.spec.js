@@ -10,18 +10,18 @@ test.describe('UI-AUTH — Authentication Flow', () => {
     // Assert landing page visible
     await expect(page.locator('body')).toBeVisible();
 
-    // Click Login
-    const loginBtn = page.getByRole('button', { name: /login/i }).first();
+    // Click Sign In (nav button)
+    const loginBtn = page.getByRole('button', { name: /sign.?in|login/i }).first();
     await loginBtn.waitFor({ state: 'visible', timeout: 10000 });
     await loginBtn.click();
 
     // Fill credentials
     await page.getByPlaceholder(/email/i).fill('ultra.boy7@gmail.com');
     await page.getByPlaceholder(/password/i).fill('123456');
-    await page.locator('form').getByRole('button', { name: /login/i }).click();
+    await page.locator('form').getByRole('button', { name: /sign.?in|login/i }).click();
 
-    // Wait for redirect
-    await page.waitForURL(url => !url.toString().includes('landing'), { timeout: 20000 });
+    // URL stays at '/' — wait for modal to close (email field disappears)
+    await page.waitForSelector('input[placeholder*="email" i]', { state: 'hidden', timeout: 20000 });
 
     // Assert chat input or main UI is present
     const chatInput = page.locator('textarea').or(page.locator('[data-tutor-tour="chat-input"]')).first();
@@ -36,13 +36,13 @@ test.describe('UI-AUTH — Authentication Flow', () => {
   test('UI-AUTH-02 — Login with wrong password shows error', async ({ page }) => {
     await page.goto('/');
 
-    const loginBtn = page.getByRole('button', { name: /login/i }).first();
+    const loginBtn = page.getByRole('button', { name: /sign.?in|login/i }).first();
     await loginBtn.waitFor({ state: 'visible', timeout: 10000 });
     await loginBtn.click();
 
     await page.getByPlaceholder(/email/i).fill('ultra.boy7@gmail.com');
     await page.getByPlaceholder(/password/i).fill('wrongpassword');
-    await page.locator('form').getByRole('button', { name: /login/i }).click();
+    await page.locator('form').getByRole('button', { name: /sign.?in|login/i }).click();
 
     // Assert error message appears — AuthModal shows inline div + toast
     // Inline error has bg-gray-900 border border-white (no "error" class name)

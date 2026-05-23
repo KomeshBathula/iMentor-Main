@@ -29,7 +29,7 @@ function reflectOnTeaching(state = {}) {
         results.push({
             action: 'RETEACH_CONCEPT',
             note: `Student answered incorrectly ${consecutiveWrong} times in a row. Switching to re-teaching mode.`,
-            promptPatch: 'The student is struggling. Start over with a simpler explanation and a relatable analogy before asking any question.',
+            promptPatch: 'The student is struggling. Start over with a 2-sentence explanation and a very simple, 1-sentence analogy before asking any question.',
             priority: 10,
         });
     }
@@ -39,7 +39,7 @@ function reflectOnTeaching(state = {}) {
         results.push({
             action: 'SIMPLIFY_PROBLEM',
             note: `${hintsGiven} hints given; problem may be beyond current level.`,
-            promptPatch: 'Break the current problem into smaller, more manageable steps. Reduce complexity before asking again.',
+            promptPatch: 'Break the current problem into exactly one smaller, very simple step. Avoid complex detail.',
             priority: 8,
         });
     }
@@ -59,7 +59,7 @@ function reflectOnTeaching(state = {}) {
         results.push({
             action: 'EXPLAIN_CONCEPT',
             note: 'Student struggled at the very start; need to provide foundational explanation first.',
-            promptPatch: 'Before asking any more questions, provide a clear introductory explanation of the fundamental idea.',
+            promptPatch: 'Before asking any more questions, provide a clear 2-paragraph introductory explanation of the fundamental idea.',
             priority: 9,
         });
     }
@@ -69,7 +69,7 @@ function reflectOnTeaching(state = {}) {
         results.push({
             action: 'ENCOURAGE',
             note: `Emotional state detected: ${emotionalState}. Inserting encouragement.`,
-            promptPatch: 'Before your next question, briefly acknowledge that this is a challenging topic and offer genuine encouragement. Keep the tone warm and patient.',
+            promptPatch: 'Before your next question, offer a single sentence of genuine encouragement. Keep it very brief.',
             priority: 6,
         });
     }
@@ -89,7 +89,7 @@ function reflectOnTeaching(state = {}) {
         results.push({
             action: 'ASK_COMPREHENSION_CHECK',
             note: 'Just explained a concept; checking if student understood.',
-            promptPatch: 'You just provided an explanation. Now ask a single targeted question to check whether the student understood it.',
+            promptPatch: 'You just provided an explanation. Now ask a single, short check question (max 15 words) to verify understanding.',
             priority: 4,
         });
     }

@@ -24,26 +24,23 @@ const RAG_EMBED_URL = () => `${(process.env.PYTHON_RAG_SERVICE_URL || 'http://lo
 const INTENT_ROUTES = {
   DEEP_RESEARCH: {
     examples: [
-      "explain machine learning in detail",
-      "comprehensive analysis of quantum computing",
+      // Only clear "write a full research paper / systematic review" intents
       "write a research paper on blockchain technology",
-      "in-depth explanation of neural networks",
-      "thorough analysis of renewable energy sources",
-      "extensive study on protein folding mechanisms",
-      "complete breakdown of supply chain optimization",
-      "comprehensive review of CRISPR gene editing",
-      // Additional diverse examples to improve recall
-      "give me a comprehensive analysis of transformer architectures",
-      "detailed deep dive into large language models",
-      "write an in-depth explanation of CRISPR gene editing",
-      "thorough analysis of supply chain disruptions",
-      "everything you know about reinforcement learning",
       "help me write a research paper on AI ethics",
-      "can you help me understand and write a paper on climate change",
+      "write a comprehensive academic literature review on CRISPR",
+      "conduct a systematic review of federated learning",
+      "write a full research report on renewable energy policy",
+      "generate a detailed academic report on supply chain disruptions",
+      "produce a comprehensive research synthesis on protein folding",
+      "create an academic research paper on quantum computing applications",
+      "write a literature review on transformer architectures for my thesis",
+      "compile a full research paper on climate change mitigation strategies",
+      "I need a complete research document on the history of neural networks",
+      "generate a scholarly report on multi-agent reinforcement learning",
     ],
     tools: ['deep_research'],
     handler: 'deepResearch',
-    confidence_threshold: 0.60,  // was 0.75; measured scores land 0.63-0.72
+    confidence_threshold: 0.70,  // raised from 0.60 — only explicit "write paper/report" requests score ≥0.70
   },
 
   ACADEMIC_SEARCH: {

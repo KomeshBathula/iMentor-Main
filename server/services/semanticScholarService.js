@@ -14,7 +14,8 @@ const BASE_URL = 'https://api.semanticscholar.org/graph/v1/paper/search';
 const FIELDS = [
     'paperId', 'title', 'abstract', 'year', 'citationCount',
     'authors', 'externalIds', 'fieldsOfStudy', 'publicationDate',
-    'openAccessPdf', 'referenceCount', 'influentialCitationCount'
+    'openAccessPdf', 'referenceCount', 'influentialCitationCount',
+    'journal', 'publicationVenue'
 ].join(',');
 
 /**
@@ -70,13 +71,24 @@ const semanticScholarService = {
     /**
      * Retrieve papers from Semantic Scholar using its bulk endpoint (sorted by relevance).
      * Used for larger volume fetches.
+     * @param {string[]} queries
+     * @param {number}   limitPerQuery
+     * @param {object}   constraints   – { yearStart?, yearEnd?, venueFilter? }
      */
-    async retrieveSourcesBulk(queries = [], limitPerQuery = 8) {
+    async retrieveSourcesBulk(queries = [], limitPerQuery = 8, constraints = {}) {
         const results = [];
         const seen = new Set();
 
+        // Build SS year filter string — e.g. "2025-2026" or "2025-"
+        let yearParam;
+        if (constraints.yearStart && constraints.yearEnd) {
+            yearParam = `${constraints.yearStart}-${constraints.yearEnd}`;
+        } else if (constraints.yearStart) {
+            yearParam = `${constraints.yearStart}-`;
+        }
+
         for (const q of queries) {
-            const papers = await this.retrieveSources(q, { limit: limitPerQuery });
+            const papers = await this.retrieveSources(q, { limit: limitPerQuery, year: yearParam });
             for (const p of papers) {
                 const key = (p.url || p.title || '').toLowerCase();
                 if (!seen.has(key)) {
@@ -115,6 +127,9 @@ const semanticScholarService = {
         const influentialCount = p.influentialCitationCount || 0;
         const credScore = Math.min(95, 78 + Math.log1p(citationCount) * 1.5 + influentialCount * 0.3);
 
+        const journal   = p.journal?.name || p.publicationVenue?.name || null;
+        const publisher = p.publicationVenue?.publisher || null;
+
         return {
             title: p.title || 'Untitled',
             abstract: p.abstract || '',
@@ -124,6 +139,8 @@ const semanticScholarService = {
             doi,
             url,
             openAccessUrl,
+            journal,
+            publisher,
             semanticScholarId: p.paperId || null,
             arxivId,
             citationCount,

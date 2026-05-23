@@ -2,9 +2,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// When building for Capacitor (mobile) we need relative asset paths so the
+// WebView can load them from file://. Web builds use '/' so React Router works.
+const isMobileBuild = process.env.VITE_BUILD_FOR_CAPACITOR === 'true';
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: isMobileBuild ? './' : '/',
   // --- API Proxy Configuration ---
   server: {
     port: 3005,
@@ -22,10 +27,34 @@ export default defineConfig({
         ws: true,   // proxy WebSocket upgrades
       },
     },
+
+    // ── Exclude Capacitor native projects from the file watcher ──────────────
+    // Without this, Vite hot-reloads android/app/.../public/index.html and
+    // ios/App/.../public/index.html every time cap sync copies assets there.
+    watch: {
+      ignored: [
+        '**/android/**',
+        '**/ios/**',
+        '**/.git/**',
+        '**/node_modules/**',
+      ],
+    },
+
+    // ── Block .env files from being served over HTTP ──────────────────────────
+    // Vite's built-in protection should already cover this, but being explicit
+    // prevents the "outside of serving allow list" warnings in the console.
+    fs: {
+      deny: [
+        '.env',
+        '.env.*',
+        '*.{pem,crt,key}',
+      ],
+    },
   },
-  // --- ADD THIS SECTION TO FIX THE "global is not defined" ERROR ---
+  // --- FIX "global is not defined" + expose Capacitor build flag ---
   define: {
     'global': {},
+    '__CAPACITOR_BUILD__': JSON.stringify(isMobileBuild),
   },
   build: {
     rollupOptions: {

@@ -2,8 +2,49 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 
+// ─── Native-context detection ────────────────────────────────────────────────
+// When the app runs inside a Capacitor WebView (Android / iOS) there is no
+// Vite dev-proxy and relative paths like "/api" won't resolve.  We must use
+// the absolute HTTPS URL of the production backend.
+//
+// Detection: Capacitor sets window.Capacitor.isNativePlatform() = true at
+// runtime, OR the bundle was compiled with VITE_BUILD_FOR_CAPACITOR=true.
+//
+// .env files:
+//   .env                  VITE_BACKEND_URL=  (empty — uses Vite proxy in web dev)
+//   .env.mobile           VITE_BUILD_FOR_CAPACITOR=true
+//   .env.production       VITE_BACKEND_URL=https://your-server.com
+// ─────────────────────────────────────────────────────────────────────────────
+function resolveBaseURL() {
+  // Runtime check — true when running inside a Capacitor shell on a device
+  const isNative =
+    typeof window !== 'undefined' &&
+    typeof window.Capacitor !== 'undefined' &&
+    window.Capacitor?.isNativePlatform?.();
+
+  // Build-time check — true when built with VITE_BUILD_FOR_CAPACITOR=true
+  const isCapacitorBuild =
+    typeof __CAPACITOR_BUILD__ !== 'undefined' && __CAPACITOR_BUILD__;
+
+  if (isNative || isCapacitorBuild) {
+    // Must be an absolute HTTPS URL — no proxy available in the WebView
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    if (!backendUrl) {
+      console.warn(
+        '[iMentor] VITE_BACKEND_URL is not set. ' +
+        'API calls will fail on device. ' +
+        'Set it in .env.mobile or .env.production.'
+      );
+    }
+    return (backendUrl || 'https://REPLACE_WITH_YOUR_SERVER/api');
+  }
+
+  // Web browser: use Vite proxy (/api → backend) or explicit env var
+  return import.meta.env.VITE_API_BASE_URL || '/api';
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api",
+  baseURL: resolveBaseURL(),
 });
 
 apiClient.interceptors.request.use(
@@ -717,8 +758,15 @@ const api = {
   },
 
   // ===== User Feedback (product bugs / suggestions) =====
-  submitUserFeedback: async ({ type, category, message }) => {
-    const response = await apiClient.post('/user/feedback', { type, category, message });
+  submitUserFeedback: async ({ type, category, message, attachments = [] }) => {
+    const formData = new FormData();
+    formData.append('type', type);
+    formData.append('category', category);
+    formData.append('message', message);
+    attachments.forEach(file => formData.append('attachments', file));
+    const response = await apiClient.post('/user/feedback', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
   getUserFeedback: async () => {

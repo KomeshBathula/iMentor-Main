@@ -112,11 +112,14 @@ const parseAndRenderMarkdown = (markdownText, messageId) => {
 
     const resultNodes = [];
     let currentHtmlBuffer = '';
+    // Deterministic counter — never use Math.random() here; random keys force
+    // React to unmount+remount every node on each streaming token, causing shaking.
+    let nodeIndex = 0;
 
     const flushHtmlBuffer = () => {
         if (currentHtmlBuffer) {
             resultNodes.push(
-                <div key={`html-${messageId}-${resultNodes.length}-${Math.random().toString(36).substring(2, 9)}`}
+                <div key={`html-${messageId}-${nodeIndex++}`}
                     dangerouslySetInnerHTML={{ __html: currentHtmlBuffer }} />
             );
             currentHtmlBuffer = '';
@@ -138,7 +141,7 @@ const parseAndRenderMarkdown = (markdownText, messageId) => {
                 ?.replace('language-', '');
             if (language === 'mermaid') {
                 resultNodes.push(
-                    <div key={`mermaid-${messageId}-${resultNodes.length}`} className="my-3 rounded-lg overflow-hidden border border-gray-700">
+                    <div key={`mermaid-${messageId}-${nodeIndex++}`} className="my-3 rounded-lg overflow-hidden border border-gray-700 w-full" style={{ maxHeight: '350px', overflowY: 'auto' }}>
                         <MindmapViewer mermaidCode={codeText} />
                     </div>
                 );
@@ -149,7 +152,7 @@ const parseAndRenderMarkdown = (markdownText, messageId) => {
 
             resultNodes.push(
                 <CodeBlockWithCopyButton
-                    key={`code-${messageId}-${resultNodes.length}-${Math.random().toString(36).substring(2, 9)}`}
+                    key={`code-${messageId}-${nodeIndex++}`}
                     codeText={codeText}
                 >
                     {preOuterHtml}
@@ -259,6 +262,14 @@ function MessageBubble({ sender, text, thinking, references, timestamp, sourcePi
     // Show dropdown if there is thinking content, structured steps, OR if there is an active status (EXCEPT in Tutor Mode)
     const showThinkingDropdown = !isUser && !isTutor && (thinkingContent !== null || hasSteps || (activeIsStreaming && activeStatus));
 
+    // Memoize the rich post-stream render so state changes (dropdown, feedback, etc.)
+    // don't re-run the expensive DOMParser traversal unnecessarily.
+    const renderedContent = React.useMemo(
+        () => parseAndRenderMarkdown(mainContent, messageId),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [mainContent, messageId]
+    );
+
     useEffect(() => {
         if (contentRef.current && !activeIsStreaming) {
             const timer = setTimeout(() => {
@@ -336,8 +347,8 @@ function MessageBubble({ sender, text, thinking, references, timestamp, sourcePi
                     : 'bg-[#1a1a1a] text-white border border-[#4a4a4a] shadow-[0_2px_12px_rgba(0,0,0,0.4)]'
                     }`}>
 
-                    {/* Status Badge (like Tutor Mode) */}
-                    {!isUser && activeStatus && (
+                    {/* Status Badge (like Tutor Mode) — only visible while streaming */}
+                    {!isUser && activeIsStreaming && activeStatus && (
                         <div className="mb-1">
                             <span className="inline-block px-2 py-0.5 text-[10px] font-medium rounded bg-blue-600/80 text-white">
                                 {activeStatus}
@@ -369,9 +380,23 @@ function MessageBubble({ sender, text, thinking, references, timestamp, sourcePi
                             </div>
                         ) : (
                             <>
-                                {parseAndRenderMarkdown(mainContent, messageId)}
-                                {activeIsStreaming && mainContent.length === 0 && <TypingIndicator status={activeStatus} />}
-                                {activeIsStreaming && mainContent.length > 0 && <span className="inline-block w-1 h-4 ml-1 bg-white animate-pulse align-middle" />}
+                                {activeIsStreaming ? (
+                                    // While streaming: render a single stable div so React never
+                                    // unmounts/remounts nodes on each token (eliminates page shaking).
+                                    // Copy buttons and syntax highlighting appear once streaming ends.
+                                    <>
+                                        {mainContent.length === 0
+                                            ? <div className="streaming-cursor"><TypingIndicator status={activeStatus} /></div>
+                                            : <>
+                                                <div dangerouslySetInnerHTML={createMarkup(mainContent)} />
+                                                <span className="streaming-cursor inline-block w-1 h-4 ml-1 bg-white animate-pulse align-middle" />
+                                              </>
+                                        }
+                                    </>
+                                ) : (
+                                    // After streaming: full rich render with copy buttons, mermaid, etc.
+                                    renderedContent
+                                )}
                             </>
                         )}
                     </div>

@@ -36,6 +36,10 @@ export const SEL = {
 
   // Error indicators
   errorModal:         '[role="alert"], [class*="error-modal"]',
+
+  // Service interruption dialog ("AI Service Notification")
+  serviceDialog:      'dialog[aria-modal="true"]',
+  serviceDialogDismiss: 'dialog button:text-is("Dismiss"), dialog button:text-is("Got it"), dialog button[aria-label*="Close"]',
 };
 
 /* ─── Core chat actions ────────────────────────────────────────────── */
@@ -59,12 +63,39 @@ export async function waitForStreamComplete(page, timeout = 90000) {
 }
 
 /**
+ * Dismiss any open service interruption / notification dialog that might block UI.
+ * Safe to call even when no dialog is present.
+ */
+export async function dismissServiceDialog(page) {
+  try {
+    const dialog = page.locator(SEL.serviceDialog);
+    if (await dialog.isVisible({ timeout: 1000 }).catch(() => false)) {
+      // Try the labelled dismiss buttons first
+      const dismissBtn = page.locator(SEL.serviceDialogDismiss).first();
+      if (await dismissBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await dismissBtn.click();
+      } else {
+        await page.keyboard.press('Escape');
+      }
+      // Wait for dialog to close
+      await dialog.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    }
+  } catch {
+    // No dialog present — fine
+  }
+}
+
+/**
  * Send a chat message and wait for full bot response.
  * Returns the text content of the last bot message.
  */
 export async function sendAndWait(page, text, timeout = 90000) {
   const input = page.locator('textarea').first();
+  // Wait for textarea to be visible AND enabled (previous response must have finished)
   await input.waitFor({ state: 'visible', timeout: 10000 });
+  await page.waitForSelector('textarea:not([disabled])', { timeout });
+  // Dismiss any service dialog that might be blocking the UI
+  await dismissServiceDialog(page);
   await input.fill(text);
 
   const sendBtn = page.locator(SEL.sendButton);
@@ -264,8 +295,12 @@ export async function clickPromptCoach(page) {
  * Click "New Chat" to clear the conversation.
  */
 export async function clickNewChat(page) {
+  // Ensure any in-progress response has finished and dialogs are dismissed
+  await page.waitForSelector('textarea:not([disabled])', { timeout: 30000 }).catch(() => {});
+  await dismissServiceDialog(page);
   const newChatBtn = page.getByRole('button', { name: /new chat/i })
     .or(page.getByTitle(/new chat/i));
+  await newChatBtn.waitFor({ state: 'visible', timeout: 5000 });
   await newChatBtn.click();
   await page.waitForTimeout(2000);
 }

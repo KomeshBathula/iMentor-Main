@@ -168,9 +168,20 @@ async function generateWithFallback(chatHistory, currentQuery, systemPrompt, llm
  * Ported from Team1-6's assessStudentResponse — produces richer signals for the FSM.
  */
 async function assessStudentResponse(studentResponse, moduleTitle, lastQuestion, llmConfig, conversationHistory = []) {
-    const prompt = `Assess the following student response in the context of learning ${moduleTitle}.
-Last Tutor Question: ${lastQuestion}
-Student Response: ${studentResponse}
+    const prompt = `You are an expert educational assessor evaluating a student's response during an AI tutoring session.
+
+Topic: ${moduleTitle}
+Tutor's Last Question: ${lastQuestion}
+Student's Response: ${studentResponse}
+
+Classification guide (be GENEROUS — reward genuine understanding):
+- CORRECT: Student demonstrates clear understanding of the concept with correct information. Does NOT need to be perfect — covering the key idea counts as CORRECT.
+- PARTIAL: Student shows some understanding but has a specific, identifiable gap in their answer.
+- MISCONCEPTION: Student gives a factually incorrect answer that shows a clear wrong mental model.
+- VAGUE: Student's response is too vague or off-topic to assess understanding.
+- NO_FOUNDATION: Student has no idea or says "I don't know".
+
+IMPORTANT: If the student correctly identifies the main concept and gives a reasonable explanation or example — even if incomplete — classify as CORRECT. Only use PARTIAL if there is a SPECIFIC identifiable gap that matters.
 
 Return ONLY valid JSON:
 {
@@ -178,8 +189,8 @@ Return ONLY valid JSON:
   "confidence": "HIGH|MEDIUM|LOW",
   "emotionalState": "CURIOUS|CONFIDENT|UNCERTAIN|FRUSTRATED|BORED",
   "effortLevel": "HIGH|MEDIUM|LOW",
-  "specificGaps": ["gap 1", "gap 2"],
-  "reasoning": "Brief explanation"
+  "specificGaps": [],
+  "reasoning": "Brief one-sentence explanation of your classification"
 }`;
 
     try {
@@ -914,14 +925,20 @@ CRITICAL RULES:
     let consecutiveCorrect = state.consecutiveCorrect || 0;
     if (classification.status === 'CORRECT') {
         consecutiveCorrect += 1;
-    } else {
-        consecutiveCorrect = 0; // Reset on wrong/unknown
+    } else if (classification.status === 'WRONG' || classification.status === 'UNKNOWN') {
+        consecutiveCorrect = 0; // Reset on definitively wrong answers
     }
-    
+    // PARTIAL does NOT increment nor reset consecutiveCorrect
+
     // Calculate mastery out of 5.0
-    const newMastery = Math.min(5.0, masteryScore + (classification.status === 'CORRECT' ? 1.0 : (classification.status === 'WRONG' || classification.status === 'UNKNOWN' ? -0.5 : 0.5)));
+    // Only CORRECT answers increase mastery meaningfully; PARTIAL gives a small boost
+    const masteryDelta = classification.status === 'CORRECT' ? 1.0
+        : (classification.status === 'PARTIAL' ? 0.25
+        : (classification.status === 'WRONG' || classification.status === 'UNKNOWN' ? -0.5 : 0));
+    const newMastery = Math.min(5.0, masteryScore + masteryDelta);
     const projectedMastery = Math.max(0, newMastery);
-    const isMastered = consecutiveCorrect >= 2 || projectedMastery >= 3.5;
+    // Mastery requires BOTH consecutive correct answers AND a minimum mastery score
+    const isMastered = (consecutiveCorrect >= 2 && projectedMastery >= 2.0) || projectedMastery >= 3.5;
 
     // ── Award gamification credits on subtopic mastery (fire-and-forget) ──────
     if (isMastered && !state.masteryAwarded && state.userId) {

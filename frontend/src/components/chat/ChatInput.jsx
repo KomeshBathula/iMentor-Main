@@ -50,11 +50,7 @@ function ChatInput({
 
     const [isCoaching, setIsCoaching] = useState(false);
 
-    // ── Whisper STT state ─────────────────────────────────────────────────────
-    const [isRecording, setIsRecording] = useState(false);
-    const [isTranscribing, setIsTranscribing] = useState(false);
-    const mediaRecorderRef = useRef(null);
-    const audioChunksRef = useRef([]);
+
 
     // Rotate placeholder text every 4 seconds
     useEffect(() => {
@@ -137,7 +133,15 @@ function ChatInput({
 
     useEffect(() => {
         if (transcript) {
-            setInputValue(prev => prev + (prev ? " " : "") + transcript);
+            setInputValue(prev => {
+                const prevNorm = prev.trim().toLowerCase();
+                const nextNorm = transcript.trim().toLowerCase();
+                // Guard against duplicate emits from some browser engines.
+                if (nextNorm && (prevNorm === nextNorm || prevNorm.endsWith(` ${nextNorm}`) || prevNorm.endsWith(nextNorm))) {
+                    return prev;
+                }
+                return prev + (prev ? " " : "") + transcript;
+            });
             resetTranscript();
         }
     }, [transcript, resetTranscript]);
@@ -174,55 +178,9 @@ function ChatInput({
         }
     };
 
-    // ── Whisper STT handlers ──────────────────────────────────────────────────
-    const startRecording = async () => {
-        // Fallback to browser Web Speech if MediaRecorder unavailable
-        if (!navigator.mediaDevices?.getUserMedia) {
-            if (isSpeechSupported) startListening();
-            else toast.error('Microphone not supported in this browser.');
-            return;
-        }
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioChunksRef.current = [];
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
-            const recorder = new MediaRecorder(stream, { mimeType });
-            recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
-            recorder.onstop = async () => {
-                stream.getTracks().forEach(t => t.stop());
-                const blob = new Blob(audioChunksRef.current, { type: mimeType });
-                setIsTranscribing(true);
-                try {
-                    const ext = mimeType === 'audio/webm' ? 'webm' : 'ogg';
-                    const { text } = await api.transcribeAudio(blob, `recording.${ext}`);
-                    if (text?.trim()) {
-                        setInputValue(prev => prev + (prev ? ' ' : '') + text.trim());
-                        toast.success('Voice transcribed');
-                    } else {
-                        toast.error('No speech detected — try again.');
-                    }
-                } catch {
-                    toast.error('Transcription failed. Check microphone and try again.');
-                } finally {
-                    setIsTranscribing(false);
-                }
-            };
-            mediaRecorderRef.current = recorder;
-            recorder.start();
-            setIsRecording(true);
-        } catch {
-            toast.error('Microphone access denied.');
-        }
-    };
-
-    const stopRecording = () => {
-        mediaRecorderRef.current?.stop();
-        setIsRecording(false);
-    };
-
     const handleVoiceClick = () => {
-        if (isRecording) stopRecording();
-        else startRecording();
+        if (listening) stopListening();
+        else startListening();
     };
 
     const handleWebSearchToggle = () => {
@@ -354,15 +312,12 @@ function ChatInput({
                                 >
                                     <button
                                         onClick={() => { handleVoiceClick(); setIsMenuOpen(false); }}
-                                        disabled={isTranscribing}
+                                        disabled={!isSpeechSupported}
                                         className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-xs"
-                                        style={{ borderRadius:'3px', color: isRecording ? '#f87171' : 'var(--vs-text-lo)', background: isRecording ? 'var(--vs-active)' : 'transparent', border:'none', cursor: isTranscribing ? 'not-allowed' : 'pointer' }}
+                                        style={{ borderRadius:'3px', color: listening ? '#f87171' : 'var(--vs-text-lo)', background: listening ? 'var(--vs-active)' : 'transparent', border:'none', cursor: !isSpeechSupported ? 'not-allowed' : 'pointer' }}
                                     >
-                                        {isTranscribing
-                                            ? <div className="w-3 h-3 border border-[color:var(--vs-accent)] border-t-transparent rounded-full animate-spin" />
-                                            : <Mic size={13} className={isRecording ? 'animate-pulse' : ''} />
-                                        }
-                                        {isRecording ? 'Stop Recording' : isTranscribing ? 'Transcribing…' : 'Voice Input'}
+                                        <Mic size={13} className={listening ? 'animate-pulse' : ''} />
+                                        {listening ? 'Stop Listening' : 'Voice Input'}
                                     </button>
                                     {[
                                         { onClick: () => { handleRequestPromptCoaching(); setIsMenuOpen(false); }, Icon: Sparkles, label: 'Prompt Coach', active: false },
@@ -435,28 +390,27 @@ function ChatInput({
                     {/* Helper: uniform icon button */}
                     {/* (inline — keeps this component self-contained) */}
 
-                    {/* Voice - Desktop (Whisper backend STT) */}
+                    {/* Voice - Desktop (Web Speech API, instant) */}
+                    {isSpeechSupported && (
                     <button
                         onClick={handleVoiceClick}
-                        disabled={isLoading || isTranscribing}
+                        disabled={isLoading}
                         className="hidden sm:flex items-center justify-center"
-                        title={isRecording ? 'Stop recording' : isTranscribing ? 'Transcribing…' : 'Voice input (Whisper)'}
-                        aria-label={isRecording ? 'Stop recording' : 'Voice input'}
+                        title={listening ? 'Stop listening' : 'Voice input'}
+                        aria-label={listening ? 'Stop listening' : 'Voice input'}
                         style={{
                             padding: '5px', borderRadius: '3px',
-                            background: isRecording ? 'var(--vs-active)' : 'transparent',
-                            border: isRecording ? '1px solid var(--vs-accent)' : '1px solid transparent',
-                            color: isRecording ? '#f87171' : isTranscribing ? 'var(--vs-accent)' : 'var(--vs-text-dim)',
-                            cursor: (isLoading || isTranscribing) ? 'not-allowed' : 'pointer',
-                            opacity: (isLoading) ? 0.4 : 1,
+                            background: listening ? 'var(--vs-active)' : 'transparent',
+                            border: listening ? '1px solid var(--vs-accent)' : '1px solid transparent',
+                            color: listening ? '#f87171' : 'var(--vs-text-dim)',
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            opacity: isLoading ? 0.4 : 1,
                             transition: 'color 0.15s, background 0.15s',
                         }}
                     >
-                        {isTranscribing
-                            ? <div className="w-3.5 h-3.5 border border-[color:var(--vs-accent)] border-t-transparent rounded-full animate-spin" />
-                            : <Mic size={15} className={isRecording ? 'animate-pulse' : ''} />
-                        }
+                        <Mic size={15} className={listening ? 'animate-pulse' : ''} />
                     </button>
+                    )}
 
                     {/* Prompt Coach - Desktop */}
                     <button

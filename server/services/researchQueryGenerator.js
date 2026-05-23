@@ -125,6 +125,45 @@ const QUERY_COUNT_BY_DEPTH = {
 // Main Service
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Constraint Extraction
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse structured constraints (year range, venue/publisher) from a raw query string.
+ * These are applied as API-level filters downstream — not injected into query text.
+ *
+ * @param {string} query
+ * @returns {{ yearStart: number|null, yearEnd: number|null, venueFilter: string|null }}
+ */
+function extractQueryConstraints(query = '') {
+    const constraints = { yearStart: null, yearEnd: null, venueFilter: null };
+
+    // "2025 and 2026" / "2025 to 2026" / "2025-2026" / "during 2025 and 2026"
+    const rangeMatch = query.match(/(?:during\s+|from\s+)?(\d{4})\s+(?:and|to|-)\s+(\d{4})/i);
+    if (rangeMatch) {
+        constraints.yearStart = parseInt(rangeMatch[1], 10);
+        constraints.yearEnd   = parseInt(rangeMatch[2], 10);
+    } else {
+        // "in 2025" / "year 2025" / standalone 4-digit year
+        const singleMatch = query.match(/(?:in|during|year|from)\s+(\d{4})/i)
+            || query.match(/\b(20[2-9]\d)\b/);
+        if (singleMatch) {
+            constraints.yearStart = parseInt(singleMatch[1], 10);
+            constraints.yearEnd   = parseInt(singleMatch[1], 10);
+        }
+    }
+
+    // Venue / publisher keywords
+    if (/\bieee\b/i.test(query))    constraints.venueFilter = 'IEEE';
+    else if (/\barxiv\b/i.test(query)) constraints.venueFilter = 'arxiv';
+    else if (/\bnature\b/i.test(query) && /journal/i.test(query)) constraints.venueFilter = 'Nature';
+    else if (/\belsevier\b/i.test(query)) constraints.venueFilter = 'Elsevier';
+    else if (/\bspringer\b/i.test(query)) constraints.venueFilter = 'Springer';
+
+    return constraints;
+}
+
 const researchQueryGenerator = {
 
     /**
@@ -133,7 +172,7 @@ const researchQueryGenerator = {
      * @param {string} topic            – raw research question from the user
      * @param {object} researchConfig   – must include { nature, depth }
      * @param {string|null} userId
-     * @returns {Promise<{openalex: string[], semantic: string[], arxiv: string[], web: string[]}>}
+     * @returns {Promise<{openalex: string[], semantic: string[], arxiv: string[], web: string[], constraints: object}>}
      */
     async generateQuerySets(topic, researchConfig, userId = null) {
         const nature = (researchConfig.nature || 'academic').toLowerCase();
@@ -162,11 +201,16 @@ const researchQueryGenerator = {
             log.warn('RESEARCH', `Query generation LLM failed: ${err.message} — using templates`);
         }
 
+        // Short keyword seeds extracted from the topic — always included for OpenAlex (keyword-indexed)
+        const keywordSeeds = buildKeywordSeeds(topic);
+
         // Extract or fallback per provider
         const extract = (key, sourceType) => {
             const raw = (parsed?.[key] || []).filter(q => typeof q === 'string' && q.trim().length > 5);
             const base = raw.length >= 3 ? raw : buildTemplateQueries(topic, nature, sourceType);
-            return deduplicateQueries(base, 0.72).slice(0, counts[key] + 4); // +4 buffer before cross-type dedup
+            // For OpenAlex, inject keyword seeds at the front so short queries are always included
+            const seeded = key === 'openalex' ? [...keywordSeeds, ...base] : base;
+            return deduplicateQueries(seeded, 0.72).slice(0, counts[key] + 4); // +4 buffer before cross-type dedup
         };
 
         const rawSets = {
@@ -184,19 +228,78 @@ const researchQueryGenerator = {
             !rawSets.arxiv.some(a => querySimilarity(q, a) >= 0.80)
         );
 
-        // Trim to target counts
+        // Trim to target counts and attach parsed constraints
         return {
-            openalex: rawSets.openalex.slice(0, counts.openalex),
-            semantic: rawSets.semantic.slice(0, counts.semantic),
-            arxiv:    rawSets.arxiv.slice(0, counts.arxiv),
-            web:      rawSets.web.slice(0, counts.web),
+            openalex:    rawSets.openalex.slice(0, counts.openalex),
+            semantic:    rawSets.semantic.slice(0, counts.semantic),
+            arxiv:       rawSets.arxiv.slice(0, counts.arxiv),
+            web:         rawSets.web.slice(0, counts.web),
+            constraints: extractQueryConstraints(topic),
         };
     },
 
     // Exposed for unit testing
     deduplicateQueries,
     querySimilarity,
+    extractQueryConstraints,
 };
+
+// ---------------------------------------------------------------------------
+// Keyword seed builder — short keyword combos for OpenAlex's keyword index
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract 4–8 short (3–6 word) keyword combinations from the raw topic.
+ * These bypass the LLM and directly target OpenAlex's keyword index.
+ * Handles common technical abbreviations (SoC→"state of charge", etc.)
+ */
+function buildKeywordSeeds(topic = '') {
+    const t = topic.toLowerCase();
+
+    // Known abbreviation expansions
+    const expansions = {
+        'soc': 'state of charge',
+        'rul': 'remaining useful life',
+        'soh': 'state of health',
+        'bms': 'battery management system',
+        'lstm': 'LSTM',
+        'gru':  'GRU',
+        'cnn':  'CNN',
+        'rnn':  'RNN',
+        'dnn':  'deep neural network',
+        'ev':   'electric vehicle',
+    };
+
+    // Pull meaningful tokens (3+ chars, not stopwords)
+    const STOP = new Set(['the','and','with','from','that','this','for','are','is','was','to','of','in','on','at','by','an','or','during','only','from']);
+    const tokens = t.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
+
+    const seeds = new Set();
+    // Raw tokens as a base seed
+    if (tokens.length >= 2) seeds.add(tokens.slice(0, 4).join(' '));
+
+    // Expand abbreviations and add combination seeds
+    const expanded = tokens.map(w => expansions[w] || w);
+    if (expanded.length >= 2) seeds.add(expanded.slice(0, 4).join(' '));
+
+    // Specific domain seeds from common abbreviations found in the topic
+    if (/\bsoc\b|state.of.charge/i.test(t)) {
+        seeds.add('state of charge estimation deep learning');
+        seeds.add('SoC estimation neural network battery');
+        seeds.add('state of charge LSTM lithium-ion');
+    }
+    if (/\brul\b|remaining.useful.life/i.test(t)) {
+        seeds.add('remaining useful life prediction battery');
+        seeds.add('RuL estimation deep learning');
+        seeds.add('battery degradation deep learning prediction');
+    }
+    if (/batter/i.test(t)) {
+        seeds.add('lithium-ion battery deep learning');
+        seeds.add('battery management deep learning 2025');
+    }
+
+    return [...seeds].slice(0, 8);
+}
 
 // ---------------------------------------------------------------------------
 // Prompt builder
@@ -224,12 +327,13 @@ QUERY COUNTS REQUIRED:
 
 RULES:
 1. Each query must be UNIQUE — do NOT repeat the same idea with slightly different wording.
-2. OpenAlex queries should be citation-weighted, use subject terminology, avoid informal phrasing.
-3. Semantic Scholar queries should exploit concept similarity — use related fields, synonyms, cross-domain bridges.
-4. ArXiv queries should be narrow and technical — use terms like "preprint", exact model names, benchmark names.
+2. OpenAlex queries MUST be SHORT (3-7 words max) — use only key technical terms and nouns. OpenAlex uses keyword index matching, NOT semantic search. Long queries REDUCE recall. Example good: "LSTM state of charge estimation". Example bad: "A comprehensive deep learning approach using LSTM networks for state-of-charge estimation in lithium-ion batteries".
+3. Semantic Scholar queries should exploit concept similarity — use related fields, synonyms, cross-domain bridges. Medium length (5-10 words).
+4. ArXiv queries should be narrow and technical — use terms like exact model names, benchmark names, datasets.
 5. Web queries should target news, policy reports, industry whitepapers from the LAST 3 MONTHS — use year/date terms.
 6. Cover: main claims, counter-evidence, methodological critique, quantitative signals, longitudinal trends.
 7. DO NOT include the word "query" or numbering in the output strings.
+8. For OpenAlex: vary the keyword combinations across queries (e.g. use "SoC" in some, "state of charge" in others, "RuL" in some, "remaining useful life" in others).
 
 OUTPUT FORMAT (strict JSON, no markdown):
 {

@@ -45,10 +45,13 @@ const authLimiter = createLimiter(10, 'auth');
 const chatLimiter = createLimiter(30, 'chat');
 const researchLimiter = createLimiter(5, 'research');
 const toolsLimiter = createLimiter(5, 'tools');
+// STT/Whisper: tight limit to protect GPU — keyed by userId (auth'd) or IP (guest)
+const sttLimiter = createLimiter(6, 'stt');
 
 module.exports = {
   authLimiter,
   chatLimiter,
   researchLimiter,
-  toolsLimiter
+  toolsLimiter,
+  sttLimiter
 };

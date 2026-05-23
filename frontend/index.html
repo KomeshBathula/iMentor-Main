@@ -3,8 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI TUTOR</title>
+
+    <!-- Mobile / PWA / Capacitor meta ───────────────────────────────────── -->
+    <!-- initial-scale=1, user-scalable=no: prevent double-tap zoom in the app -->
+    <!-- viewport-fit=cover: extend into notch / rounded corners on phones    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+
+    <!-- iOS home-screen app behaviour -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="iMentor" />
+
+    <!-- Android / Chrome theme (matches VS Code dark shell) -->
+    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- PWA manifest (also used by Capacitor for app metadata) -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Placeholder touch icon — replace /icons/icon-192.png with a real PNG -->
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
+
+    <title>iMentor</title>
 
     <script src="https://cdn.jsdelivr.net/npm/d3@6"></script>
     <script src="https://cdn.jsdelivr.net/npm/markmap-lib@latest"></script>

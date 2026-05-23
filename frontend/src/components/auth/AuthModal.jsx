@@ -338,10 +338,10 @@ function AuthModal({ isOpen, onClose, initialViewIsLogin }) {
                 <div className={inputWrapperClass}>
                     <Lightbulb className={inputIconClass} />
                     <select name="learningStyle" value={formData.learningStyle} onChange={handleChange} className="bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-8 py-2.5 text-sm appearance-none text-left text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition-all" required>
-                        <option className="bg-black">Reading/Writing (detailed text)</option>
-                        <option className="bg-black">Visual (diagrams, mind maps)</option>
-                        <option className="bg-black">Auditory (podcasts, explanations)</option>
-                        <option className="bg-black">Kinesthetic (hands-on examples, code)</option>
+                        <option value="Reading/Writing" className="bg-black">Reading/Writing (detailed text)</option>
+                        <option value="Visual" className="bg-black">Visual (diagrams, mind maps)</option>
+                        <option value="Auditory" className="bg-black">Auditory (podcasts, explanations)</option>
+                        <option value="Kinesthetic" className="bg-black">Kinesthetic (hands-on examples, code)</option>
                     </select>
                     <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
                 </div>

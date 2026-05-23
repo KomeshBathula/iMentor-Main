@@ -40,7 +40,18 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const verifyTokenAndLoadUser = async () => {
+            // If this is an active admin session, skip user-verification entirely.
+            // The admin token is validated per-request by the server.
+            const adminSessionActive = sessionStorage.getItem('isAdminSessionActive') === 'true';
             const storedToken = localStorage.getItem('authToken');
+
+            if (adminSessionActive) {
+                // Keep the token, mark loading done — admin auth is handled by adminAuthMiddleware.
+                if (storedToken) setTokenState(storedToken);
+                setLoading(false);
+                return;
+            }
+
             if (storedToken) {
                 setTokenState(storedToken);
                 try {
@@ -58,9 +69,14 @@ export const AuthProvider = ({ children }) => {
                         setUser(null);
                     }
                 } catch (error) {
-                    setToken(null);
-                    setUser(null);
-                    throw error;
+                    // Only clear the token on definitive auth failures (401/403).
+                    // Network errors / server restarts should NOT wipe a valid token.
+                    const status = error?.response?.status;
+                    if (status === 401 || status === 403) {
+                        setToken(null);
+                        setUser(null);
+                    }
+                    // Otherwise leave the token intact — the user can retry.
                 }
             }
             setLoading(false);

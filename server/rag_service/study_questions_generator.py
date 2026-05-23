@@ -6,7 +6,7 @@ Study Mode Question Bank Generator
 For each curriculum subtopic this module generates a rich, levelled question
 bank that feeds the frontend Study Mode:
 
-  MCQ         — 5 multiple-choice questions (2 beginner / 2 intermediate / 1 advanced)
+  MCQ         — 15 multiple-choice questions (5 beginner / 6 intermediate / 4 advanced)
   Short-Answer — 3 open-ended conceptual questions
   Flashcards  — 5 term → definition cards
 

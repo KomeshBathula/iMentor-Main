@@ -593,7 +593,7 @@ function generateFallbackLevelNames(topic, totalLevels) {
 // @desc    Generate quiz questions for a specific level
 router.post('/skill-tree/level-questions', async (req, res) => {
     try {
-        const { topic, levelId, levelName, difficulty } = req.body;
+        const { topic, levelId, levelName, difficulty, gameId } = req.body;
 
         // Accept either a numeric `levelId` or a `levelName` from frontend.
         if (!topic || (!levelId && !levelName)) {
@@ -734,16 +734,30 @@ JSON Structure (Return ONLY the array):
         let generationSuccess = false;
 
         try {
-            responseText = await LLMRouter.generate({
-                query: prompt,
-                systemPrompt: null,
-                chatHistory: [],
-                userId: req.user._id,
-                deepResearchContext: false
-            });
+            const LLM_TIMEOUT_MS = 30000;
+            const llmTimeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('LLM_TIMEOUT')), LLM_TIMEOUT_MS)
+            );
+            responseText = await Promise.race([
+                LLMRouter.generate({
+                    query: prompt,
+                    systemPrompt: null,
+                    chatHistory: [],
+                    userId: req.user._id,
+                    deepResearchContext: false
+                }),
+                llmTimeoutPromise
+            ]);
             generationSuccess = true;
             log.success('AI', 'Level questions generation successful');
         } catch (llmErr) {
+            if (llmErr.message === 'LLM_TIMEOUT') {
+                log.warn('AI', `Level questions generation timed out after 30s for "${levelName}"`);
+                return res.status(503).json({
+                    message: 'Question generation is taking too long. Please try again in a moment.',
+                    aiGenerationFailed: true
+                });
+            }
             log.error('AI', `Level questions generation failed: ${llmErr.message}`);
         }
 
@@ -1072,6 +1086,13 @@ router.put('/skill-tree/games/:gameId/level/:levelId', async (req, res) => {
                     await gamificationService.awardLearningCredits(req.user._id, creditsEarned, 'skill_tree_completion', game.topic);
                 } catch (awardError) {
                     log.error('SYSTEM', 'Failed to award credits', awardError);
+                }
+                // Also award Bloom's XP: 3★ = 20 XP, 2★ = 15 XP, 1★ = 10 XP
+                try {
+                    const xpToAward = level.stars === 3 ? 20 : level.stars === 2 ? 15 : 10;
+                    await gamificationService.awardXP(req.user._id, xpToAward, 'application', game.topic);
+                } catch (xpError) {
+                    log.warn('SYSTEM', 'Failed to award XP for skill tree level', xpError);
                 }
             }
         }

@@ -1,46 +1,48 @@
 // frontend/src/components/admin/ExternalServicesNav.jsx
 import React from 'react';
-import { BarChart3, LayoutDashboard, Search, Bug, DatabaseZap, Share2 } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Bug, DatabaseZap, Share2, Server } from 'lucide-react';
 
-// URLs for the external services. Kibana is used for Elasticsearch logs.
+// Actual ports from docker-compose.yml — shifted to avoid conflicts:
+//   Prometheus  9091:9090   Grafana  3002:3000
+//   Qdrant      6335:6333   Neo4j    7475:7474
+//   Elastic     9201:9200   (Kibana not deployed)
 const services = [
     {
         name: 'Prometheus',
-        url: 'http://localhost:2008/targets',
+        url: 'http://localhost:9091/targets',
         icon: BarChart3,
-        description: 'View application performance metrics and alerts.'
+        description: 'Live scrape targets and application metrics.'
     },
     {
         name: 'Grafana',
-        url: 'http://localhost:2009/d/ai_tutor_dashboard/application-health-dashboard',
+        url: 'http://localhost:3002/',
         icon: LayoutDashboard,
         description: 'Visualize metrics in custom dashboards.'
     },
     {
-        name: 'Kibana',
-        url: 'http://localhost:2007/',
-        icon: Search,
-        description: 'Explore, search, and visualize application logs.'
+        name: 'Qdrant',
+        url: 'http://localhost:6335/dashboard#/collections',
+        icon: DatabaseZap,
+        description: 'Inspect vector collections and embeddings.'
+    },
+    {
+        name: 'Neo4j Browser',
+        url: 'http://localhost:7475/browser/',
+        icon: Share2,
+        description: 'Query and visualize the knowledge graph.'
+    },
+    {
+        name: 'Elasticsearch',
+        url: 'http://localhost:9201/',
+        icon: Server,
+        description: 'Full-text search & log index health.'
     },
     {
         name: 'Sentry',
-        // This URL is constructed based on your SENTRY_DSN.
         url: import.meta.env.VITE_SENTRY_URL || null,
         icon: Bug,
         description: 'Monitor and debug application errors and crashes.'
     },
-    {
-        name: 'Qdrant',
-        url: 'http://localhost:2003/dashboard#/collections',
-        icon: DatabaseZap,
-        description: 'Inspect the vector database and collections.'
-    },
-    {
-        name: 'Neo4j Browser',
-        url: 'http://localhost:2004/',
-        icon: Share2,
-        description: 'Query and visualize the knowledge graph database.'
-    }
 ];
 
 const iconColors = [

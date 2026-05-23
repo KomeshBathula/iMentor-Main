@@ -7,10 +7,23 @@
     "dev": "npx vite --host",
     "start": "vite",
     "build": "npx vite build",
+    "build:mobile": "VITE_BUILD_FOR_CAPACITOR=true npx vite build && npx cap sync",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
+    "cap:run:android": "npx cap run android",
+    "cap:run:ios": "npx cap run ios",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives",
     "preview": "npx vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@monaco-editor/react": "^4.7.0",
     "axios": "^1.9.0",
     "chart.js": "^4.5.0",
@@ -64,6 +77,7 @@
     "postcss-nesting": "^13.0.1",
     "tailwind-scrollbar": "^3.0.5",
     "tailwindcss": "^3.4.19",
+    "typescript": "^6.0.2",
     "vite": "^6.3.5"
   }
 }

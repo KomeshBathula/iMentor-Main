@@ -1,5 +1,6 @@
 import os
 import time
+import re
 import logging
 import asyncio
 from typing import List, Dict, Any
@@ -109,6 +110,13 @@ def graph_search_query(query: str, user_id: str, document_context: str = None) -
     4. Return structured facts.
     """
     _t0 = time.perf_counter()
+    
+    def _escape_lucene(query: str) -> str:
+        # Special Lucene characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
+        escaped = re.sub(r'([+\-&|!(){}\[\]^"~*?:\\/])', r'\\\1', query)
+        escaped = re.sub(r'\s+(OR|AND|NOT)$', '', escaped, flags=re.IGNORECASE)
+        return escaped.strip()
+
     try:
         # Build Lucene-compatible search string from query keywords
         keywords = [w for w in query.split() if len(w) > 3]
@@ -127,7 +135,7 @@ def graph_search_query(query: str, user_id: str, document_context: str = None) -
             RETURN node.nodeId AS nodeId, node.description AS description,
                    COLLECT(DISTINCT { relationship: r.type, neighborId: neighbor.nodeId }) AS relations
             """
-            params = {"search_term": search_term, "userId": user_id, "documentName": document_context}
+            params = {"search_term": _escape_lucene(search_term), "userId": user_id, "documentName": document_context}
         else:
             cypher = """
             CALL db.index.fulltext.queryNodes("node_search_index", $search_term) YIELD node, score
@@ -138,7 +146,7 @@ def graph_search_query(query: str, user_id: str, document_context: str = None) -
             RETURN node.nodeId AS nodeId, node.description AS description,
                    COLLECT(DISTINCT { relationship: r.type, neighborId: neighbor.nodeId }) AS relations
             """
-            params = {"search_term": search_term, "userId": user_id}
+            params = {"search_term": _escape_lucene(search_term), "userId": user_id}
 
         results = execute_query(cypher, params)
 

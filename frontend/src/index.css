@@ -45,8 +45,11 @@
     --vs-code-bg:     #282c34;
     --vs-code-text:   #abb2bf;
 
-    /* Font scale — JS writes font-size to <html> via this var */
-    --font-base: 15px;
+    /* Font scale — JS writes user preference to --font-base on <html>
+     * --vp-scale then multiplies it so the result is appropriate for the
+     * screen size without requiring any JS media-query listeners. */
+    --font-base: 17px;
+    --vp-scale:  1;      /* desktop default — 17 × 1.0 = 17px */
 
     /* Legacy: keep vscode-* vars for backward compat with existing components */
     --vscode-bg:          var(--vs-bg);
@@ -65,9 +68,21 @@
     --vscode-text-muted:  var(--vs-text-lo);
   }
 
+  /* ─── Viewport-responsive font scaling ─────────────────────────────────────
+   * --vp-scale automatically reduces font size on smaller screens so every
+   * rem-based Tailwind size scales correctly with zero JS changes.
+   *   Mobile  (<640 px)    0.82  → 17px default ≈ 14 px
+   *   Tablet (640-1023 px) 0.90  → 17px default ≈ 15 px
+   *   Desktop (≥1024 px)   1.00  → 17px default = 17 px
+   * The user's manual font-size preference (--font-base, set by TopNav) still
+   * applies — it is just proportionally scaled down on smaller screens.
+   * ────────────────────────────────────────────────────────────────────────── */
+  @media (max-width: 639px)                          { :root { --vp-scale: 0.82; } }
+  @media (min-width: 640px) and (max-width: 1023px)  { :root { --vp-scale: 0.90; } }
+
   /* Apply font scale — all rem units inherit this */
   html {
-    font-size: var(--font-base, 15px);
+    font-size: calc(var(--font-base, 17px) * var(--vp-scale, 1));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;

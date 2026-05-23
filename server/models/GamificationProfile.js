@@ -5,7 +5,19 @@ const XPHistorySchema = new mongoose.Schema({
     amount: { type: Number, required: true },
     reason: {
         type: String,
-        enum: ['remembering', 'understanding', 'applying', 'analyzing', 'evaluating_creating', 'rote', 'application', 'crafting', 'boss_battle', 'streak_bonus', 'bounty_question'],
+        enum: [
+            // Legacy / credits reasons
+            'remembering', 'understanding', 'applying', 'analyzing',
+            'evaluating_creating', 'rote', 'application', 'crafting',
+            'boss_battle', 'streak_bonus', 'bounty_question',
+            // Tutor turn XP reasons (tutorXpService)
+            'tutor_turn', 'tutor_correct', 'tutor_partial', 'tutor_wrong',
+            'tutor_unknown', 'tutor_incomplete', 'tutor_vague',
+            'tutor_misconception', 'tutor_no_foundation',
+            'tutor_mastery',
+            // Quality bonus from LLM eval
+            'quality_bonus'
+        ],
         required: true
     },
     topic: { type: String, default: '' },
@@ -51,7 +63,22 @@ const GamificationProfileSchema = new mongoose.Schema({
     totalLearningCredits: { type: Number, default: 0, min: 0 },
     learningCreditsHistory: [{
         amount: { type: Number, required: true },
-        reason: { type: String, enum: ['remembering', 'understanding', 'applying', 'analyzing', 'evaluating_creating', 'rote', 'application', 'crafting', 'boss_battle', 'bounty_question', 'bounty_completed', 'daily_bonus', 'admin_award', 'spent', 'skill_tree_completion', 'streak_bonus'], required: true },
+        reason: {
+            type: String,
+            enum: [
+                'remembering', 'understanding', 'applying', 'analyzing',
+                'evaluating_creating', 'rote', 'application', 'crafting',
+                'boss_battle', 'bounty_question', 'bounty_completed',
+                'daily_bonus', 'admin_award', 'spent', 'skill_tree_completion',
+                'streak_bonus',
+                // Tutor reasons
+                'tutor_turn', 'tutor_correct', 'tutor_partial', 'tutor_wrong',
+                'tutor_unknown', 'tutor_incomplete', 'tutor_vague',
+                'tutor_misconception', 'tutor_no_foundation',
+                'tutor_mastery', 'quality_bonus'
+            ],
+            required: true
+        },
         bountyId: { type: String, default: '' },
         topic: { type: String, default: '' },
         timestamp: { type: Date, default: Date.now }

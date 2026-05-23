@@ -318,7 +318,7 @@ function TutorModePage({
                 });
             }
 
-            // Update completed modules
+            // Update completed modules — from explicit masteredModuleId or full sync array
             if (data.masteredModuleId) {
                 setCompletedModules(prev => {
                     if (!prev.includes(data.masteredModuleId)) {
@@ -327,6 +327,9 @@ function TutorModePage({
                     }
                     return prev;
                 });
+            }
+            if (data.completedModules?.length > 0) {
+                setCompletedModules(prev => [...new Set([...prev, ...data.completedModules])]);
             }
 
             // Update current topic/subtopic indicator

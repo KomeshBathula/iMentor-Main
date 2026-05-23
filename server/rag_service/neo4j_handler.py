@@ -1,5 +1,6 @@
 # server/rag_service/neo4j_handler.py
 
+import re
 import logging
 from neo4j import GraphDatabase, exceptions as neo4j_exceptions
 import config
@@ -109,12 +110,23 @@ def _add_edges_transactional(tx, edges_param, user_id, document_name):
     result = tx.run(query, edges_data=valid_edges, userId=user_id, documentName=document_name)
     return result.single()[0] if result.peek() else 0
 
+def _escape_lucene(query: str) -> str:
+    """Escapes Lucene special characters to avoid parsing errors in Neo4j fulltext index."""
+    # Special Lucy/Lucene characters: + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /
+    # Also handle trailing operators
+    escaped = re.sub(r'([+\-&|!(){}\[\]^"~*?:\\/])', r'\\\1', query)
+    # Remove trailing OR/AND/NOT
+    escaped = re.sub(r'\s+(OR|AND|NOT)$', '', escaped, flags=re.IGNORECASE)
+    return escaped.strip()
 
 def _search_kg_transactional(tx, user_id, document_name, query_text):
     logger.info(f"Neo4j TX: Searching KG for user '{user_id}', doc '{document_name}' with query: '{query_text[:50]}...'")
     
-    query = """
-    CALL db.index.fulltext.queryNodes("node_search_index", $query_text) YIELD node, score
+    escaped_query = _escape_lucene(query_text)
+    if not escaped_query: return []
+    
+    cypher = """
+    CALL db.index.fulltext.queryNodes("node_search_index", $escaped_query) YIELD node, score
     WHERE node.userId = $userId AND toLower(node.documentName) = toLower($documentName)
     WITH node, score ORDER BY score DESC LIMIT 5
     MATCH (node)-[r:RELATED_TO]-(neighbor)
@@ -123,7 +135,7 @@ def _search_kg_transactional(tx, user_id, document_name, query_text):
            COLLECT(DISTINCT { relationship: r.type, neighborId: neighbor.nodeId }) AS relations
     """
     
-    results = tx.run(query, userId=user_id, documentName=document_name, query_text=query_text)
+    results = tx.run(cypher, userId=user_id, documentName=document_name, escaped_query=escaped_query)
     
     facts = []
     for record in results:

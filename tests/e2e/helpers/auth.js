@@ -8,8 +8,8 @@ export async function loginAs(page, email = 'ultra.boy7@gmail.com', password = '
   await page.goto('/');
 
   // We land on LandingPage when not authenticated
-  // Click the hero Login button or nav Login
-  const loginBtn = page.getByRole('button', { name: /login/i }).first();
+  // Click the hero 'Sign In' or 'Login' button in the nav
+  const loginBtn = page.getByRole('button', { name: /sign.?in|login/i }).first();
   await loginBtn.waitFor({ state: 'visible', timeout: 10000 });
   await loginBtn.click();
 
@@ -17,18 +17,17 @@ export async function loginAs(page, email = 'ultra.boy7@gmail.com', password = '
   await page.getByPlaceholder(/email/i).fill(email);
   await page.getByPlaceholder(/password/i).fill(password);
 
-  // Click the submit button (Login) — inside the form to avoid strict-mode
-  await page.locator('form').getByRole('button', { name: /login/i }).click();
+  // Click the submit button (Sign In / Login) — inside the form to avoid strict-mode
+  await page.locator('form').getByRole('button', { name: /sign.?in|login/i }).click();
 
-  // Wait until we leave the landing page (authenticated redirect to /)
-  await page.waitForURL(url => !url.toString().includes('landing'), { timeout: 20000 });
+  // Wait for auth modal to close: the email input inside the modal disappears
+  await page.waitForSelector('input[placeholder*="Email Address"]', { state: 'hidden', timeout: 25000 });
 
-  // Wait for any post-login content to be ready (chat textarea or any main content)
-  try {
-    await page.waitForSelector('[data-tutor-tour="chat-input"], textarea, [data-testid="chat-input-container"], nav, header', { timeout: 15000 });
-  } catch {
-    // Some pages may not have chat input (e.g. tutor/skill-tree), that's ok
-  }
+  // Wait for the main chat input to appear and be enabled (app fully loaded)
+  await page.waitForSelector('textarea:not([disabled])', { timeout: 25000 });
+
+  // Extra buffer for session creation async work
+  await page.waitForTimeout(300);
 }
 
 /**

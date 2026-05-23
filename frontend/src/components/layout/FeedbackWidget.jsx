@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Bug, Lightbulb, MessageSquare, Send, X, Flag } from 'lucide-react';
+import { Bug, Lightbulb, MessageSquare, Send, X, Flag, Paperclip, Image as ImageIcon, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
@@ -37,10 +37,13 @@ export default function FeedbackWidget() {
     const [category, setCategory] = useState('Other');
     const [message, setMessage]   = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [attachments, setAttachments] = useState([]); // File[]
+    const [previews, setPreviews]       = useState([]); // {url, isImage}[]
 
-    const panelRef  = useRef(null);
-    const triggerRef = useRef(null);
-    const textareaRef = useRef(null);
+    const panelRef     = useRef(null);
+    const triggerRef   = useRef(null);
+    const textareaRef  = useRef(null);
+    const fileInputRef = useRef(null);
 
     // Close on outside click
     useEffect(() => {
@@ -68,6 +71,8 @@ export default function FeedbackWidget() {
         setType('bug');
         setCategory('Other');
         setMessage('');
+        setAttachments([]);
+        setPreviews(prev => { prev.forEach(p => URL.revokeObjectURL(p.url)); return []; });
     }, []);
 
     const handleClose = useCallback(() => {
@@ -83,7 +88,7 @@ export default function FeedbackWidget() {
         }
         setSubmitting(true);
         try {
-            await api.submitUserFeedback({ type, category, message: trimmed });
+            await api.submitUserFeedback({ type, category, message: trimmed, attachments });
             toast.success('Thanks! Your feedback was submitted.', { icon: '🎯' });
             handleClose();
         } catch (err) {
@@ -91,7 +96,28 @@ export default function FeedbackWidget() {
         } finally {
             setSubmitting(false);
         }
-    }, [type, category, message, handleClose]);
+    }, [type, category, message, attachments, handleClose]);
+
+    const handleFileChange = useCallback((e) => {
+        const files = Array.from(e.target.files || []);
+        const remaining = 3 - attachments.length;
+        const toAdd = files.slice(0, remaining);
+        if (toAdd.length < files.length) toast.error('Maximum 3 attachments allowed.');
+        setAttachments(prev => [...prev, ...toAdd]);
+        setPreviews(prev => [
+            ...prev,
+            ...toAdd.map(f => ({ url: URL.createObjectURL(f), isImage: f.type.startsWith('image/'), name: f.name })),
+        ]);
+        e.target.value = '';
+    }, [attachments.length]);
+
+    const removeAttachment = useCallback((idx) => {
+        setAttachments(prev => prev.filter((_, i) => i !== idx));
+        setPreviews(prev => {
+            URL.revokeObjectURL(prev[idx]?.url);
+            return prev.filter((_, i) => i !== idx);
+        });
+    }, []);
 
     const remaining = MAX_LEN - message.length;
     const tooShort  = message.trim().length < MIN_LEN && message.length > 0;
@@ -110,9 +136,9 @@ export default function FeedbackWidget() {
                     display:        'flex',
                     alignItems:     'center',
                     justifyContent: 'center',
-                    width:          '26px',
-                    height:         '26px',
-                    borderRadius:   '4px',
+                    width:          '38px',
+                    height:         '38px',
+                    borderRadius:   '6px',
                     border:         open
                         ? '1px solid var(--vs-border-hi)'
                         : '1px solid transparent',
@@ -135,7 +161,7 @@ export default function FeedbackWidget() {
                     }
                 }}
             >
-                <Flag size={13} />
+                <Flag size={20} />
             </button>
 
             {/* ── Popover panel ─────────────────────────────────────────── */}
@@ -313,6 +339,53 @@ export default function FeedbackWidget() {
                                 <div style={{ fontSize: '10px', color: '#f87171', marginTop: '3px' }}>
                                     At least {MIN_LEN} characters required
                                 </div>
+                            )}
+                        </div>
+
+                        {/* Attachments */}
+                        <div style={{ marginBottom: '10px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--vs-text-dim)', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>Attachments</span>
+                                <span style={{ fontWeight: 400 }}>{attachments.length}/3 · images or PDF</span>
+                            </div>
+
+                            {/* Previews */}
+                            {previews.length > 0 && (
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                                    {previews.map((p, i) => (
+                                        <div key={i} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '4px', border: '1px solid var(--vs-border)', overflow: 'hidden', background: 'var(--vs-surface)', flexShrink: 0 }}>
+                                            {p.isImage ? (
+                                                <img src={p.url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', padding: '4px' }}>
+                                                    <FileText size={20} style={{ color: 'var(--vs-text-dim)' }} />
+                                                    <span style={{ fontSize: '8px', color: 'var(--vs-text-dim)', textAlign: 'center', wordBreak: 'break-all', lineHeight: 1.2 }}>{p.name.slice(0, 12)}</span>
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={() => removeAttachment(i)}
+                                                style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, color: '#fff' }}
+                                                aria-label={`Remove ${p.name}`}
+                                            >
+                                                <X size={9} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Add button */}
+                            {attachments.length < 3 && (
+                                <>
+                                    <input ref={fileInputRef} type="file" accept="image/*,application/pdf" multiple hidden onChange={handleFileChange} />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 9px', background: 'var(--vs-surface)', border: '1px dashed var(--vs-border)', borderRadius: '4px', color: 'var(--vs-text-dim)', fontSize: '11px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
+                                    >
+                                        <Paperclip size={12} />
+                                        Add screenshot or file
+                                    </button>
+                                </>
                             )}
                         </div>
 

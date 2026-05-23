@@ -6,6 +6,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ArrowUp, Mic, Server, Loader2 } from 'lucide-react';
 import { renderMarkdown } from '../../utils/markdownUtils';
+import toast from 'react-hot-toast';
 
 // ─── Minimal top nav ──────────────────────────────────────
 function LandingNav({ onLoginClick }) {
@@ -75,8 +76,8 @@ function LandingPage({ onLoginClick }) {
     const [isStreaming, setIsStreaming] = useState(false);
     const [guestMessageCount, setGuestMessageCount] = useState(0);
     const textareaRef = useRef(null);
-    const chatEndRef = useRef(null);
-    const abortRef = useRef(null);
+    const chatEndRef  = useRef(null);
+    const abortRef    = useRef(null);
 
     // Auto-resize textarea
     useEffect(() => {
@@ -199,14 +200,6 @@ function LandingPage({ onLoginClick }) {
         }
     };
 
-    const handleMicClick = () => {
-        // Voice input requires sign-in for speech recognition permissions
-        setMessages(prev => [
-            ...prev,
-            { role: 'assistant', text: 'Voice input is available after signing in. You can type your question below — I\'m happy to help!' }
-        ]);
-    };
-
     return (
         <div className="flex flex-col h-screen bg-black text-white">
             <LandingNav onLoginClick={onLoginClick} />
@@ -281,12 +274,12 @@ function LandingPage({ onLoginClick }) {
                             className="flex-1 bg-transparent text-white text-base leading-relaxed resize-none min-h-[28px] max-h-36 py-1.5 border-none outline-none placeholder:text-gray-500"
                         />
 
-                        {/* Mic button */}
+                        {/* Mic — available after sign-in */}
                         <button
-                            onClick={handleMicClick}
-                            className="flex-shrink-0 p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
-                            title="Voice input — sign in required"
-                            aria-label="Voice input"
+                            onClick={() => toast('Sign in to use voice input', { icon: '🎙️' })}
+                            className="flex-shrink-0 p-2 rounded-lg text-gray-600 hover:text-gray-400 transition-colors"
+                            title="Voice input — sign in to use"
+                            aria-label="Voice input requires sign-in"
                         >
                             <Mic size={18} />
                         </button>

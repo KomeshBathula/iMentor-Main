@@ -64,6 +64,7 @@ function LeftCollapsedNav({ isChatProcessing, onHistoryClick, onKnowledgeBaseCli
             id: 'research',
             label: 'Deep Research',
             iconName: 'research',
+            mobileHide: true,
             action: () => {
                 navigate('/tools/deep-research');
             }
@@ -97,17 +98,19 @@ function LeftCollapsedNav({ isChatProcessing, onHistoryClick, onKnowledgeBaseCli
             {navItems.map(item => {
                 const IconComponent = iconMap[item.iconName] || Settings2; // Fallback icon
                 return (
-                    <IconButton
-                        key={item.id}
-                        icon={IconComponent}
-                        onClick={item.action} // Action currently just opens the panel
-                        title={item.label}
-                        ariaLabel={item.label}
-                        variant="ghost"
-                        size="md"
-                        className="text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary-light"
-                        disabled={isChatProcessing}
-                    />
+                    // mobileHide items are desktop-only (e.g. Deep Research)
+                    <div key={item.id} className={item.mobileHide ? 'hidden md:block' : ''}>
+                        <IconButton
+                            icon={IconComponent}
+                            onClick={item.action}
+                            title={item.label}
+                            ariaLabel={item.label}
+                            variant="ghost"
+                            size="md"
+                            className="text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary-light"
+                            disabled={isChatProcessing}
+                        />
+                    </div>
                 );
             })}
             {/* Add a flexible spacer if you want the open button pushed further down from items */}

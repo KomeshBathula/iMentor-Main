@@ -293,15 +293,20 @@ except ImportError:
     YTDLP_AVAILABLE, yt_dlp = False, None
     
 # STT: local OpenAI Whisper — no HuggingFace token needed, runs offline, great for Indian English
-# STT: using SpeechRecognition with Google Web Speech API (lightweight, Indian English)
 try:
     import speech_recognition as _sr_check
     SPEECH_RECOGNITION_AVAILABLE = True
 except ImportError:
     SPEECH_RECOGNITION_AVAILABLE = False
     logger.warning("SpeechRecognition not installed. STT will be unavailable. Run: pip install SpeechRecognition")
-# Legacy flag for backward compat
-WHISPER_AVAILABLE = False
+
+try:
+    import whisper as _whisper_check  # openai-whisper
+    WHISPER_AVAILABLE = True
+    logger.info(f"Whisper STT available (openai-whisper {_whisper_check.__version__})")
+except ImportError:
+    WHISPER_AVAILABLE = False
+    logger.warning("openai-whisper not installed. Whisper STT unavailable. Run: pip install openai-whisper")
     
 try:
     from playwright.sync_api import sync_playwright

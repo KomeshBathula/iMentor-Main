@@ -186,6 +186,13 @@ const SkillTreeGames = () => {
 
                     {/* Total Credits Display + History Button */}
                     <div className="flex items-center gap-2">
+                        <span
+                            data-testid="profile-credits"
+                            className="flex items-center gap-1 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm font-bold text-yellow-400"
+                            title="Total Learning Credits"
+                        >
+                            ⭐ {profileCredits}
+                        </span>
                         <button
                             onClick={() => setHistoryOpen(true)}
                             className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 rounded-xl px-3 py-2 transition-colors hover:scale-105 active:scale-95"

@@ -37,8 +37,12 @@ export const TUTOR_SEL = {
 export async function navigateToTutor(page) {
   await page.goto('/tutor');
   await page.waitForTimeout(2000);
-  // Wait for either course selector or tutor label
-  await page.waitForSelector(`${TUTOR_SEL.courseSelect}, text=/tutor mode/i`, { timeout: 15000 });
+  // Wait for either course selector or tutor label (avoid double-quote in combined selector)
+  try {
+    await page.waitForSelector(TUTOR_SEL.courseSelect, { timeout: 10000 });
+  } catch {
+    await page.waitForSelector('text=/tutor mode/i', { timeout: 10000 });
+  }
 }
 
 /**
@@ -65,7 +69,7 @@ export async function selectTutorCourse(page, courseName) {
 export async function clearTutorProgress(page, courseName) {
   // Get token from cookie or local storage
   const token = await page.evaluate(() => {
-    return localStorage.getItem('token') || '';
+    return localStorage.getItem('authToken') || localStorage.getItem('token') || '';
   });
 
   const response = await page.request.post(`${BASE_API}/progress/update`, {
@@ -90,7 +94,7 @@ export async function clearTutorProgress(page, courseName) {
  * Uses POST /api/chat/tutor/progress/:course
  */
 export async function saveTutorProgress(page, courseName, progress) {
-  const token = await page.evaluate(() => localStorage.getItem('token') || '');
+  const token = await page.evaluate(() => localStorage.getItem('authToken') || localStorage.getItem('token') || '');
 
   const response = await page.request.post(
     `${BASE_API}/chat/tutor/progress/${encodeURIComponent(courseName)}`,
@@ -110,7 +114,7 @@ export async function saveTutorProgress(page, courseName, progress) {
  * Returns { modules: [{ id, name, topics: [{ id, name, subtopics: [...] }] }] }
  */
 export async function getCurriculumStructure(page, courseName) {
-  const token = await page.evaluate(() => localStorage.getItem('token') || '');
+  const token = await page.evaluate(() => localStorage.getItem('authToken') || localStorage.getItem('token') || '');
 
   const response = await page.request.get(
     `${BASE_API}/chat/tutor/curriculum/${encodeURIComponent(courseName)}`,

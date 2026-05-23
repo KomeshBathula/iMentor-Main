@@ -142,6 +142,34 @@ function normalizedOverlapScore(overlap, tokenSetSize, cap = 12) {
 
 function defaultDimensionsForQuery(query) {
     const q = query.toLowerCase();
+
+    // Detect technical / engineering / ML / scientific queries
+    const isTechnical = /(deep learning|machine learning|neural network|algorithm|model|estimation|prediction|battery|lstm|cnn|rnn|transformer|dataset|benchmark|accuracy|training|inference|signal processing|sensor|hardware|firmware|embedded|circuit|semiconductor|chemistry|physics|biology|genomic|protein|climate|geospatial|satellite|radar|lidar|optical|quantum|robotics|autonomous|reinforcement learning|computer vision|nlp|natural language|speech|image|classification|regression|clustering|optimization|gradient|loss function|epoch|overfitting|regularization|precision|recall|f1|mse|rmse|mae|auc|roc|confusion matrix|feature engineering|hyperparameter|preprint|arxiv|journal|conference|proceedings|doi|peer.reviewed)/.test(q);
+
+    if (isTechnical) {
+        const dims = [
+            'methodology and algorithmic approach',
+            'empirical results and benchmark performance',
+            'dataset and experimental validation',
+            'model architecture and training procedure',
+            'accuracy precision recall performance metrics',
+            'comparison with state of the art methods',
+            'limitations and future research directions',
+            'application domain and deployment use case',
+            'computational efficiency hardware requirements',
+            'reproducibility open source code availability'
+        ];
+        if (/(battery|soc|rul|soh|lithium|charge|energy storage)/.test(q)) {
+            dims.push('battery degradation cycle life aging');
+            dims.push('state estimation electrochemical model');
+        }
+        if (/(health|biotech|medical|clinical|drug|patient)/.test(q)) {
+            dims.push('clinical trial safety efficacy outcomes');
+        }
+        return uniqueList(dims).slice(0, 10);
+    }
+
+    // Finance / economics / market queries — original dimensions
     const dimensions = [
         'historical economic structure comparison',
         'capital formation and funding dynamics',

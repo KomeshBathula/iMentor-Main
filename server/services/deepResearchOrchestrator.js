@@ -24,6 +24,7 @@ const citationGraphService = require('./citationGraphService');
 const factCheckingService = require('./factCheckingService');
 const researchIntelligenceService = require('./researchIntelligenceService');
 const researchQueryGenerator = require('./researchQueryGenerator');
+const { extractQueryConstraints } = researchQueryGenerator;
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -82,22 +83,22 @@ async function runCrewAiResearch(query, options = {}, onProgress = null) {
 // Per-provider fetching with quota enforcement
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function fetchOpenAlexQuota(queries, quota) {
+async function fetchOpenAlexQuota(queries, quota, constraints = {}) {
     if (!queries.length || quota <= 0) return [];
     const perQuery = Math.ceil(quota / queries.length) + 2;
-    return academicSourceService.fetchOpenAlexBatch(queries, perQuery);
+    return academicSourceService.fetchOpenAlexBatch(queries, perQuery, constraints);
 }
 
-async function fetchSemanticQuota(queries, quota) {
+async function fetchSemanticQuota(queries, quota, constraints = {}) {
     if (!queries.length || quota <= 0) return [];
     const perQuery = Math.ceil(quota / queries.length) + 2;
-    return academicSourceService.fetchSemanticBatch(queries, perQuery);
+    return academicSourceService.fetchSemanticBatch(queries, perQuery, constraints);
 }
 
-async function fetchArxivQuota(queries, quota) {
+async function fetchArxivQuota(queries, quota, constraints = {}) {
     if (!queries.length || quota <= 0) return [];
     const perQuery = Math.ceil(quota / queries.length) + 2;
-    return academicSourceService.fetchArxivBatch(queries, perQuery);
+    return academicSourceService.fetchArxivBatch(queries, perQuery, constraints);
 }
 
 async function fetchWebQuota(queries, quota) {
@@ -195,18 +196,34 @@ const deepResearchOrchestrator = {
 
         // ── 2. Generate source-type-specific queries via LLM ─────────────────
         await progress('generating_queries', 'Generating specialised search queries...');
-        let querySets = { openalex: [], semantic: [], arxiv: [], web: [] };
+        let querySets = { openalex: [], semantic: [], arxiv: [], web: [], constraints: {} };
         try {
             querySets = await researchQueryGenerator.generateQuerySets(query, researchConfig, options.userId);
-            log.info('RESEARCH', `Query sets — OA:${querySets.openalex.length} SS:${querySets.semantic.length} Ax:${querySets.arxiv.length} Web:${querySets.web.length}`);
+            const c = querySets.constraints || {};
+            const constraintSummary = [
+                c.yearStart ? `years:${c.yearStart}-${c.yearEnd || c.yearStart}` : null,
+                c.venueFilter ? `venue:${c.venueFilter}` : null,
+            ].filter(Boolean).join(', ') || 'none';
+            log.info('RESEARCH', `Query sets — OA:${querySets.openalex.length} SS:${querySets.semantic.length} Ax:${querySets.arxiv.length} Web:${querySets.web.length} | Constraints: ${constraintSummary}`);
+            if (constraintSummary !== 'none') {
+                await progress('generating_queries', `Constraints detected — ${constraintSummary}`);
+            }
         } catch (qErr) {
             log.warn('RESEARCH', `Query generation failed, using plan queries: ${qErr.message}`);
             const planQueries = researchPlan.expanded_search_queries || [query];
-            querySets.openalex = planQueries.slice(0, 8);
-            querySets.semantic = planQueries.slice(0, 6);
-            querySets.arxiv    = planQueries.slice(0, 4);
-            querySets.web      = planQueries.slice(0, 3);
+            querySets.openalex    = planQueries.slice(0, 8);
+            querySets.semantic    = planQueries.slice(0, 6);
+            querySets.arxiv       = planQueries.slice(0, 4);
+            querySets.web         = planQueries.slice(0, 3);
+            querySets.constraints = researchQueryGenerator.extractQueryConstraints(query);
         }
+        const activeConstraints = {
+            ...querySets.constraints || {},
+            // ── Deep research always uses trusted publishers only ─────────────
+            // OpenAlex: restricted to IEEE, Elsevier, Springer, Nature
+            // arXiv:    only papers with ≥18 citations (or published < 12 months)
+            trustedPublishersOnly: true,
+        };
 
         // ── 3. Local knowledge ───────────────────────────────────────────────
         await progress('searching_local', 'Checking internal knowledge graph...');
@@ -220,17 +237,34 @@ const deepResearchOrchestrator = {
 
         const onlineStart = Date.now();
         const [openAlexResult, semanticResult, arxivResult, webResult] = await Promise.allSettled([
-            fetchOpenAlexQuota(querySets.openalex, researchConfig.openAlexTarget),
-            fetchSemanticQuota(querySets.semantic,  researchConfig.semanticTarget),
-            fetchArxivQuota(querySets.arxiv,        researchConfig.arxivTarget),
+            fetchOpenAlexQuota(querySets.openalex, researchConfig.openAlexTarget, activeConstraints),
+            fetchSemanticQuota(querySets.semantic,  researchConfig.semanticTarget, activeConstraints),
+            fetchArxivQuota(querySets.arxiv,        researchConfig.arxivTarget,    activeConstraints),
             fetchWebQuota(querySets.web,             researchConfig.webTarget),
         ]);
         perf.addTool(Date.now() - onlineStart);
 
-        const openAlexSources  = openAlexResult.status  === 'fulfilled' ? openAlexResult.value  : [];
-        const semanticSources  = semanticResult.status  === 'fulfilled' ? semanticResult.value  : [];
-        const arxivSources     = arxivResult.status     === 'fulfilled' ? arxivResult.value     : [];
+        let openAlexSources  = openAlexResult.status  === 'fulfilled' ? openAlexResult.value  : [];
+        let semanticSources  = semanticResult.status  === 'fulfilled' ? semanticResult.value  : [];
+        let arxivSources     = arxivResult.status     === 'fulfilled' ? arxivResult.value     : [];
         const rawWebSources    = webResult.status        === 'fulfilled' ? webResult.value       : [];
+
+        // ── 4b. Constraint-only fallback: if venue filter produced nothing, retry year-only ──
+        const totalConstrained = openAlexSources.length + semanticSources.length + arxivSources.length;
+        if (totalConstrained === 0 && activeConstraints.venueFilter) {
+            log.warn('RESEARCH', `Zero results with venue=${activeConstraints.venueFilter} filter — retrying year-only`);
+            await progress('searching_online', `No results for venue:${activeConstraints.venueFilter} — expanding to year-only filter...`);
+            const yearOnlyConstraints = { yearStart: activeConstraints.yearStart, yearEnd: activeConstraints.yearEnd, trustedPublishersOnly: true };
+            const [oaR2, ssR2, axR2] = await Promise.allSettled([
+                fetchOpenAlexQuota(querySets.openalex, researchConfig.openAlexTarget, yearOnlyConstraints),
+                fetchSemanticQuota(querySets.semantic,  researchConfig.semanticTarget, yearOnlyConstraints),
+                fetchArxivQuota(querySets.arxiv,        researchConfig.arxivTarget,    yearOnlyConstraints),
+            ]);
+            openAlexSources = oaR2.status === 'fulfilled' ? oaR2.value : [];
+            semanticSources = ssR2.status === 'fulfilled' ? ssR2.value : [];
+            arxivSources    = axR2.status === 'fulfilled' ? axR2.value : [];
+            log.info('RESEARCH', `Year-only retry — OA:${openAlexSources.length} SS:${semanticSources.length} Ax:${arxivSources.length}`);
+        }
 
         // Separate recent vs gold-standard web
         const recentWebSources     = rawWebSources.filter(s => !s.goldStandard);
@@ -286,12 +320,31 @@ const deepResearchOrchestrator = {
 
         // Fallback ladder
         const counterQueries       = (researchPlan.counter_evidence_queries || []).slice(0, 6);
-        const domainExpansionQueries = [
-            `${query} arxiv`,
-            `${query} government policy report`,
-            `${query} industry whitepaper`,
-            `${query} technical benchmark report`
-        ];
+
+        // Build domain-appropriate expansion queries (strip generic non-academic suffixes for academic searches)
+        const isAcademic = researchConfig.nature === 'academic' || researchConfig.nature === 'research';
+        const domainExpansionQueries = isAcademic
+            ? [
+                `${query} deep learning`,
+                `${query} neural network`,
+                `${query} machine learning estimation`,
+                `${query} LSTM transformer battery`,
+              ]
+            : [
+                `${query} arxiv`,
+                `${query} government policy report`,
+                `${query} industry whitepaper`,
+                `${query} technical benchmark report`,
+              ];
+
+        // L1/L2: keep year filter + trusted publisher gate; L3: drop ALL — broadest possible
+        const fallbackConstraintsL1 = {
+            trustedPublishersOnly: true,  // keep quality gate even in fallback
+            ...(activeConstraints.yearStart
+                ? { yearStart: activeConstraints.yearStart, yearEnd: activeConstraints.yearEnd }
+                : {}),
+        };
+        const fallbackConstraintsL3 = {}; // no year, no venue, no publisher gate — last resort
 
         while (researchConfig.allow_adaptive_fallback && !researchIntelligenceService.hasSufficientEvidence(sufficiency) && fallbackStage < 4) {
             fallbackStage++;
@@ -302,8 +355,8 @@ const deepResearchOrchestrator = {
                 if (secondPass.length > 0) {
                     await progress('searching_online', 'Adaptive retrieval L1: expanding semantic queries...');
                     const [r1, r2] = await Promise.allSettled([
-                        academicSourceService.fetchOpenAlexBatch(secondPass, 4),
-                        academicSourceService.fetchSemanticBatch(secondPass, 3),
+                        academicSourceService.fetchOpenAlexBatch(secondPass, 4, fallbackConstraintsL1),
+                        academicSourceService.fetchSemanticBatch(secondPass, 3, fallbackConstraintsL1),
                     ]);
                     const extra = [...(r1.status==='fulfilled'?r1.value:[]), ...(r2.status==='fulfilled'?r2.value:[])];
                     allSources = researchIntelligenceService.dedupeSources([...allSources, ...extra]);
@@ -312,13 +365,30 @@ const deepResearchOrchestrator = {
             if (fallbackStage === 2) {
                 retrievalMode = 'adaptive';
                 await progress('searching_online', 'Adaptive retrieval L2: domain expansion (ArXiv / industry / policy)...');
-                const domSources = await academicSourceService.fetchArxivBatch(domainExpansionQueries, 4);
+                const [domOA, domAx] = await Promise.allSettled([
+                    academicSourceService.fetchOpenAlexBatch(domainExpansionQueries, 5, fallbackConstraintsL1),
+                    academicSourceService.fetchArxivBatch(domainExpansionQueries, 4, fallbackConstraintsL1),
+                ]);
+                const domSources = [...(domOA.status==='fulfilled'?domOA.value:[]), ...(domAx.status==='fulfilled'?domAx.value:[])];
                 allSources = researchIntelligenceService.dedupeSources([...allSources, ...domSources]);
             }
             if (fallbackStage === 3) {
                 retrievalMode = 'fallback';
                 thresholds = researchIntelligenceService.getAdaptiveThresholds(3);
-                await progress('searching_online', 'Adaptive retrieval L3: lowered evidence thresholds...');
+                // Drop ALL constraints so we fetch broadly and lower thresholds simultaneously
+                await progress('searching_online', 'Adaptive retrieval L3: dropping year/venue constraints, lowering thresholds...');
+                const [r3oa, r3ss, r3ax] = await Promise.allSettled([
+                    academicSourceService.fetchOpenAlexBatch(querySets.openalex.slice(0, 6), 6, fallbackConstraintsL3),
+                    academicSourceService.fetchSemanticBatch(querySets.semantic.slice(0, 5), 5, fallbackConstraintsL3),
+                    academicSourceService.fetchArxivBatch(querySets.arxiv.slice(0, 4), 5, fallbackConstraintsL3),
+                ]);
+                const l3Sources = [
+                    ...(r3oa.status==='fulfilled'?r3oa.value:[]),
+                    ...(r3ss.status==='fulfilled'?r3ss.value:[]),
+                    ...(r3ax.status==='fulfilled'?r3ax.value:[]),
+                ];
+                log.info('RESEARCH', `L3 unconstrained fetch: ${l3Sources.length} additional sources`);
+                allSources = researchIntelligenceService.dedupeSources([...allSources, ...l3Sources]);
             }
             if (fallbackStage >= 4) {
                 retrievalMode = 'fallback';
@@ -432,6 +502,7 @@ const deepResearchOrchestrator = {
             goldStandardCount:      providerBreakdown.goldStandard,
             nature:                 researchConfig.nature,
             depth:                  researchConfig.depth,
+            appliedConstraints:     activeConstraints,
         };
 
         const researchResult = {

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Modal from '../core/Modal';
-import { Code, FileQuestion, ShieldCheck, GraduationCap, Target, Swords, Award, Coins, TreePine, Zap } from 'lucide-react';
+import { Code, TreePine } from 'lucide-react';
 
 const availableTools = [
     {
@@ -13,49 +13,10 @@ const availableTools = [
         status: 'active'
     },
     {
-        title: 'AI Quiz Generator',
-        description: 'Upload a document (PDF, DOCX, TXT) and generate a multiple-choice quiz to test your knowledge.',
-        icon: FileQuestion,
-        path: '/tools/quiz-generator',
-        status: 'active'
-    },
-    {
-        title: 'Academic Integrity & Analysis',
-        description: 'Check your text for potential plagiarism, biased language, and readability metrics..',
-        icon: ShieldCheck,
-        path: '/tools/integrity-checker',
-        status: 'active'
-    },
-    // GAMIFICATION FEATURES
-    {
         title: 'Skill Tree Map',
         description: 'Visualize your learning progress as a skill tree. Unlock new skills as you master topics.',
         icon: TreePine,
         path: '/gamification/skill-tree',
-        status: 'active',
-        category: 'gamification'
-    },
-    {
-        title: 'Bounty Questions',
-        description: 'Take on daily personalized challenge questions and earn Learning Credits as rewards.',
-        icon: Target,
-        path: '/gamification/bounties',
-        status: 'active',
-        category: 'gamification'
-    },
-    {
-        title: 'Boss Battles',
-        description: 'Test your knowledge with 5-question challenges on your weak topics and earn XP rewards.',
-        icon: Swords,
-        path: '/gamification/boss-battles',
-        status: 'active',
-        category: 'gamification'
-    },
-    {
-        title: 'Badge Collection',
-        description: 'View your earned badges and track your progress across 18 unique achievements.',
-        icon: Award,
-        path: '/gamification/badges',
         status: 'active',
         category: 'gamification'
     },

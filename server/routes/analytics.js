@@ -1,95 +1,97 @@
 // server/routes/analytics.js
+// ──────────────────────────────────────────────────────────────────────────────
+// All analytics routes now use MongoDB as the PRIMARY data source.
+// Elasticsearch (via filebeat) is attempted first where it adds value;
+// if unavailable or empty, the route falls back to MongoDB aggregations
+// so the dashboard always shows meaningful data.
+// ──────────────────────────────────────────────────────────────────────────────
 const express = require('express');
-const router = express.Router();
-const log = require('../utils/logger');
-const esClient = require('../config/elasticsearchClient');
-const User = require('../models/User');
-const KnowledgeSource = require('../models/KnowledgeSource');
+const router  = express.Router();
+const log     = require('../utils/logger');
 
-// --- KPI & User Growth Routes (Unchanged) ---
+const esClient          = require('../config/elasticsearchClient');
+const User              = require('../models/User');
+const ChatHistory       = require('../models/ChatHistory');
+const KnowledgeSource   = require('../models/KnowledgeSource');
+const LLMPerformanceLog = require('../models/LLMPerformanceLog');
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Quick check: does ES have any filebeat data at all? Cached per-process. */
+let _esHasData = null;
+async function esHasData() {
+    if (_esHasData !== null) return _esHasData;
+    if (!esClient) { _esHasData = false; return false; }
+    try {
+        const resp = await esClient.count({ index: 'filebeat-*' });
+        _esHasData = resp.count > 0;
+    } catch {
+        _esHasData = false;
+    }
+    // Re-check every 5 minutes
+    setTimeout(() => { _esHasData = null; }, 5 * 60 * 1000);
+    return _esHasData;
+}
+
+// ── KPI Routes ───────────────────────────────────────────────────────────────
+
+// Total user queries (messages with role 'user')
 router.get('/total-queries', async (req, res) => {
-    if (!esClient) { return res.status(503).json({ message: "Analytics service unavailable." }); }
     try {
-        const response = await esClient.count({
-            index: 'filebeat-*',
-            body: { query: { "match_phrase": { "message": "User Event: CHAT_MESSAGE_SENT" } } }
-        });
-        res.json({ count: response.count });
+        // Try ES first
+        if (await esHasData()) {
+            try {
+                const esResp = await esClient.count({
+                    index: 'filebeat-*',
+                    body: { query: { match_phrase: { message: 'User Event: CHAT_MESSAGE_SENT' } } }
+                });
+                if (esResp.count > 0) return res.json({ count: esResp.count });
+            } catch { /* fall through to MongoDB */ }
+        }
+
+        // MongoDB fallback: count all user messages
+        const result = await ChatHistory.aggregate([
+            { $match: { 'messages.0': { $exists: true } } },
+            { $project: { userMsgCount: {
+                $size: { $filter: { input: '$messages', as: 'm', cond: { $eq: ['$$m.role', 'user'] } } }
+            }}},
+            { $group: { _id: null, total: { $sum: '$userMsgCount' } } }
+        ]);
+        res.json({ count: result[0]?.total || 0 });
     } catch (error) {
-        log.error('SYSTEM', `Total queries ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve total query analytics." });
+        log.error('SYSTEM', `Total queries analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve total query analytics.' });
     }
 });
 
+// Active users in the last 24 hours
 router.get('/active-users-today', async (req, res) => {
-    if (!esClient) {
-        return res.status(503).json({ message: "Analytics service (Elasticsearch) is currently unavailable." });
-    }
     try {
-        const response = await esClient.search({
-            index: 'filebeat-*',
-            body: {
-                size: 0,
-                query: {
-                    range: {
-                        "@timestamp": {
-                            "gte": "now-24h/h",
-                            "lte": "now/h"
-                        }
-                    }
-                },
-                aggs: {
-                    unique_active_users: {
-                        "cardinality": {
-                            "script": {
-                                "source": `
-                                    if (doc.containsKey('payload') && !doc['payload'].empty) {
-                                        String payload = doc['payload'].value;
-                                        if (payload == null) return null;
-                                        def m = /"userId":"([^"]+)"/.matcher(payload);
-                                        if (m.find()) {
-                                            String userId = m.group(1);
-                                            if (userId != 'SYSTEM') {
-                                                return userId;
-                                            }
-                                        }
-                                    }
-                                    return null;
-                                `,
-                                "lang": "painless"
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        const activeUserCount = response.aggregations?.unique_active_users?.value || 0;
-
-        res.json({
-            title: "Active Users (Today)",
-            count: activeUserCount
-        });
-
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const activeUserIds = await ChatHistory.distinct('userId', { updatedAt: { $gte: yesterday } });
+        res.json({ title: 'Active Users (Today)', count: activeUserIds.length });
     } catch (error) {
-        log.error('SYSTEM', `Active users ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve active users analytics." });
+        log.error('SYSTEM', `Active users analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve active users analytics.' });
     }
 });
 
+// Total knowledge sources ingested
 router.get('/total-sources', async (req, res) => {
     try {
         const count = await KnowledgeSource.countDocuments();
-        res.json({ count: count });
+        res.json({ count });
     } catch (error) {
-        log.error('SYSTEM', `Total sources MongoDB query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve total sources." });
+        log.error('SYSTEM', `Total sources query failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve total sources.' });
     }
 });
 
+// ── User Engagement (MongoDB) ────────────────────────────────────────────────
+
 router.get('/user-engagement', async (req, res) => {
     try {
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const sevenDaysAgo  = new Date(Date.now() - 7  * 24 * 60 * 60 * 1000);
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
         const [totalUsers, newSignupsLast7Days, dailySignupsResponse] = await Promise.all([
@@ -97,9 +99,9 @@ router.get('/user-engagement', async (req, res) => {
             User.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
             User.aggregate([
                 { $match: { createdAt: { $gte: thirtyDaysAgo } } },
-                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
+                { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
                 { $sort: { _id: 1 } },
-                { $project: { date: "$_id", count: 1, _id: 0 } }
+                { $project: { date: '$_id', count: 1, _id: 0 } }
             ])
         ]);
         res.json({ totalUsers, newSignupsLast7Days, dailySignupsLast30Days: dailySignupsResponse });
@@ -109,245 +111,230 @@ router.get('/user-engagement', async (req, res) => {
     }
 });
 
-// --- Chart Data Routes (REVISED AND CONSOLIDATED) ---
+// ── Feature Usage (MongoDB-primary) ──────────────────────────────────────────
 
-// --- START OF FIX ---
 router.get('/feature-usage', async (req, res) => {
-    if (!esClient) { return res.status(503).json({ message: "Analytics service unavailable." }); }
     try {
-        // Run all queries concurrently
-        const [
-            toolUsageResponse,
-            criticalThinkingResponse,
-            searchUsageResponse,
-            tutorModeResponse
-        ] = await Promise.all([
-            // 1. Query for Tool Usage (Quiz, Code Executor, etc.)
-            esClient.search({
-                index: 'filebeat-*',
-                body: {
-                    size: 0,
-                    query: { "wildcard": { "payload": "*TOOL_USAGE_*" } },
-                    aggs: {
-                        feature_counts: {
-                            "terms": {
-                                "script": {
-                                    "source": `if (doc.containsKey('payload') && !doc['payload'].empty) { def payload = doc['payload'].value; def m = /"eventType":"([^"]+)"/.matcher(payload); if (m.find()) { return m.group(1); } } return 'N/A';`,
-                                    "lang": "painless"
-                                }, "size": 20
-                            }
-                        }
-                    }
-                }
-            }),
-            // 2. Query for Critical Thinking Usage (using the validated query)
-            esClient.count({
-                index: 'filebeat-*',
-                body: { query: { "query_string": { "query": "message:\"User Event: CHAT_MESSAGE_SENT\" AND payload:*\"criticalThinkingEnabled\"\\:true*" } } }
-            }),
-            // 3. Query for Web/Academic Search usage
-            esClient.search({
-                index: 'filebeat-*',
-                body: {
-                    size: 0,
-                    query: { "match_phrase": { "message": "AI Response Sent" } },
-                    aggs: {
-                        search_tool_counts: {
-                            "terms": {
-                                "field": "source_pipeline.keyword", "size": 10
-                            }
-                        }
-                    }
-                }
-            }),
-            // 4. Query for Tutor Mode Usage
-            esClient.count({
-                index: 'filebeat-*',
-                body: { query: { "query_string": { "query": "message:\"User Event: CHAT_MESSAGE_SENT\" AND payload:*\"tutorModeEnabled\"\\:true*" } } }
-            })
+        // Aggregate feature usage from ChatHistory source_pipeline field
+        const [pipelineCounts, tutorSessionCount] = await Promise.all([
+            ChatHistory.aggregate([
+                { $unwind: '$messages' },
+                { $match: { 'messages.role': 'model', 'messages.source_pipeline': { $ne: '' } } },
+                { $group: { _id: '$messages.source_pipeline', count: { $sum: 1 } } },
+                { $sort: { count: -1 } }
+            ]),
+            ChatHistory.countDocuments({ isTutorMode: true })
         ]);
 
-        // Process Tool Usage
-        const toolUsageData = (toolUsageResponse.aggregations?.feature_counts?.buckets || [])
-            .filter(bucket => bucket.key.startsWith('TOOL_USAGE_'))
-            .map(bucket => ({
-                feature: bucket.key.replace('TOOL_USAGE_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                count: bucket.doc_count
-            }));
+        // Categorise source_pipelines into user-friendly feature names
+        const featureMap = {};
+        for (const entry of pipelineCounts) {
+            const p = entry._id || '';
+            let feature = null;
 
-        // Process Search Usage from the correct response variable
-        const searchUsageData = (searchUsageResponse.aggregations?.search_tool_counts?.buckets || [])
-            .filter(bucket => bucket.key.includes('web_search') || bucket.key.includes('academic_search'))
-            .map(bucket => ({
-                feature: bucket.key.includes('web_search') ? 'Web Search' : 'Academic Search',
-                count: bucket.doc_count
-            }));
+            if (p.startsWith('tutor-'))                         feature = 'Tutor Mode (Socratic)';
+            else if (p.includes('rag_search'))                  feature = 'RAG Search';
+            else if (p.includes('web_search'))                  feature = 'Web Search';
+            else if (p.includes('academic_search'))             feature = 'Academic Search';
+            else if (p.includes('code'))                        feature = 'Code Executor';
+            else if (p.includes('direct-bypass'))               feature = 'Direct LLM Response';
+            else if (p.includes('error'))                       feature = 'Error Recovery';
+            else                                                feature = p.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-        // Combine all data into the final array
-        const finalData = [
-            ...toolUsageData,
-            ...searchUsageData,
-            { feature: 'Critical Thinking Mode', count: criticalThinkingResponse.count },
-            { feature: 'Tutor Mode (Socratic)', count: tutorModeResponse.count }
-        ];
+            featureMap[feature] = (featureMap[feature] || 0) + entry.count;
+        }
+
+        // Ensure Tutor Mode always appears (from isTutorMode flag, which is more accurate)
+        if (tutorSessionCount > 0) {
+            featureMap['Tutor Mode (Socratic)'] = Math.max(featureMap['Tutor Mode (Socratic)'] || 0, tutorSessionCount);
+        }
+
+        const finalData = Object.entries(featureMap)
+            .map(([feature, count]) => ({ feature, count }))
+            .sort((a, b) => b.count - a.count);
 
         res.json(finalData);
-
     } catch (error) {
-        log.error('SYSTEM', `Feature usage ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve feature usage analytics." });
+        log.error('SYSTEM', `Feature usage analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve feature usage analytics.' });
     }
 });
-// --- END OF FIX ---
 
+// ── Content / Document Insights (MongoDB) ────────────────────────────────────
 
-// ... (Other routes like content-insights, llm-usage, etc. remain the same) ...
 router.get('/content-insights', async (req, res) => {
-    if (!esClient) { return res.status(503).json({ message: "Analytics service unavailable." }); }
     try {
-        const response = await esClient.search({
-            index: 'filebeat-*',
-            body: {
-                size: 0,
-                query: { "query_string": { "query": "message:\"User Event: CHAT_MESSAGE_SENT\" AND payload:*documentContext* AND NOT payload:*documentContext*null*" } },
-                aggs: { document_counts: { "terms": { "script": { "source": `if (doc.containsKey('payload') && !doc['payload'].empty) { String payloadStr = doc['payload'].value; if (payloadStr == null) return 'N/A'; def m = /"documentContext":"([^"]+)"/.matcher(payloadStr); if (m.find()) { return m.group(1); } } return 'N/A';`, "lang": "painless" }, "size": 10 } } }
+        // Group chats by courseName to show which courses get the most engagement
+        const courseDistribution = await ChatHistory.aggregate([
+            { $match: { courseName: { $ne: null }, 'messages.0': { $exists: true } } },
+            { $group: {
+                _id: '$courseName',
+                count: { $sum: 1 },
+                totalMessages: { $sum: { $size: '$messages' } }
+            }},
+            { $sort: { totalMessages: -1 } },
+            { $limit: 20 },
+            { $project: { documentName: '$_id', count: '$totalMessages', sessions: '$count', _id: 0 } }
+        ]);
+
+        // Also include reference/source breakdown from model messages
+        const sourcePipelineInsights = await ChatHistory.aggregate([
+            { $unwind: '$messages' },
+            { $match: { 'messages.role': 'model', 'messages.references.0': { $exists: true } } },
+            { $unwind: '$messages.references' },
+            { $group: { _id: '$messages.references.source', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+            { $project: { documentName: '$_id', count: 1, _id: 0 } }
+        ]);
+
+        // Combine: course distribution first, then referenced sources
+        const combined = [...courseDistribution];
+        for (const src of sourcePipelineInsights) {
+            if (src.documentName && !combined.find(c => c.documentName === src.documentName)) {
+                combined.push(src);
             }
-        });
-        const formattedData = (response.aggregations?.document_counts?.buckets || [])
-            .filter(b => b.key !== 'N/A')
-            .map(b => ({ documentName: b.key, count: b.doc_count }));
-        res.json(formattedData);
+        }
+
+        res.json(combined);
     } catch (error) {
-        log.error('SYSTEM', `Content insights ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve content insights." });
+        log.error('SYSTEM', `Content insights analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve content insights.' });
     }
 });
+
+// ── LLM Usage (MongoDB from LLMPerformanceLog + ChatHistory) ─────────────────
 
 router.get('/llm-usage', async (req, res) => {
-    if (!esClient) { return res.status(503).json({ message: "Analytics service unavailable." }); }
     try {
-        const response = await esClient.search({
-            index: 'filebeat-*',
-            body: {
-                size: 0,
-                query: {
-                    "query_string": {
-                        "query": "message:\"User Event: CHAT_MESSAGE_SENT\" AND (payload:*llmProvider* OR payload:*provider* OR payload:*chosenProvider*)"
-                    }
-                },
-                aggs: {
-                    llm_provider_counts: {
-                        "terms": {
-                            "script": {
-                                "source": `
-                                    if (doc.containsKey('payload') && !doc['payload'].empty) {
-                                        String payloadStr = doc['payload'].value;
-                                        if (payloadStr == null) return 'N/A';
+        const modelDistribution = await LLMPerformanceLog.aggregate([
+            { $group: { _id: '$chosenModelId', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $project: { provider: '$_id', count: 1, _id: 0 } }
+        ]);
 
-                                        def m1 = /"llmProvider":"([^"]+)"/.matcher(payloadStr);
-                                        if (m1.find()) return m1.group(1).toLowerCase();
-
-                                        def m2 = /"chosenProvider":"([^"]+)"/.matcher(payloadStr);
-                                        if (m2.find()) return m2.group(1).toLowerCase();
-
-                                        def m3 = /"provider":"([^"]+)"/.matcher(payloadStr);
-                                        if (m3.find()) return m3.group(1).toLowerCase();
-                                    }
-                                    return 'N/A';
-                                `,
-                                "lang": "painless"
-                            },
-                            "size": 20
+        // If LLMPerformanceLog is empty, fall back to source_pipeline from ChatHistory
+        if (modelDistribution.length === 0) {
+            const pipelineFallback = await ChatHistory.aggregate([
+                { $unwind: '$messages' },
+                { $match: { 'messages.role': 'model', 'messages.source_pipeline': { $ne: '' } } },
+                { $group: {
+                    _id: {
+                        $switch: {
+                            branches: [
+                                { case: { $regexMatch: { input: '$messages.source_pipeline', regex: /^sglang/ } }, then: 'SGLang' },
+                                { case: { $regexMatch: { input: '$messages.source_pipeline', regex: /^tutor/ } },  then: 'SGLang (Tutor)' },
+                                { case: { $regexMatch: { input: '$messages.source_pipeline', regex: /^gemini/ } }, then: 'Gemini' },
+                                { case: { $regexMatch: { input: '$messages.source_pipeline', regex: /^groq/ } },   then: 'Groq' },
+                            ],
+                            default: '$messages.source_pipeline'
                         }
-                    }
-                }
-            }
-        });
-        const formattedData = (response.aggregations?.llm_provider_counts?.buckets || [])
-            .filter(b => b.key !== 'N/A')
-            .map(b => ({ provider: b.key, count: b.doc_count }));
-        res.json(formattedData);
+                    },
+                    count: { $sum: 1 }
+                }},
+                { $sort: { count: -1 } },
+                { $project: { provider: '$_id', count: 1, _id: 0 } }
+            ]);
+            return res.json(pipelineFallback);
+        }
+
+        res.json(modelDistribution);
     } catch (error) {
-        log.error('SYSTEM', `LLM usage ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve LLM usage analytics." });
+        log.error('SYSTEM', `LLM usage analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve LLM usage analytics.' });
     }
 });
 
+// ── Generation Counts ────────────────────────────────────────────────────────
+// Count PPTX/DOCX exports. Try ES first, fall back to Job model or 0.
+
+const Job = (() => {
+    try { return require('../models/Job'); } catch { return null; }
+})();
+
 router.get('/pptx-generated-count', async (req, res) => {
-    if (!esClient) { return res.status(503).json({ message: "Analytics service unavailable." }); }
     try {
-        const response = await esClient.count({ index: 'filebeat-*', body: { query: { "query_string": { "query": "message:*CONTENT_GENERATION* AND payload:*docType* AND payload:*pptx*" } } } });
-        res.json({ count: response.count });
+        if (await esHasData()) {
+            try {
+                const esResp = await esClient.count({
+                    index: 'filebeat-*',
+                    body: { query: { query_string: { query: 'message:*CONTENT_GENERATION* AND payload:*pptx*' } } }
+                });
+                if (esResp.count > 0) return res.json({ count: esResp.count });
+            } catch { /* fall through */ }
+        }
+        const count = Job ? await Job.countDocuments({ type: /pptx/i, status: 'completed' }).catch(() => 0) : 0;
+        res.json({ count });
     } catch (error) {
-        log.error('SYSTEM', `PPTX count ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve PPTX generation analytics." });
+        log.error('SYSTEM', `PPTX count analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve PPTX generation analytics.' });
     }
 });
 
 router.get('/docx-generated-count', async (req, res) => {
-    if (!esClient) { return res.status(503).json({ message: "Analytics service unavailable." }); }
     try {
-        const response = await esClient.count({ index: 'filebeat-*', body: { query: { "query_string": { "query": "message:*CONTENT_GENERATION* AND payload:*docType* AND payload:*docx*" } } } });
-        res.json({ count: response.count });
+        if (await esHasData()) {
+            try {
+                const esResp = await esClient.count({
+                    index: 'filebeat-*',
+                    body: { query: { query_string: { query: 'message:*CONTENT_GENERATION* AND payload:*docx*' } } }
+                });
+                if (esResp.count > 0) return res.json({ count: esResp.count });
+            } catch { /* fall through */ }
+        }
+        const count = Job ? await Job.countDocuments({ type: /docx/i, status: 'completed' }).catch(() => 0) : 0;
+        res.json({ count });
     } catch (error) {
-        log.error('SYSTEM', `DOCX count ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve DOCX generation analytics." });
+        log.error('SYSTEM', `DOCX count analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve DOCX generation analytics.' });
     }
 });
 
-// --- Tutor Mode Analytics ---
+// ── Tutor Mode Analytics (MongoDB) ───────────────────────────────────────────
+
 router.get('/tutor-mode-stats', async (req, res) => {
-    if (!esClient) { return res.status(503).json({ message: "Analytics service unavailable." }); }
     try {
-        const [totalUsageResponse, dailyUsageResponse] = await Promise.all([
-            // Total Tutor Mode usage count
-            esClient.count({
-                index: 'filebeat-*',
-                body: { query: { "query_string": { "query": "message:\"User Event: CHAT_MESSAGE_SENT\" AND payload:*\"tutorModeEnabled\"\\:true*" } } }
-            }),
-            // Daily Tutor Mode usage for the last 30 days
-            esClient.search({
-                index: 'filebeat-*',
-                body: {
-                    size: 0,
-                    query: {
-                        bool: {
-                            must: [
-                                { "query_string": { "query": "message:\"User Event: CHAT_MESSAGE_SENT\" AND payload:*\"tutorModeEnabled\"\\:true*" } },
-                                { range: { "@timestamp": { gte: "now-30d/d", lte: "now/d" } } }
-                            ]
-                        }
-                    },
-                    aggs: {
-                        daily_usage: {
-                            date_histogram: {
-                                field: "@timestamp",
-                                calendar_interval: "day",
-                                format: "yyyy-MM-dd",
-                                min_doc_count: 0,
-                                extended_bounds: {
-                                    min: "now-30d/d",
-                                    max: "now/d"
-                                }
-                            }
-                        }
-                    }
-                }
-            })
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+        const [totalTutorModeSessions, dailyUsageResponse] = await Promise.all([
+            ChatHistory.countDocuments({ isTutorMode: true }),
+            ChatHistory.aggregate([
+                { $match: { isTutorMode: true, createdAt: { $gte: thirtyDaysAgo } } },
+                { $group: {
+                    _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                    count: { $sum: 1 }
+                }},
+                { $sort: { _id: 1 } },
+                { $project: { date: '$_id', count: 1, _id: 0 } }
+            ])
         ]);
 
-        const dailyUsageData = dailyUsageResponse.aggregations?.daily_usage?.buckets?.map(bucket => ({
-            date: bucket.key_as_string,
-            count: bucket.doc_count
-        })) || [];
-
         res.json({
-            totalTutorModeSessions: totalUsageResponse.count,
-            dailyUsageLast30Days: dailyUsageData
+            totalTutorModeSessions,
+            dailyUsageLast30Days: dailyUsageResponse
         });
     } catch (error) {
-        log.error('SYSTEM', `Tutor mode stats ES query failed: ${error.message}`);
-        res.status(500).json({ message: "Failed to retrieve tutor mode analytics." });
+        log.error('SYSTEM', `Tutor mode stats failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve tutor mode analytics.' });
+    }
+});
+
+// ── Code Executor Usage (MongoDB) ────────────────────────────────────────────
+
+router.get('/code-executor-usage', async (req, res) => {
+    try {
+        const result = await ChatHistory.aggregate([
+            { $unwind: '$messages' },
+            { $match: {
+                'messages.role': 'model',
+                'messages.source_pipeline': { $regex: /code/i }
+            }},
+            { $count: 'total' }
+        ]);
+        res.json({ count: result[0]?.total || 0 });
+    } catch (error) {
+        log.error('SYSTEM', `Code executor usage analytics failed: ${error.message}`);
+        res.status(500).json({ message: 'Failed to retrieve code executor usage analytics.' });
     }
 });
 

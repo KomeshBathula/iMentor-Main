@@ -46,6 +46,11 @@ done
 
 sleep 1
 echo "✅ Cleanup complete."
+
+# Reload Caddy config immediately (zero-downtime — no terminal needed yet)
+if systemctl is-active --quiet caddy 2>/dev/null; then
+    systemctl reload caddy 2>/dev/null || true
+fi
 echo ""
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -170,15 +175,53 @@ gnome-terminal --window \
     cd \"$PROJECT_DIR/frontend\"
     npm run dev
     exec bash
+  '" \
+  --tab --title="🛡️  Caddy + CrowdSec" --working-directory="$PROJECT_DIR" --command="bash -c '
+    echo \"================================================\"
+    echo \"  Tab 4: Caddy Proxy + CrowdSec Security\"
+    echo \"================================================\"
+    echo \"\"
+
+    # ── Restart Caddy ──────────────────────────────────────
+    echo \"♻  Reloading Caddy config...\"
+    if systemctl is-active --quiet caddy 2>/dev/null; then
+        sudo systemctl reload caddy && echo \"✅ Caddy reloaded (zero-downtime).\"
+    else
+        sudo systemctl start caddy && echo \"✅ Caddy started.\"
+    fi
+
+    # ── Restart CrowdSec ────────────────────────────────────
+    echo \"\"
+    echo \"♻  Restarting CrowdSec...\"
+    sudo systemctl restart crowdsec && echo \"✅ CrowdSec engine running.\"
+    sudo systemctl restart crowdsec-firewall-bouncer && echo \"✅ Firewall bouncer running.\"
+
+    echo \"\"
+    echo \"── Caddy status ──────────────────────────────────\"
+    systemctl status caddy --no-pager -l | head -8
+
+    echo \"\"
+    echo \"── Active CrowdSec bans ──────────────────────────\"
+    sudo cscli decisions list 2>/dev/null | head -20 || echo \"  (none yet)\"
+
+    echo \"\"
+    echo \"── Live Caddy access log (Ctrl+C to stop) ────────\"
+    sleep 2
+    sudo tail -f /var/log/caddy/imentor_access.log 2>/dev/null || journalctl -u caddy -f
+    exec bash
   '"
 
 echo ""
 echo "✨ Terminals launched!"
 echo ""
-echo "�� Service URLs:"
-echo "   Frontend:  http://localhost:$FRONTEND_PORT"
-echo "   Backend:   http://localhost:$NODE_PORT"
-echo "   RAG API:   http://localhost:$RAG_PORT"
+echo "🌐 Access iMentor at (via Caddy HTTPS):"
+echo "   https://$(hostname -I | awk '{print $1}')"
+echo "   https://localhost"
+echo ""
+echo "⚙️  Internal service ports (do NOT open these directly):"
+echo "   Vite dev:  http://localhost:$FRONTEND_PORT  (proxied through Caddy)"
+echo "   Backend:   http://localhost:$NODE_PORT       (proxied through Caddy)"
+echo "   RAG API:   http://localhost:$RAG_PORT        (proxied through Caddy)"
 echo "   SGLang:    http://localhost:$SGLANG_PORT/v1"
 echo ""
 echo "📦 Docker services:"
@@ -191,4 +234,10 @@ echo "   Elasticsearch:  localhost:$ELASTIC_PORT"
 echo "   SGLang LLM:     localhost:$SGLANG_PORT"
 echo ""
 echo "🔑 Login: ultra.boy7@gmail.com / 123456"
+echo ""
+echo "🛡️  Security:"
+echo "   Reverse proxy:  Caddy 2.x  (auto-TLS, security headers)"
+echo "   Threat engine:  CrowdSec   (active bans: \$(sudo cscli decisions list 2>/dev/null | grep -c 'ban' || echo 0))"
+echo "   Firewall:       UFW + iptables bouncer (ports 22/80/443/2000 only)"
+echo "   Databases:      All bound to 127.0.0.1 — NOT internet-accessible"
 echo ""

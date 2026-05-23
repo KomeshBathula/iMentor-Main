@@ -1,0 +1,160 @@
+# =============================================================
+# iMentor — Unified Nginx Site Config
+# =============================================================
+# This file is the CANONICAL config deployed to the server.
+# Source of truth is nginx/nginx.conf in the project repo.
+#
+# DEPLOY:
+#   sudo cp nginx/sites-available/000-unified /etc/nginx/sites-available/
+#   sudo ln -sf /etc/nginx/sites-available/000-unified /etc/nginx/sites-enabled/000-unified
+#   sudo nginx -t && sudo systemctl reload nginx
+#
+# Service ports (must match startup.sh):
+#   Frontend (Vite):           3005
+#   Backend  (Node.js):        5005
+#   RAG      (Python/FastAPI): 2005
+#   Interactive Learning tool: 9845
+#
+# Server IPs:
+#   Public:   61.0.228.124
+#   Internal: 172.180.14.125
+# =============================================================
+
+upstream imentor_frontend {
+    server 127.0.0.1:3005;
+    keepalive 32;
+}
+
+upstream imentor_backend {
+    server 127.0.0.1:5005;
+    keepalive 32;
+}
+
+upstream imentor_rag {
+    server 127.0.0.1:2005;
+    keepalive 32;
+}
+
+upstream interactive_learning {
+    server 127.0.0.1:9845;
+    keepalive 64;
+}
+
+# HTTP → HTTPS redirect
+server {
+    listen 80;
+    listen [::]:80;
+    server_name 61.0.228.124 172.180.14.125 localhost;
+
+    return 301 https://$host$request_uri;
+}
+
+# Main HTTPS server
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    listen 2000 ssl;
+    listen [::]:2000 ssl;
+
+    server_name 61.0.228.124 172.180.14.125 localhost;
+
+    ssl_certificate     /etc/ssl/certs/interactive-learning.crt;
+    ssl_certificate_key /etc/ssl/private/interactive-learning.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+
+    client_max_body_size 100M;
+
+    access_log /var/log/nginx/imentor_access.log;
+    error_log  /var/log/nginx/imentor_error.log;
+
+    location /testaddr {
+        default_type text/plain;
+        return 200 "iMentor Platform is running!\nRequest URI: $request_uri\nRemote Address: $remote_addr\nServer: $server_name\n";
+    }
+
+    location /api/ {
+        proxy_pass http://imentor_backend/api/;
+        proxy_http_version 1.1;
+        proxy_set_header X-Accel-Buffering "no";
+        proxy_set_header Cache-Control "no-cache";
+        proxy_set_header Connection "";
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+        proxy_connect_timeout 60s;
+        proxy_buffering off;
+        proxy_request_buffering off;
+    }
+
+    location /rag/ {
+        proxy_pass http://imentor_rag/;
+        proxy_http_version 1.1;
+        proxy_set_header X-Accel-Buffering "no";
+        proxy_set_header Cache-Control "no-cache";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+        proxy_connect_timeout 60s;
+        proxy_buffering off;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://imentor_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_buffering off;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+
+    location /metrics {
+        proxy_pass http://imentor_backend/metrics;
+    }
+
+    location /interactive-learning/ {
+        proxy_pass http://interactive_learning/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+
+    # LAST — frontend catch-all
+    location / {
+        proxy_pass http://imentor_frontend/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}

@@ -382,7 +382,9 @@ function App() {
                 setShowAuthModal(false);
                 document.body.classList.remove('landing-page-body');
 
-                if (location.pathname.startsWith('/admin')) navigate('/', { replace: true });
+                // Don't redirect an active admin session away from /admin even if
+                // verifyTokenAndLoadUser also resolved them as a regular user.
+                if (location.pathname.startsWith('/admin') && !isAdminSessionActive) navigate('/', { replace: true });
 
                 const shouldCreateSession = !currentSessionId && !location.pathname.startsWith('/tools') && !location.pathname.startsWith('/study-plan');
                 if (shouldCreateSession && !isCreatingSessionRef.current) {

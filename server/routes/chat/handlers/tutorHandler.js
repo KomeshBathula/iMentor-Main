@@ -54,7 +54,7 @@ async function handleGeneral(res, ctx) {
 
     if (!tutorMode || tutorModeType !== TUTOR_MODE_TYPES.GENERAL_SOCRATIC) return false;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
@@ -361,7 +361,7 @@ async function handleStructured(res, ctx) {
 
     if (!tutorMode || tutorModeType !== TUTOR_MODE_TYPES.COURSE_STRUCTURED) return false;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
@@ -685,6 +685,21 @@ async function handleStructured(res, ctx) {
             const messageCount = (chatSession?.messages?.length || 0) + 2;
             triggerPeriodicAnalysis(sessionId, userId, messageCount, llmConfig);
 
+            // Build the accumulated completedModules list for the event
+            const updatedCompletedModules = [
+                ...new Set([
+                    ...(advanceResult?.moduleJustCompleted && tutorState.moduleId
+                        ? [...(completedTopics || []), tutorState.moduleId]
+                        : []),
+                ])
+            ];
+            // Re-read the saved DB value to get accurate completedModules
+            let dbCompletedModules = [];
+            try {
+                const freshUser = await User.findById(reqUser._id).select('curriculumProgress');
+                dbCompletedModules = freshUser?.curriculumProgress?.get(courseName)?.completedModules || [];
+            } catch (_) {}
+
             const progressUpdate = {
                 type: 'progress_update',
                 content: {
@@ -697,6 +712,7 @@ async function handleStructured(res, ctx) {
                     masteredModuleName: advanceResult?.moduleCompletedName || null,
                     completedSubtopics: advanceResult?.completedSubtopics || [],
                     completedTopics: advanceResult?.completedTopics || [],
+                    completedModules: dbCompletedModules,
                     currentPosition: nextTopicState ? {
                         subtopicId: nextTopicState.subtopicId,
                         subtopicName: nextTopicState.subtopicName,

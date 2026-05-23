@@ -1,5 +1,8 @@
 // server/routes/admin.js
 const express = require('express');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -22,6 +25,157 @@ const { safeCascadeDeleteCourse } = require('../services/courseCascadeDeletionSe
 
 const router = express.Router();
 
+// @route   GET /api/admin/system-performance
+// @desc    Dynamic GPU/LLM health — pulls live data from nvidia-smi + SGLang
+router.get('/system-performance', async (req, res) => {
+  try {
+    // ── 1. nvidia-smi live GPU metrics
+    let gpuData = { name: 'Unknown', memTotal: 0, memUsed: 0, memFree: 0, utilGpu: 0, utilMem: 0 };
+    try {
+      const { stdout } = await execAsync(
+        'nvidia-smi --query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu,utilization.memory --format=csv,noheader,nounits'
+      );
+      const parts = stdout.trim().split(',').map(s => s.trim());
+      gpuData = {
+        name: parts[0],
+        memTotal: parseInt(parts[1], 10),
+        memUsed:  parseInt(parts[2], 10),
+        memFree:  parseInt(parts[3], 10),
+        utilGpu:  parseInt(parts[4], 10),
+        utilMem:  parseInt(parts[5], 10),
+      };
+    } catch (e) { log.warn('SYSTEM', 'nvidia-smi unavailable: ' + e.message); }
+
+    // ── 2. SGLang live server info (last_gen_throughput + memory_usage)
+    const SGLANG_URL = process.env.SGLANG_CHAT_URL
+      ? process.env.SGLANG_CHAT_URL.replace('/v1', '')
+      : 'http://localhost:8000';
+
+    let sglang = { status: 'unknown', model: 'unknown', contextLength: 0, quantization: 'unknown',
+                   maxRunningRequests: 0, actualTokPerSec: null, memWeight: 0, memKvcache: 0,
+                   memGraph: 0, tokenCapacity: 0, maxTotalTokens: 0 };
+    try {
+      const sgResp = await axios.get(`${SGLANG_URL}/get_server_info`, { timeout: 3000 });
+      const info = sgResp.data;
+      const state = (info.internal_states || [])[0] || {};
+      sglang = {
+        status: info.status || 'unknown',
+        version: info.version,
+        model: info.served_model_name || state.model_path || 'unknown',
+        contextLength: info.context_length || state.context_length || 0,
+        quantization: state.quantization || 'unknown',
+        maxRunningRequests: state.max_running_requests || 0,
+        actualTokPerSec: state.last_gen_throughput != null ? parseFloat(state.last_gen_throughput.toFixed(2)) : null,
+        memWeight:    state.memory_usage ? state.memory_usage.weight   : 0,
+        memKvcache:   state.memory_usage ? state.memory_usage.kvcache  : 0,
+        memGraph:     state.memory_usage ? state.memory_usage.graph    : 0,
+        tokenCapacity: info.max_total_num_tokens || state.memory_usage?.token_capacity || 0,
+      };
+    } catch (e) { log.warn('SYSTEM', 'SGLang unreachable: ' + e.message); }
+
+    // ── 3. Recent chat logs
+    const recentChats = await LLMPerformanceLog.find({}).sort({ createdAt: -1 }).limit(50);
+    const latencies = recentChats.map(c => c.latency || c.responseTime || 0).filter(l => l > 0);
+    const avgLatency = latencies.length ? Math.round(latencies.reduce((a,b) => a+b) / latencies.length) : 0;
+    const maxLatency = latencies.length ? Math.max(...latencies) : 0;
+    const minLatency = latencies.length ? Math.min(...latencies) : 0;
+
+    // ── 4. Derived metrics
+    // RTX A4000 memory bandwidth: 448 GB/s; model weights ~3.5 GB at 4-bit
+    const MEM_BW_GBs = 448;
+    const WEIGHT_GB = sglang.memWeight > 0 ? sglang.memWeight : 3.5;
+    const theoreticalMax = Math.round(MEM_BW_GBs / WEIGHT_GB);
+    const actualTok = sglang.actualTokPerSec;
+    const efficiency = actualTok != null ? ((actualTok / theoreticalMax) * 100).toFixed(1) : null;
+    const memUsedGb  = (gpuData.memUsed / 1024).toFixed(1);
+    const memTotalGb = (gpuData.memTotal / 1024).toFixed(1);
+    const memPct = gpuData.memTotal > 0 ? Math.round((gpuData.memUsed / gpuData.memTotal) * 100) : 0;
+
+    // ── 5. Dynamic issue detection
+    const issues = [];
+    if (actualTok != null && actualTok < theoreticalMax * 0.3) {
+      const effPct = parseFloat(efficiency);
+      const idlePct = (100 - effPct).toFixed(0);
+      issues.push({
+        severity: 'CRITICAL',
+        component: 'GPU Token Generation',
+        issue: `Low throughput: ${actualTok} tok/s actual vs ${theoreticalMax} tok/s theoretical (${efficiency}% efficiency, ${idlePct}% GPU idle)`,
+        rootCause: 'AWQ dequantization kernels on Ampere (A4000) do not saturate memory bandwidth at batch=1',
+        recommendation: 'Enable speculative decoding (EAGLE + 1.5B draft) or switch to Qwen2.5-3B-AWQ for 2× speedup',
+      });
+    }
+    if (memPct >= 95) {
+      issues.push({
+        severity: 'HIGH',
+        component: 'GPU Memory',
+        issue: `GPU VRAM near capacity: ${memUsedGb} GB / ${memTotalGb} GB (${memPct}% used)`,
+        rootCause: 'Large KV cache + model weights filling available VRAM',
+        recommendation: 'Reduce context length or enable CPU offload',
+      });
+    }
+    if (sglang.status !== 'ready') {
+      issues.push({
+        severity: 'HIGH',
+        component: 'SGLang Server',
+        issue: `SGLang server status: ${sglang.status}`,
+        rootCause: 'Server not in ready state',
+        recommendation: 'Check SGLang container logs: docker logs chatbot-sglang',
+      });
+    }
+
+    // ── 6. Overall health
+    const healthStatus = issues.some(i => i.severity === 'CRITICAL') ? 'critical'
+                       : issues.some(i => i.severity === 'HIGH')     ? 'warning'
+                       : issues.length > 0                           ? 'degraded'
+                       : 'healthy';
+
+    res.json({
+      timestamp: new Date().toISOString(),
+      healthStatus,
+      gpu: {
+        name:              gpuData.name,
+        memoryBandwidth:   '448 GB/s',
+        memUsedMb:         gpuData.memUsed,
+        memTotalMb:        gpuData.memTotal,
+        memFreeMb:         gpuData.memFree,
+        memUsedGb,
+        memTotalGb,
+        memUsedPercent:    memPct,
+        gpuUtilPercent:    gpuData.utilGpu,
+        memUtilPercent:    gpuData.utilMem,
+      },
+      llm: {
+        status:            sglang.status,
+        model:             sglang.model,
+        contextLength:     sglang.contextLength,
+        quantization:      sglang.quantization,
+        maxRunningRequests: sglang.maxRunningRequests,
+        tokenCapacity:     sglang.tokenCapacity,
+        throughput: {
+          actualTokPerSec:      actualTok,
+          theoreticalMaxTokPerSec: theoreticalMax,
+          efficiencyPercent:    efficiency,
+        },
+        vramBreakdown: {
+          weightGb:   sglang.memWeight,
+          kvcacheGb:  sglang.memKvcache,
+          graphGb:    sglang.memGraph,
+          totalAllocGb: parseFloat((sglang.memWeight + sglang.memKvcache + sglang.memGraph).toFixed(2)),
+        },
+      },
+      performance: {
+        recentChatsAnalyzed: recentChats.length,
+        avgResponseLatencyMs: avgLatency,
+        minResponseLatencyMs: minLatency,
+        maxResponseLatencyMs: maxLatency,
+      },
+      issues,
+    });
+  } catch (error) {
+    log.error('SYSTEM', `Failed to fetch system performance: ${error.message}`);
+    res.status(500).json({ message: 'Server error while fetching system performance.' });
+  }
+});
 
 /* ====== Model feedback routes ======= */
 
@@ -114,18 +268,45 @@ const CACHE_DURATION_SECONDS = 30;
 // @desc    Get key statistics for the admin dashboard
 router.get('/dashboard-stats', cacheMiddleware(CACHE_DURATION_SECONDS), async (req, res) => {
   try {
-    const [totalUsers, totalAdminDocs, totalSessions, pendingApiKeys] = await Promise.all([
+    const yesterday    = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7  * 24 * 60 * 60 * 1000);
+
+    const [
+      totalUsers,
+      totalAdminDocs,
+      totalSessions,
+      pendingApiKeys,
+      activeSessions,
+      totalMessages,
+      tutorModeSessions,
+      activeUsersToday,
+      newUsersLast7Days,
+    ] = await Promise.all([
       User.countDocuments(),
       AdminDocument.countDocuments(),
       ChatHistory.countDocuments(),
-      User.countDocuments({ apiKeyRequestStatus: 'pending' })
+      User.countDocuments({ apiKeyRequestStatus: 'pending' }),
+      ChatHistory.countDocuments({ 'messages.0': { $exists: true } }),
+      ChatHistory.aggregate([
+        { $match: { 'messages.0': { $exists: true } } },
+        { $project: { c: { $size: '$messages' } } },
+        { $group: { _id: null, total: { $sum: '$c' } } }
+      ]).then(r => r[0]?.total || 0),
+      ChatHistory.countDocuments({ isTutorMode: true }),
+      ChatHistory.distinct('userId', { updatedAt: { $gte: yesterday } }).then(ids => ids.length),
+      User.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
     ]);
 
     res.json({
       totalUsers,
       totalAdminDocs,
       totalSessions,
-      pendingApiKeys
+      pendingApiKeys,
+      activeSessions,
+      totalMessages,
+      tutorModeSessions,
+      activeUsersToday,
+      newUsersLast7Days,
     });
   } catch (error) {
     log.error('SYSTEM', `Failed to fetch dashboard stats: ${error.message}`);
@@ -914,6 +1095,16 @@ router.patch('/user-feedback/:id', async (req, res) => {
     log.error('ADMIN', `user-feedback update error: ${err.message}`);
     return res.status(500).json({ message: 'Failed to update feedback.' });
   }
+});
+
+// @route   GET /api/admin/user-feedback/attachment/:filename
+// @desc    Serve a feedback attachment file (admin-only)
+router.get('/user-feedback/attachment/:filename', (req, res) => {
+  const { filename } = req.params;
+  if (!/^[\w.\-]+$/.test(filename)) return res.status(400).json({ message: 'Invalid filename.' });
+  const filePath = path.join(__dirname, '../uploads/feedback', filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ message: 'Attachment not found.' });
+  res.sendFile(filePath);
 });
 
 // ── END User Product Feedback ──────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { Send, Bug, Lightbulb, MessageSquare, Clock } from 'lucide-react';
+import { Send, Bug, Lightbulb, MessageSquare, Clock, Paperclip, X, FileText } from 'lucide-react';
 import Button from '../core/Button.jsx';
 
 const TYPE_OPTIONS = [
@@ -27,6 +27,9 @@ const FeedbackForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [history, setHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
+    const [attachments, setAttachments] = useState([]);
+    const [previews, setPreviews]       = useState([]);
+    const fileInputRef = React.useRef(null);
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -50,9 +53,11 @@ const FeedbackForm = () => {
         }
         setIsSubmitting(true);
         try {
-            await api.submitUserFeedback({ type, category, message: message.trim() });
+            await api.submitUserFeedback({ type, category, message: message.trim(), attachments });
             toast.success('Thank you for your feedback!');
             setMessage('');
+            setAttachments([]);
+            setPreviews(prev => { prev.forEach(p => URL.revokeObjectURL(p.url)); return []; });
             // Refresh history
             const data = await api.getUserFeedback();
             setHistory(data.feedback || []);
@@ -61,6 +66,27 @@ const FeedbackForm = () => {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleFileChange = (e) => {
+        const files = Array.from(e.target.files || []);
+        const remaining = 3 - attachments.length;
+        const toAdd = files.slice(0, remaining);
+        if (toAdd.length < files.length) toast.error('Maximum 3 attachments allowed.');
+        setAttachments(prev => [...prev, ...toAdd]);
+        setPreviews(prev => [
+            ...prev,
+            ...toAdd.map(f => ({ url: URL.createObjectURL(f), isImage: f.type.startsWith('image/'), name: f.name })),
+        ]);
+        e.target.value = '';
+    };
+
+    const removeAttachment = (idx) => {
+        setAttachments(prev => prev.filter((_, i) => i !== idx));
+        setPreviews(prev => {
+            URL.revokeObjectURL(prev[idx]?.url);
+            return prev.filter((_, i) => i !== idx);
+        });
     };
 
     return (
@@ -113,6 +139,56 @@ const FeedbackForm = () => {
                         required
                     />
                     <p className="text-xs text-text-muted-light dark:text-text-muted-dark text-right mt-0.5">{message.length}/1000</p>
+                </div>
+
+                {/* Attachments */}
+                <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-medium text-text-muted-light dark:text-text-muted-dark">
+                            Attachments <span className="font-normal">(screenshots or PDF, max 3)</span>
+                        </label>
+                        <span className="text-xs text-text-muted-light dark:text-text-muted-dark">{attachments.length}/3</span>
+                    </div>
+
+                    {/* Previews */}
+                    {previews.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {previews.map((p, i) => (
+                                <div key={i} className="relative w-16 h-16 rounded-lg border border-border-light dark:border-border-dark overflow-hidden bg-surface-light dark:bg-surface-dark flex-shrink-0">
+                                    {p.isImage ? (
+                                        <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+                                            <FileText size={20} className="text-text-muted-light dark:text-text-muted-dark" />
+                                            <span className="text-[8px] text-text-muted-light dark:text-text-muted-dark text-center break-all leading-tight">{p.name.slice(0, 12)}</span>
+                                        </div>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeAttachment(i)}
+                                        className="absolute top-0.5 right-0.5 bg-black/60 rounded-full w-4 h-4 flex items-center justify-center text-white hover:bg-black/80"
+                                        aria-label={`Remove ${p.name}`}
+                                    >
+                                        <X size={9} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {attachments.length < 3 && (
+                        <>
+                            <input ref={fileInputRef} type="file" accept="image/*,application/pdf" multiple hidden onChange={handleFileChange} />
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs border border-dashed border-border-light dark:border-border-dark rounded-lg text-text-muted-light dark:text-text-muted-dark hover:border-accent-light dark:hover:border-accent-dark hover:text-accent-light dark:hover:text-accent-dark transition-colors"
+                            >
+                                <Paperclip size={13} />
+                                Add screenshot or file
+                            </button>
+                        </>
+                    )}
                 </div>
 
                 <Button type="submit" isLoading={isSubmitting} leftIcon={<Send size={14} />}>

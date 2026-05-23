@@ -18,13 +18,6 @@ import {
     Sparkles,
     ChevronRight,
     Flame,
-    FileQuestion,
-    ShieldCheck,
-    GraduationCap,
-    Target,
-    Swords,
-    Coins,
-    Award,
     CheckCircle,
     XCircle,
     X,
@@ -38,22 +31,6 @@ import OrchestratorMonitor from '../debug/OrchestratorMonitor.jsx';
 
 const features = [
     {
-        icon: GraduationCap,
-        title: "Module Roadmap",
-        description: "Learn through guided questioning. iMentor teaches by asking, not telling — just like a real tutor!",
-        path: '/tutor',
-        status: 'active',
-        glowColor: 'purple'
-    },
-    {
-        icon: ShieldCheck,
-        title: "Academic Integrity & Analysis",
-        description: "Check your text for potential plagiarism, biased language, and readability metrics.",
-        path: '/tools/integrity-checker',
-        status: 'active',
-        glowColor: 'blue'
-    },
-    {
         icon: MapPin,
         title: 'Skill Tree Map',
         description: 'Explore your learning journey with an interactive fog-of-war map. Master skills to unlock new paths!',
@@ -62,50 +39,19 @@ const features = [
         glowColor: 'cyan'
     },
     {
-        icon: Target,
-        title: 'Bounty Questions',
-        description: 'Daily personalized challenges based on your weak topics. Earn credits and Learning Credits!',
-        path: '/gamification/bounties',
-        status: 'active',
-        glowColor: 'green'
-    },
-    {
-        icon: Swords,
-        title: 'Boss Battles',
-        description: 'Test your knowledge with AI-generated boss battles. Win rewards and badges!',
-        path: '/gamification/boss-battles',
-        status: 'active',
-        glowColor: 'red'
-    },
-    {
-        icon: FileQuestion,
-        title: 'iMentor Quiz Generator',
-        description: 'Upload a document (PDF, DOCX, TXT) and generate a multiple-choice quiz to test your knowledge.',
-        path: '/tools/quiz-generator',
-        status: 'active',
-        glowColor: 'yellow'
-    },
-    {
-        icon: Code,
-        title: "Secure Code Executor",
-        description: "Write, compile, and run code in a sandboxed environment with iMentor assistance.",
-        path: '/tools/code-executor',
-        status: 'active',
-        glowColor: 'orange'
-    },
-    {
         icon: Zap,
         title: "Deep Research Mode",
         description: "AI-driven comprehensive research with synthesis, fact-checking, and citation analysis.",
         path: '/tools/deep-research',
         status: 'active',
-        glowColor: 'blue'
+        glowColor: 'blue',
+        desktopOnly: true   // not shown on mobile
     },
     {
         icon: BookMarked,
-        title: "Academic Search",
-        description: "Find and synthesize information from academic papers and scholarly articles.",
-        action: 'toggleAcademicSearch',
+        title: "Courses",
+        description: "Browse admin-curated course content and explore complete lecture notes with AI-powered search.",
+        path: '/courses',
         status: 'active',
         glowColor: 'purple'
     }
@@ -940,53 +886,57 @@ function CenterPanel({ messages, setMessages, currentSessionId, onChatProcessing
                                 {features.map((feature) => {
                                     const Icon = feature.icon;
                                     return (
-                                        <button
+                                        <div
                                             key={feature.title}
-                                            onClick={() => handleFeatureClick(feature)}
-                                            className="group text-left p-3.5 rounded-md transition-all duration-150 outline-none focus-visible:ring-1 focus-visible:ring-[--vs-border-hi]"
-                                            style={{
-                                                background:   'var(--vs-sidebar)',
-                                                border:       '1px solid var(--vs-border)',
-                                                borderRadius: '6px',
-                                                boxShadow:    '0 2px 8px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15)',
-                                            }}
-                                            onMouseEnter={e => {
-                                                e.currentTarget.style.background    = 'var(--vs-surface)';
-                                                e.currentTarget.style.borderColor   = 'var(--vs-border-hi)';
-                                                e.currentTarget.style.boxShadow     = '0 4px 16px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)';
-                                                e.currentTarget.style.transform     = 'translateY(-1px)';
-                                            }}
-                                            onMouseLeave={e => {
-                                                e.currentTarget.style.background    = 'var(--vs-sidebar)';
-                                                e.currentTarget.style.borderColor   = 'var(--vs-border)';
-                                                e.currentTarget.style.boxShadow     = '0 2px 8px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15)';
-                                                e.currentTarget.style.transform     = 'translateY(0)';
-                                            }}
-                                            aria-label={feature.title}
+                                            className={feature.desktopOnly ? 'hidden md:block' : ''}
                                         >
-                                            <div className="flex items-start gap-2.5">
-                                                <div
-                                                    className="mt-0.5 flex-shrink-0"
-                                                    style={{ color: 'var(--vs-text-lo)' }}
-                                                >
-                                                    <Icon size={14} />
-                                                </div>
-                                                <div className="min-w-0">
+                                            <button
+                                                onClick={() => handleFeatureClick(feature)}
+                                                className="group text-left p-3.5 rounded-md transition-all duration-150 outline-none focus-visible:ring-1 focus-visible:ring-[--vs-border-hi] w-full"
+                                                style={{
+                                                    background:   'var(--vs-sidebar)',
+                                                    border:       '1px solid var(--vs-border)',
+                                                    borderRadius: '6px',
+                                                    boxShadow:    '0 2px 8px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15)',
+                                                }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.background    = 'var(--vs-surface)';
+                                                    e.currentTarget.style.borderColor   = 'var(--vs-border-hi)';
+                                                    e.currentTarget.style.boxShadow     = '0 4px 16px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2)';
+                                                    e.currentTarget.style.transform     = 'translateY(-1px)';
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.background    = 'var(--vs-sidebar)';
+                                                    e.currentTarget.style.borderColor   = 'var(--vs-border)';
+                                                    e.currentTarget.style.boxShadow     = '0 2px 8px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15)';
+                                                    e.currentTarget.style.transform     = 'translateY(0)';
+                                                }}
+                                                aria-label={feature.title}
+                                            >
+                                                <div className="flex items-start gap-2.5">
                                                     <div
-                                                        className="text-xs font-bold mb-0.5 truncate"
-                                                        style={{ color: '#ffffff' }}
+                                                        className="mt-0.5 flex-shrink-0"
+                                                        style={{ color: 'var(--vs-text-lo)' }}
                                                     >
-                                                        {feature.title}
+                                                        <Icon size={14} />
                                                     </div>
-                                                    <div
-                                                        className="text-xs leading-snug line-clamp-2"
-                                                        style={{ color: 'var(--vs-text-dim)' }}
-                                                    >
-                                                        {feature.description}
+                                                    <div className="min-w-0">
+                                                        <div
+                                                            className="text-xs font-bold mb-0.5 truncate"
+                                                            style={{ color: '#ffffff' }}
+                                                        >
+                                                            {feature.title}
+                                                        </div>
+                                                        <div
+                                                            className="text-xs leading-snug line-clamp-2"
+                                                            style={{ color: 'var(--vs-text-dim)' }}
+                                                        >
+                                                            {feature.description}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </button>
+                                            </button>
+                                        </div>
                                     );
                                 })}
                             </div>

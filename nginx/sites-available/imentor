@@ -1,0 +1,90 @@
+# =============================================================
+# iMentor — HTTP-only reference config (legacy / dev fallback)
+# =============================================================
+# This config served iMentor over HTTP on port 8080 before SSL
+# was enabled. Kept as a reference; 000-unified is the active config.
+# =============================================================
+
+upstream imentor_frontend {
+    server 127.0.0.1:3005;
+    keepalive 32;
+}
+
+upstream imentor_backend {
+    server 127.0.0.1:5005;
+    keepalive 32;
+}
+
+upstream imentor_rag {
+    server 127.0.0.1:2005;
+    keepalive 32;
+}
+
+server {
+    listen 8080;
+    listen [::]:8080;
+    server_name 61.0.228.124;
+
+    client_max_body_size 100M;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    access_log /var/log/nginx/imentor_access.log;
+    error_log  /var/log/nginx/imentor_error.log;
+
+    location /api/ {
+        proxy_pass http://imentor_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+        proxy_buffering off;
+        proxy_request_buffering off;
+    }
+
+    location /rag/ {
+        proxy_pass http://imentor_rag/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 600s;
+        proxy_read_timeout 600s;
+        proxy_buffering off;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://imentor_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_buffering off;
+    }
+
+    location / {
+        proxy_pass http://imentor_frontend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}

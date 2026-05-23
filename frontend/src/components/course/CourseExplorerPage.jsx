@@ -621,7 +621,7 @@ function CourseGrid({ onSelectCourse }) {
                     Course Library
                 </div>
                 <h1 className="text-5xl font-serif font-medium text-white mb-4 tracking-tight">
-                    Admin Subjects
+                    Courses
                 </h1>
                 <p className="text-gray-400 text-base max-w-md leading-relaxed mb-8">
                     Browse admin-curated course content. Select a course to explore its complete lecture notes with AI-powered search.

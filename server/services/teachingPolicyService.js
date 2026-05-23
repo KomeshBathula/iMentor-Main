@@ -22,16 +22,16 @@ const COGNITIVE_LABELS = {
  * Map an action to a prose instruction injected into the LLM system prompt.
  */
 const ACTION_INSTRUCTIONS = {
-    EXPLAIN_CONCEPT: 'Provide a clear, concise explanation of the current concept before asking any question.',
-    ASK_QUESTION: 'Ask one focused Socratic question to probe the student\'s understanding.',
-    GIVE_HINT: 'Offer a gentle hint without giving away the answer. Break the problem into smaller parts.',
-    SIMPLIFY_PROBLEM: 'Simplify the current question — reduce scope, use an analogy, or present a concrete example.',
-    ADVANCE_DIFFICULTY: 'The student has demonstrated solid understanding. Raise the difficulty level and target a higher cognitive objective.',
-    RETEACH_CONCEPT: 'The student seems stuck. Re-explain the concept from first principles using a different framing.',
-    REVIEW_PREREQUISITES: 'Before proceeding, briefly review the prerequisite concept the student appears to be missing.',
-    SUMMARISE_AND_ADVANCE: 'Summarise what has been covered so far, affirm the student\'s progress, then introduce the next sub-topic.',
-    ENCOURAGE: 'Offer brief, genuine encouragement. Acknowledge that this topic is challenging and normalise the struggle.',
-    METACOGNITIVE_PROMPT: 'Ask the student to reflect on their own thinking process ("What strategy did you use?").',
+    EXPLAIN_CONCEPT: 'Provide a clear, concise explanation of the current concept in EXACTLY TWO short paragraphs before asking any question.',
+    ASK_QUESTION: 'Ask one focused, short Socratic question to probe the student\'s understanding.',
+    GIVE_HINT: 'Offer a one-sentence hint without giving away the answer. Break the problem into exactly one smaller part.',
+    SIMPLIFY_PROBLEM: 'Simplify the current question — use a single simple analogy or a concrete 1-sentence example.',
+    ADVANCE_DIFFICULTY: 'The student has demonstrated solid understanding. Raise the difficulty briefly and target a higher cognitive objective with a concise question.',
+    RETEACH_CONCEPT: 'The student seems stuck. Re-explain the concept using EXACTLY ONE simple analogy and a 2-sentence summary.',
+    REVIEW_PREREQUISITES: 'Before proceeding, briefly (max 3 sentences) review the prerequisite concept the student is missing.',
+    SUMMARISE_AND_ADVANCE: 'Summarise progress in 3 concise bullet points, then briefly introduce the next sub-topic.',
+    ENCOURAGE: 'Offer a 1-sentence, genuine encouragement. Normalise the struggle.',
+    METACOGNITIVE_PROMPT: 'Ask a short reflection question ("What part was clearest?").',
 };
 
 /**

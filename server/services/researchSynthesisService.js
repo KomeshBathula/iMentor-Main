@@ -76,6 +76,7 @@ CRITICAL RULES:
 3. No section titles like "Introduction" or "Conclusion" — all must be substantive analytical headings
 4. Ensure counter-evidence appears in at least one dedicated section
 5. Quantitative signals (percentages, statistics, trends) must appear in at least 3 sections
+6. TOPIC GUARDRAIL: Every section MUST be directly about the research topic ("${query}"). Do NOT generate sections on unrelated domains (economics, finance, geopolitics, or anything not present in the query or sources). If you cannot fill a section with on-topic evidence, merge it with an adjacent section instead.
 `;
 
     const planResponse = await LLMRouter.generate({
@@ -233,6 +234,36 @@ Write the section content as flowing academic prose with inline citations. DO NO
       // Pass researchConfig so the planner knows section count + page targets
       const planWithConfig = { ...plan, researchConfig };
       researchPlan = await this.generateResearchPlan(query, academicTitle, enrichedSources, planWithConfig, userId);
+
+      // Post-filter: remove sections whose titles are clearly off-topic (economics/finance/politics drift)
+      const OFF_TOPIC_PATTERNS = [
+        /\beconom(ic|y|ies)\b/i, /\bcapital formation\b/i, /\bfund(ing)? dynamics\b/i,
+        /\binvestor\b/i, /\bmarket participation\b/i, /\bgeopolit\b/i,
+        /\bfinancial structure\b/i, /\bhistorical economic\b/i, /\bstock market\b/i,
+        /\bfiscal policy\b/i, /\btrade war\b/i, /\bcurrency\b/i,
+        /\bsupply chain financ/i, /\bequity market\b/i, /\bventure capital\b/i,
+        /\bIPO\b/i, /\bhedge fund\b/i, /\bportfolio management\b/i,
+        /\bmonetary policy\b/i, /\bcentral bank\b/i, /\binflation\b/i,
+        /\bregulatory compliance\b/i, /\bgovernance structure\b/i,
+        /\bsanction\b/i, /\bdiplomatic\b/i, /\bpolitical\b/i,
+      ];
+
+      // Determine if the query is finance/economics related (to allow economic sections for those)
+      const FINANCE_TOPIC_PATTERNS = [
+        /\bstock\b/i, /\bfinance\b/i, /\beconom/i, /\bmarket\b/i,
+        /\bcryptocurrenc/i, /\btrading\b/i, /\bportfolio\b/i, /\binvestment\b/i,
+      ];
+      const isFinanceTopic = FINANCE_TOPIC_PATTERNS.some(re => re.test(query));
+      const originalCount = researchPlan.sections?.length || 0;
+      if (researchPlan.sections && !isFinanceTopic) {
+        researchPlan.sections = researchPlan.sections.filter(sec => {
+          const title = (sec.title || '').toLowerCase();
+          return !OFF_TOPIC_PATTERNS.some(re => re.test(title));
+        });
+      }
+      if ((researchPlan.sections?.length || 0) < originalCount) {
+        log.warn('AI', `[Deep Research] Removed ${originalCount - researchPlan.sections.length} off-topic sections`);
+      }
       log.info('AI', `[Deep Research] Plan created: ${researchPlan.sections?.length || 0} sections`);
     } catch (planError) {
       log.error('AI', `Research planning failed: ${planError.message}`);
@@ -321,7 +352,7 @@ Write the section content as flowing academic prose with inline citations. DO NO
         strongestInsight: "Evidence-based conclusions drawn"
       },
       sections: generatedSections,
-      structuralEconomicModel: researchPlan.structuralAnalysisRequired ? {
+      structuralEconomicModel: (researchPlan.structuralAnalysisRequired && isFinanceTopic) ? {
         capitalStructure: "Analysis based on available evidence",
         revenueFundamentals: "Derived from source analysis",
         investorComposition: "As documented in sources",

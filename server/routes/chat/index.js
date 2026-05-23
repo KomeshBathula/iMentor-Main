@@ -11,6 +11,8 @@ const { createPerformanceTracker, logPerformance } = require('../../services/per
 const { calculateComplexityScore } = require('../../services/smartModelRouterService');
 const { injectContextualMemory } = require('../../middleware/contextualMemoryMiddleware');
 const { validateChatMessage } = require('../../middleware/requestValidation');
+const { sttLimiter } = require('../../middleware/rateLimitMiddleware');
+const { authMiddleware } = require('../../middleware/authMiddleware');
 const { isDebugMode } = require('../../utils/debugMode');
 const log = require('../../utils/logger');
 const routerFeedback = require('../../services/routerFeedbackService');
@@ -690,7 +692,6 @@ router.use('/', tutorRoutes);
 const multer = require('multer');
 const axios  = require('axios');
 const FormData = require('form-data');
-const { authMiddleware } = require('../../middleware/authMiddleware');
 
 const _sttUpload = multer({
     storage: multer.memoryStorage(),
