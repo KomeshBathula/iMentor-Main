@@ -73,6 +73,11 @@ try:
     from academic_search import search_all_apis as academic_search
     from integrity_services import submit_to_turnitin, get_turnitin_report, check_bias_hybrid, calculate_readability
     import curriculum_graph_handler
+    try:
+        import curriculum_outline_extractor  # [Team6] Syllabus PDF/DOCX → structured curriculum JSON
+    except Exception as _coe_err:
+        curriculum_outline_extractor = None
+        logging.getLogger(__name__).warning(f"curriculum_outline_extractor unavailable: {_coe_err}")
     import knowledge_engine
     import media_processor
     import aiohttp
@@ -2896,6 +2901,54 @@ async def generate_skill_tree_question(request: QuestionGenerationRequest):
         return JSONResponse(
             status_code=500,
             content={"error": f"Question generation failed: {str(e)}"}
+        )
+
+
+# ============================================================================
+# [Team6] CURRICULUM OUTLINE EXTRACTION — Syllabus PDF/DOCX → JSON
+# ============================================================================
+@app.post("/curriculum-outline")
+async def extract_curriculum_outline(request: Request):
+    """
+    Convert an uploaded syllabus file (PDF/DOCX/TXT) into a structured
+    Module -> Topic -> Subtopic JSON outline, compatible with the course
+    bootstrap pipeline. Uses OCR for image-based PDFs, rejects corrupt images.
+    """
+    try:
+        if curriculum_outline_extractor is None:
+            return JSONResponse(
+                status_code=503,
+                content={"error": "curriculum_outline_extractor module not available"}
+            )
+        data = await request.json()
+        file_path = data.get("file_path", "")
+        course_name = data.get("course_name", "Untitled Course")
+
+        if not file_path or not os.path.exists(file_path):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "file_path is required and must exist on server"}
+            )
+
+        text = curriculum_outline_extractor.extract_text_from_upload(file_path)
+        if not text or not text.strip():
+            return JSONResponse(
+                status_code=422,
+                content={"error": "Could not extract readable text from the uploaded file"}
+            )
+
+        outline = curriculum_outline_extractor.build_outline_from_text(text, course_name)
+        logging.getLogger(__name__).info(
+            f"[CURRICULUM_OUTLINE] Extracted {len(outline.get('modules', []))} modules, "
+            f"{len(outline.get('topics', []))} topics for course '{course_name}'"
+        )
+        return JSONResponse(content={"success": True, "outline": outline})
+
+    except Exception as e:
+        logging.getLogger(__name__).error(f"[CURRICULUM_OUTLINE] Failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Curriculum outline extraction failed: {str(e)}"}
         )
 
 
