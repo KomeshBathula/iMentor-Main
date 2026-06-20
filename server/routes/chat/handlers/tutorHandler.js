@@ -24,10 +24,29 @@ const { triggerPeriodicAnalysis } = require('../../../middleware/contextualMemor
 const log = require('../../../utils/logger');
 const { streamEvent, TUTOR_MODE_TYPES, emitTutorKnowledgeEvents } = require('../helpers');
 const { computeTurnXp, awardTurnXpAsync, scheduleQualityBonusAsync } = require('../../../services/tutorXpService');
+const masteryService = require('../../../services/masteryService'); // [Team8]
+const tutorEnhancementService = require('../../../services/tutorEnhancementService'); // [Team8]
+const priorKnowledgeDetector = require('../../../services/priorKnowledgeDetector'); // [Team8]
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
+
+// [Team8] Select starting Bloom level based on declared difficulty + prior knowledge signal
+function selectStartingCognitiveLevel(difficultyLevel, hasPriorKnowledge) {
+    if (difficultyLevel === 'advanced') return 'L3_CRITICAL';
+    if (difficultyLevel === 'beginner') return 'L1_CONCEPT';
+    if (hasPriorKnowledge && difficultyLevel === 'intermediate') return 'L2_APPLICATION';
+    return 'L1_CONCEPT';
+}
+
+// [Team4] Build optional client timing metadata to pass into processTutorResponse
+function buildTutorMetadata(ctx = {}) {
+    const meta = {};
+    if (ctx.responseTime != null) meta.responseTime = Number(ctx.responseTime);
+    if (ctx.clientId) meta.clientId = String(ctx.clientId);
+    return meta;
+}
 
 /**
  * Build the $each array for ChatHistory push.
@@ -274,6 +293,26 @@ async function handleGeneral(res, ctx) {
     if (contextualMemory?.systemPrompt) {
         contextForIntro = `[STUDENT PROFILE FOR PERSONALIZATION]:\n${contextualMemory.systemPrompt}`;
     }
+
+    // [Team8] Detect prior knowledge from student's initial query — sets starting Bloom level
+    let hasPriorKnowledge = false;
+    let startingCognitiveLevel = 'L1_CONCEPT';
+    try {
+        const pkResult = await priorKnowledgeDetector.detectPriorKnowledge(query, teachingUnit);
+        hasPriorKnowledge = pkResult?.hasPriorKnowledge || false;
+        const difficultyLevel = pkResult?.suggestedLevel || 'beginner';
+        startingCognitiveLevel = selectStartingCognitiveLevel(difficultyLevel, hasPriorKnowledge);
+        if (hasPriorKnowledge) {
+            sendStatus('Detected prior knowledge — adjusting difficulty...');
+            log.info('TUTOR', `Prior knowledge detected for "${teachingUnit}" — starting at ${startingCognitiveLevel}`);
+        }
+    } catch (pkErr) {
+        log.warn('TUTOR', `Prior knowledge detection failed (non-fatal): ${pkErr.message}`);
+    }
+    if (startingCognitiveLevel !== 'L1_CONCEPT') {
+        llmConfig = { ...llmConfig, currentCognitiveLevel: startingCognitiveLevel };
+    }
+    // [/Team8]
 
     let initialResponse = '';
     try {

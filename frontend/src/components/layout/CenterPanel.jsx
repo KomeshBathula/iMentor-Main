@@ -23,7 +23,8 @@ import {
     X,
     MapPin,
     Zap,
-    AlertCircle
+    AlertCircle,
+    GraduationCap
 } from 'lucide-react';
 
 import DeepResearchPanel from '../research/DeepResearchPanel';
@@ -107,13 +108,13 @@ function CenterPanel({ messages, setMessages, currentSessionId, onChatProcessing
     const navigate = useNavigate();
     const location = useLocation();
     const { token: regularUserToken, user: regularUser } = useRegularAuth();
-    const { setSelectedSubject, systemPrompt, selectedDocumentForAnalysis, selectedSubject, tutorMode: contextTutorMode, setTutorMode, tutorModeType: contextTutorModeType } = useAppState();
+    const { setSelectedSubject, systemPrompt, selectedDocumentForAnalysis, selectedSubject, tutorMode: contextTutorMode, setTutorMode, tutorModeType: contextTutorModeType, setSessionId } = useAppState();
     const { isResearchMode, setQuery: setResearchQuery, setPipelineStage, handleResearchUpdate } = useDeepResearch();
 
     // Explicitly check route to avoid state race conditions during mode switches
     const isTutorRoute = location.pathname.startsWith('/tutor');
-    const tutorMode = contextTutorMode || isTutorRoute;
-    const effectiveTutorModeType = tutorModeType || contextTutorModeType || (isTutorRoute ? (selectedSubject ? 'structured' : 'general_socratic') : null);
+    const tutorMode = isTutorRoute;
+    const effectiveTutorModeType = isTutorRoute ? (tutorModeType || contextTutorModeType || (selectedSubject ? 'structured' : 'general_socratic')) : null;
 
     const [useWebSearch, setUseWebSearch] = useState(false);
     const [useAcademicSearch, setUseAcademicSearch] = useState(false);
@@ -728,20 +729,28 @@ function CenterPanel({ messages, setMessages, currentSessionId, onChatProcessing
                     ? "The request timed out. The service might be under heavy load."
                     : (error.response?.data?.message || error.message || "An unknown error occurred.");
 
-                setMessages(prev => prev.map(msg =>
-                    msg.id === streamingPlaceholderId
-                        ? {
-                            ...msg,
-                            isStreaming: false,
-                            text: "Oops! It seems like the AI service is temporarily busy or unavailable. We're sorry for the interruption! You can try regenerating the response or check back in a moment.",
-                            status: 'Service Error',
-                            isError: true,
-                            originalError: errorMessage // Keep original error for debugging if needed
-                        }
-                        : msg
-                ));
-                setLastErrorMessage(errorMessage);
-                setIsErrorModalOpen(true);
+                const isUnauthorizedSession = error.response?.status === 403 || errorMessage.includes('Unauthorized access');
+
+                if (isUnauthorizedSession) {
+                    toast.error("Session mismatch or unauthorized access. Starting a new session...");
+                    setSessionId(null);
+                    setMessages(prev => prev.filter(msg => msg.id !== streamingPlaceholderId));
+                } else {
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === streamingPlaceholderId
+                            ? {
+                                ...msg,
+                                isStreaming: false,
+                                text: "Oops! It seems like the AI service is temporarily busy or unavailable. We're sorry for the interruption! You can try regenerating the response or check back in a moment.",
+                                status: 'Service Error',
+                                isError: true,
+                                originalError: errorMessage
+                            }
+                            : msg
+                    ));
+                    setLastErrorMessage(errorMessage);
+                    setIsErrorModalOpen(true);
+                }
             }
         } finally {
             if (safetyTimeout) clearTimeout(safetyTimeout);
@@ -837,6 +846,19 @@ function CenterPanel({ messages, setMessages, currentSessionId, onChatProcessing
     return (
         <div className="flex flex-col h-full rounded-vs" style={{ background: 'var(--vs-bg)' }}>
             {/* Tutor Mode Banner */}
+            {tutorMode && (
+                <div className="flex items-center justify-between px-4 py-2 border-b text-[10px] sm:text-xs font-semibold tracking-wider text-indigo-400 bg-indigo-500/10 border-indigo-500/20 rounded-t-vs select-none animate-fadeIn flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                        <GraduationCap size={14} className="text-indigo-400 animate-pulse" />
+                        <span>SOCRATIC LEARNING MODE ACTIVE</span>
+                    </div>
+                    {effectiveTutorModeType && (
+                        <span className="text-[9px] sm:text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-medium capitalize">
+                            {effectiveTutorModeType} Tutor
+                        </span>
+                    )}
+                </div>
+            )}
 
             {isResearchMode ? (
                 <DeepResearchPanel />

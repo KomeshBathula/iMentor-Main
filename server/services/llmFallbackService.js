@@ -19,9 +19,11 @@ const log = require('../utils/logger');
 const { checkOllamaHealth } = require('./ollamaHealthService');
 
 // Lazy-load provider services to avoid circular deps
-let _gemini, _ollama, _streaming;
+let _gemini, _ollama, _streaming, _sglang, _groq; // [Team1] added sglang + groq
 function geminiService()    { return _gemini    || (_gemini    = require('./geminiService'));    }
 function ollamaService()    { return _ollama    || (_ollama    = require('./ollamaService'));    }
+function sglangService()    { return _sglang    || (_sglang    = require('./sglangService'));    } // [Team1]
+function groqService()      { return _groq      || (_groq      = require('./groqService'));      } // [Team1]
 function streamingService() { return _streaming || (_streaming = require('./llmStreamingService')); }
 
 // ─── THINKING MODEL DETECTION ──────────────────────────────────────────────

@@ -25,8 +25,9 @@ import { useAuth } from '../../hooks/useAuth';
  * Results (correct/wrong) are passed from TutorModePage but also synced.
  * Course-aware: validates that the selected course is academic before showing questions.
  */
-function QuizPanel({ selectedCourse, onQuestionChange, questionResults = {}, onResetQuiz, initialQuizIndex = 0, onIndexChange, systemPrompt }) {
-    const { token: regularUserToken } = useAuth();
+function QuizPanel({ selectedCourse, moduleId, onQuestionChange, questionResults = {}, onResetQuiz, initialQuizIndex = 0, onIndexChange, systemPrompt }) {
+    const { token: regularUserToken, user } = useAuth();
+    const userId = user?.id || 'guest';
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     // error: null | 'no_backend' | 'non_academic' | 'no_questions'
@@ -36,7 +37,7 @@ function QuizPanel({ selectedCourse, onQuestionChange, questionResults = {}, onR
 
     // Persist current question index per course
     const [currentIndex, setCurrentIndex] = useState(() => {
-        const saved = localStorage.getItem(`quizIndex_${selectedCourse || 'default'}`);
+        const saved = localStorage.getItem(`quizIndex_${userId}_${selectedCourse || 'default'}`);
         // If initialQuizIndex is 0, we should prefer it over a saved index of e.g. 5
         // but only if it's explicitly passed as a valid number.
         return (initialQuizIndex !== null && initialQuizIndex !== undefined)
@@ -131,6 +132,25 @@ function QuizPanel({ selectedCourse, onQuestionChange, questionResults = {}, onR
         }
     };
 
+    const handleSelectOption = (optionIndex) => {
+        if (isEvaluating || currentResult) return;
+
+        const isCorrect = optionIndex === current.correctIndex;
+        const correctOptionText = current.options[current.correctIndex] || '';
+        const feedbackText = isCorrect
+            ? `Correct! "${correctOptionText}" is the correct answer.`
+            : `Incorrect. You selected "${current.options[optionIndex]}". The correct answer was: "${correctOptionText}".`;
+
+        window.dispatchEvent(new CustomEvent('quiz-result', {
+            detail: {
+                result: isCorrect ? 'correct' : 'incorrect',
+                index: currentIndex,
+                feedback: feedbackText,
+                selectedOption: optionIndex
+            }
+        }));
+    };
+
     // Reset index when course changes or backend data arrives
     useEffect(() => {
         if (!selectedCourse) return;
@@ -139,30 +159,35 @@ function QuizPanel({ selectedCourse, onQuestionChange, questionResults = {}, onR
         if (initialQuizIndex !== null && initialQuizIndex !== undefined) {
             setCurrentIndex(initialQuizIndex);
         } else {
-            const saved = localStorage.getItem(`quizIndex_${selectedCourse}`);
+            const saved = localStorage.getItem(`quizIndex_${userId}_${selectedCourse}`);
             if (saved) {
                 setCurrentIndex(parseInt(saved, 10));
             }
         }
         isInitialized.current = true;
-    }, [selectedCourse, initialQuizIndex]);
+    }, [selectedCourse, initialQuizIndex, userId]);
 
     // Persist index whenever it changes
     useEffect(() => {
         if (selectedCourse && isInitialized.current) {
-            localStorage.setItem(`quizIndex_${selectedCourse}`, currentIndex.toString());
+            localStorage.setItem(`quizIndex_${userId}_${selectedCourse}`, currentIndex.toString());
             if (typeof onIndexChange === 'function') {
                 onIndexChange(currentIndex);
             }
         }
-    }, [currentIndex, selectedCourse, onIndexChange]);
+    }, [currentIndex, selectedCourse, onIndexChange, userId]);
 
     const fetchQuestions = useCallback(async () => {
         setLoading(true);
         setError(null);
         setNonAcademicMessage('');
         try {
-            const data = await api.getPracticeQuestions(selectedCourse || null);
+            console.log("Quiz Request", {
+                courseName: selectedCourse,
+                moduleId: moduleId
+            });
+            const data = await api.generateSocraticQuiz(selectedCourse || null, moduleId || null);
+            console.log("Quiz Response", data);
 
             // Non-academic rejection from backend (status 200 with isNonAcademic flag)
             if (data && data.isNonAcademic) {
@@ -195,7 +220,7 @@ function QuizPanel({ selectedCourse, onQuestionChange, questionResults = {}, onR
         } finally {
             setLoading(false);
         }
-    }, [selectedCourse]);
+    }, [selectedCourse, moduleId]);
 
     // Re-fetch whenever the selected course changes
     useEffect(() => { fetchQuestions(); }, [fetchQuestions]);
@@ -416,39 +441,69 @@ function QuizPanel({ selectedCourse, onQuestionChange, questionResults = {}, onR
                             </Animate>
                         )}
 
-                        {!currentResult && !isRevealingAnswer && (
-                            <div className="flex flex-col gap-3">
-                                <div className="relative group">
-                                    <textarea
-                                        value={answerText}
-                                        onChange={(e) => setAnswerText(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                e.preventDefault();
-                                                handleSubmitAnswer();
-                                            }
-                                        }}
-                                        disabled={isEvaluating}
-                                        placeholder={isEvaluating ? "Evaluating answer..." : "Enter your answer here..."}
-                                        className="w-full min-h-[100px] p-3 rounded-2xl bg-gray-900/40 border border-white/5 text-[12px] text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500/30 focus:bg-gray-900/60 transition-all resize-none custom-scrollbar disabled:opacity-50"
-                                    />
+                        {current?.options && current.options.length > 0 ? (
+                            <div className="flex flex-col gap-2.5">
+                                {current.options.map((option, idx) => {
+                                    let btnStyle = "border-white/5 bg-gray-900/40 text-gray-300 hover:bg-gray-800/40 hover:border-purple-500/25";
+                                    if (currentResult) {
+                                        if (idx === current.correctIndex) {
+                                            btnStyle = "border-green-500/30 bg-green-500/10 text-green-400 font-semibold";
+                                        } else if (dataForCurrent?.selectedOption === idx) {
+                                            btnStyle = "border-red-500/30 bg-red-500/10 text-red-400";
+                                        } else {
+                                            btnStyle = "border-white/5 bg-gray-900/20 text-gray-500 opacity-60 cursor-not-allowed";
+                                        }
+                                    }
+                                    return (
+                                        <button
+                                            key={idx}
+                                            disabled={!!currentResult || isEvaluating}
+                                            onClick={() => handleSelectOption(idx)}
+                                            className={`w-full p-3.5 rounded-xl border text-left text-xs transition-all duration-200 flex items-start gap-3 ${btnStyle}`}
+                                        >
+                                            <span className="flex-shrink-0 w-5 h-5 rounded-full border border-current/25 flex items-center justify-center font-bold text-[10px]">
+                                                {String.fromCharCode(65 + idx)}
+                                            </span>
+                                            <span className="flex-1">{option}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            !currentResult && !isRevealingAnswer && (
+                                <div className="flex flex-col gap-3">
+                                    <div className="relative group">
+                                        <textarea
+                                            value={answerText}
+                                            onChange={(e) => setAnswerText(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    handleSubmitAnswer();
+                                                }
+                                            }}
+                                            disabled={isEvaluating}
+                                            placeholder={isEvaluating ? "Evaluating answer..." : "Enter your answer here..."}
+                                            className="w-full min-h-[100px] p-3 rounded-2xl bg-gray-900/40 border border-white/5 text-[12px] text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500/30 focus:bg-gray-900/60 transition-all resize-none custom-scrollbar disabled:opacity-50"
+                                        />
+                                        <button
+                                            onClick={handleSubmitAnswer}
+                                            disabled={!answerText.trim() || isEvaluating}
+                                            className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 disabled:opacity-30 disabled:hover:bg-purple-500/20 transition-all border border-purple-500/20"
+                                        >
+                                            {isEvaluating ? <Loader2 size={14} className="animate-spin text-purple-300" /> : <Send size={14} />}
+                                        </button>
+                                    </div>
+
                                     <button
-                                        onClick={handleSubmitAnswer}
-                                        disabled={!answerText.trim() || isEvaluating}
-                                        className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 disabled:opacity-30 disabled:hover:bg-purple-500/20 transition-all border border-purple-500/20"
+                                        onClick={() => setIsRevealingAnswer(true)}
+                                        className="w-full py-2 rounded-xl bg-gray-800/20 border border-white/5 text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:bg-gray-800/40 transition-all flex items-center justify-center gap-2"
                                     >
-                                        {isEvaluating ? <Loader2 size={14} className="animate-spin text-purple-300" /> : <Send size={14} />}
+                                        <ShieldOff size={11} className="text-orange-400/40" />
+                                        Reveal Correct Answer
                                     </button>
                                 </div>
-
-                                <button
-                                    onClick={() => setIsRevealingAnswer(true)}
-                                    className="w-full py-2 rounded-xl bg-gray-800/20 border border-white/5 text-[10px] text-gray-500 font-bold uppercase tracking-widest hover:bg-gray-800/40 transition-all flex items-center justify-center gap-2"
-                                >
-                                    <ShieldOff size={11} className="text-orange-400/40" />
-                                    Reveal Correct Answer
-                                </button>
-                            </div>
+                            )
                         )}
 
                         {isRevealingAnswer && (
@@ -553,8 +608,8 @@ function QuizPanel({ selectedCourse, onQuestionChange, questionResults = {}, onR
                                     <button
                                         onClick={() => {
                                             if (window.confirm('Reset quiz results and start from Question 1?')) {
-                                                localStorage.removeItem(`quizResults_${selectedCourse}`);
-                                                localStorage.setItem(`quizIndex_${selectedCourse || 'default'}`, '0');
+                                                localStorage.removeItem(`quizResults_${userId}_${selectedCourse}`);
+                                                localStorage.setItem(`quizIndex_${userId}_${selectedCourse || 'default'}`, '0');
                                                 setCurrentIndex(0);
                                                 if (typeof onResetQuiz === 'function') onResetQuiz();
                                             }
