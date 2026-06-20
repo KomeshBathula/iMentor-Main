@@ -855,8 +855,10 @@ async function processAgenticRequest(
     apiKey,
   } = requestContext;
 
+  const groqService = require("./groqService");
   const llmService = llmProvider === "ollama" ? ollamaService
                     : llmProvider === "sglang" ? null  // answer generation uses llmStreamingService
+                    : llmProvider === "groq" ? groqService
                     : geminiService;
 
   const llmOptions = {
@@ -866,6 +868,7 @@ async function processAgenticRequest(
     }),
     ...(llmProvider === "sglang" && { model: process.env.SGLANG_CHAT_MODEL || 'Qwen/Qwen2.5-7B-Instruct-AWQ' }),
     ...(llmProvider === "gemini" && { geminiModel: requestContext.geminiModel || process.env.GEMINI_MODEL || 'gemini-2.0-flash' }),
+    ...(llmProvider === "groq" && { model: requestContext.groqModel || process.env.GROQ_MODEL || 'llama-3.1-8b-instant' }),
     apiKey: apiKey,
     ollamaUrl: ollamaUrl,
   };
@@ -929,6 +932,11 @@ async function processAgenticRequest(
     requestContext
   );
   let toolCall = parseToolCall(routerResponseText);
+
+  if (toolCall && (toolCall.tool_name === 'direct_answer' || toolCall.tool_name === 'none')) {
+    log.info('AI', `Intercepted tool call "${toolCall.tool_name}" — treating as direct response`);
+    toolCall = null;
+  }
 
   if ((!toolCall || !toolCall.tool_name) && requestContext?.intent === 'research') {
     toolCall = {

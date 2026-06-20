@@ -11,6 +11,9 @@ const { sendOtpEmail, sendPasswordResetEmail, isEmailServiceConfigured } = requi
 const bcrypt = require('bcryptjs');
 const { redisClient } = require('../config/redisClient');
 
+// Development mode flag: skip email verification requirement
+const EMAIL_VERIFICATION_REQUIRED = process.env.EMAIL_VERIFICATION_REQUIRED !== 'false';
+
 const router = express.Router();
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '7d';
 const OTP_MAX_ATTEMPTS = 5;
@@ -119,6 +122,9 @@ router.post('/signup', async (req, res) => {
             user.ollamaUrl = '';
         }
 
+        // Mark email as verified
+        user.emailVerified = true;
+
         await user.save();
 
         // Clean up the pending registration
@@ -151,7 +157,40 @@ router.post('/send-otp', async (req, res) => {
         return res.status(400).json({ message: 'A valid email and a password of at least 6 characters are required.' });
     }
 
-    try {
+    try {        // Development mode: skip email verification
+        if (!EMAIL_VERIFICATION_REQUIRED) {
+            log.info('AUTH', `DEV_MODE: Skipping OTP for ${email}`);
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(409).json({ message: 'An account with this email already exists.' });
+            }
+
+            // In dev mode, generate a dummy OTP (or could return it for testing)
+            const devOtp = '123456';
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+            const hashedOtp = await bcrypt.hash(devOtp, 10);
+
+            const PendingRegistration = require('../models/PendingRegistration');
+            await PendingRegistration.findOneAndUpdate(
+                { email },
+                {
+                    email,
+                    hashedPassword,
+                    hashedOtp,
+                    otpExpires: new Date(Date.now() + 10 * 60 * 1000),
+                    attempts: 0
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+
+            log.info('AUTH', `USER_SIGNUP_INITIATED_DEV: ${email} (dev mode - email verification skipped)`);
+            return res.status(200).json({ 
+                message: 'Development mode: Email verification skipped. Use OTP "123456" to complete signup.',
+                devMode: true,
+                devOtp: devOtp
+            });
+        }
         const emailConfigured = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS && isEmailServiceConfigured());
         if (!emailConfigured) {
             log.error('AUTH', 'OTP send blocked: email verification service not configured');
