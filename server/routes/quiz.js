@@ -8,6 +8,8 @@ const geminiService = require('../services/geminiService');
 const { callWithFallback } = require('../services/llmFallbackService');
 const log = require('../utils/logger');
 
+const QUIZ_GENERATE_TIMEOUT_MS = 40000; // Total timeout for quiz generation
+
 const PYTHON_RAG_URL = process.env.PYTHON_RAG_SERVICE_URL || 'http://127.0.0.1:2005';
 
 /**
@@ -66,12 +68,20 @@ router.get('/generate', async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found.' });
 
         const questionGeneratorService = require('../services/questionGeneratorService');
-        const questions = await questionGeneratorService.generateSocraticQuiz({
+
+        // Total timeout guard — never block indefinitely
+        const generationPromise = questionGeneratorService.generateSocraticQuiz({
             courseName,
             moduleId,
             moduleName,
             user
         });
+
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Quiz generation timed out after ' + (QUIZ_GENERATE_TIMEOUT_MS / 1000) + 's. Please try again.')), QUIZ_GENERATE_TIMEOUT_MS)
+        );
+
+        const questions = await Promise.race([generationPromise, timeoutPromise]);
 
         res.status(200).json({
             success: true,
@@ -80,7 +90,7 @@ router.get('/generate', async (req, res) => {
 
     } catch (error) {
         log.error('QUIZ', 'Failed to generate Socratic quiz', error);
-        res.status(500).json({ message: 'Failed to generate quiz.', error: error.message });
+        res.status(500).json({ message: error.message || 'Failed to generate quiz.' });
     }
 });
 

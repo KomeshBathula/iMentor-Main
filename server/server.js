@@ -301,6 +301,7 @@ app.use('/api/progress', authMiddleware, require('./routes/progress'));
 app.use('/api/jobs', authMiddleware, require('./routes/jobs'));
 app.use('/api/quiz', authMiddleware, quizRoutes); // [Team1] Quiz generation, submission & grading
 app.use('/api/adaptive-profile', authMiddleware, adaptiveProfileRoutes); // [Team8] Student adaptive learning profiles
+app.use('/api/assessment', authMiddleware, require('./routes/knowledgeAssessment')); // Knowledge Assessment Engine
 
 // --- Sentry Error Handler ---
 Sentry.setupExpressErrorHandler(app);

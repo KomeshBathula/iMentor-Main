@@ -40,6 +40,14 @@ const SkillTreeLanding = () => {
         fetchCourses();
     }, []);
 
+    const getCourseDisplay = (course) => {
+        if (typeof course === 'object' && course !== null) {
+            return { code: course.code || '', name: course.name || course.code || '' };
+        }
+        const s = String(course || '');
+        return { code: s, name: s };
+    };
+
     const handleStartGame = () => {
         setStep('topic');
     };
@@ -326,9 +334,10 @@ const SkillTreeLanding = () => {
                                     disabled={loading}
                                 >
                                     <option value="" disabled>Select a course...</option>
-                                    {courses.map(c => (
-                                        <option key={c} value={c}>{c}</option>
-                                    ))}
+                                    {courses.map(c => {
+                                        const { code, name } = getCourseDisplay(c);
+                                        return <option key={code} value={code}>{name}</option>;
+                                    })}
                                     <option value="other">Other Topic...</option>
                                 </select>
 

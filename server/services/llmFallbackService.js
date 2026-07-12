@@ -61,6 +61,7 @@ async function isOllamaUp(userOllamaUrl) {
     const candidates = [
         userOllamaUrl,
         process.env.OLLAMA_API_BASE_URL,
+        process.env.OLLAMA_URL,
         `http://localhost:${process.env.OLLAMA_PORT || 11434}`
     ].filter(Boolean);
 
@@ -103,14 +104,26 @@ async function isSglangUp() {
         return _sglangHealthy;
     }
     try {
-        const healthy = await sglangService().checkHealth('chat');
-        _sglangHealthy = healthy;
+        // Quick HTTP health check with short timeout instead of relying on SDK client
+        const sglangUrl = process.env.SGLANG_CHAT_URL || 'http://localhost:8000/v1';
+        const baseUrl = sglangUrl.replace(/\/v1\/?$/, '').replace(/\/chat\/completions\/?$/, '');
+        const axios = require('axios');
+        await axios.get(`${baseUrl}/health`, { timeout: 3000 });
+        _sglangHealthy = true;
         _sglangHealthTs = now;
-        return healthy;
+        return true;
     } catch (e) {
-        _sglangHealthy = false;
-        _sglangHealthTs = now;
-        return false;
+        // Fallback to SDK health check if quick HTTP check fails
+        try {
+            const healthy = await sglangService().checkHealth('chat');
+            _sglangHealthy = healthy;
+            _sglangHealthTs = now;
+            return healthy;
+        } catch (e2) {
+            _sglangHealthy = false;
+            _sglangHealthTs = now;
+            return false;
+        }
     }
 }
 
@@ -120,10 +133,22 @@ function invalidateSglangHealth() {
 }
 
 // ─── API KEY AVAILABILITY ──────────────────────────────────────────────────
+const PLACEHOLDER_KEYS = new Set([
+    'your_gemini_api_key',
+    'your_groq_api_key_here',
+    'your_api_key_here',
+    'placeholder',
+    '',
+]);
+
+function isValidKey(key) {
+    return Boolean(key) && !PLACEHOLDER_KEYS.has(key.trim().toLowerCase());
+}
+
 function hasApiKey(provider, userKeys = {}) {
     switch (provider) {
-        case 'gemini': return Boolean(userKeys.gemini || process.env.GEMINI_API_KEY);
-        case 'groq':   return Boolean(userKeys.groq || process.env.GROQ_API_KEY);
+        case 'gemini': return isValidKey(userKeys.gemini || process.env.GEMINI_API_KEY);
+        case 'groq':   return isValidKey(userKeys.groq || process.env.GROQ_API_KEY);
         case 'ollama': return true; // no key needed
         case 'sglang': return true; // no key needed
         default:       return false;
@@ -137,6 +162,14 @@ function getApiKey(provider, userKeys = {}) {
         default:       return null;
     }
 }
+
+// ─── PER-PROVIDER TIMEOUTS (ms) ────────────────────────────────────────────
+const PROVIDER_TIMEOUTS = {
+    sglang: 5_000,
+    groq:   15_000,
+    gemini: 15_000,
+    ollama: 20_000,
+};
 
 // ─── FALLBACK CHAIN BUILDER ────────────────────────────────────────────────
 // SGLang is handled via local / API calls. Groq and Gemini are fallback targets.
@@ -197,10 +230,12 @@ async function callWithFallback({
 }) {
     const chain = buildFallbackChain(preferredProvider, preferLocalFirst);
     const errors = [];
+    let attemptedAny = false;
 
     for (const provider of chain) {
         // Skip providers without API keys (except ollama)
         if (provider !== 'ollama' && !hasApiKey(provider, userApiKeys)) {
+            log.info('AI', `[Fallback] Skipping ${provider} — API key missing or is placeholder`);
             continue;
         }
 
@@ -226,6 +261,7 @@ async function callWithFallback({
         const apiKey = getApiKey(provider, userApiKeys);
         const model = resolveModelForProvider(provider, options);
         const thinkEnabled = isThinkingModel(model);
+        const providerTimeout = PROVIDER_TIMEOUTS[provider] || 30_000;
 
         const callOptions = {
             ...options,
@@ -234,15 +270,18 @@ async function callWithFallback({
             ollamaUrl,
             temperature: options.temperature ?? 0.7,
             maxOutputTokens: options.maxOutputTokens ?? 4096,
+            timeout: providerTimeout,
             ...(provider === 'gemini' && { geminiModel: model }),
             ...(thinkEnabled && { think: true }),
         };
+
+        attemptedAny = true;
+        log.info('AI', `[Fallback] Attempting ${provider}/${model} (timeout: ${providerTimeout}ms)`);
 
         try {
             let result;
 
             if (onToken && provider === 'ollama') {
-                // Ollama has native streaming via streamChat
                 result = await ollamaService().streamChat(
                     chatHistory, userQuery, systemPrompt, callOptions,
                     (token) => {
@@ -254,7 +293,6 @@ async function callWithFallback({
                     }
                 );
             } else if (onToken && UNIFIED_STREAM_PROVIDERS.has(provider)) {
-                // Gemini/Groq via unified streaming service
                 const messages = [
                     ...chatHistory.map(m => ({
                         role: m.role === 'model' ? 'assistant' : m.role,
@@ -267,7 +305,6 @@ async function callWithFallback({
                     options: { ...callOptions, handleThinkingTags: thinkEnabled }
                 });
             } else if (onToken && provider === 'sglang') {
-                // SGLang via unified streaming service
                 const messages = [
                     ...chatHistory.map(m => ({
                         role: m.role === 'model' ? 'assistant' : m.role,
@@ -280,7 +317,6 @@ async function callWithFallback({
                     options: callOptions
                 });
             } else if (provider === 'sglang') {
-                // SGLang direct REST call
                 const axios = require('axios');
                 const messages = [];
                 if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
@@ -296,10 +332,9 @@ async function callWithFallback({
                     max_tokens: callOptions.maxOutputTokens ?? 4096,
                     temperature: callOptions.temperature ?? 0.7,
                     stream: false,
-                }, { timeout: 30000 });
+                }, { timeout: providerTimeout });
                 result = resp.data?.choices?.[0]?.message?.content || '';
             } else {
-                // Non-streaming path for gemini/groq
                 const svc = getServiceForProvider(provider);
                 result = await svc.generateContentWithHistory(chatHistory, userQuery, systemPrompt, callOptions);
             }

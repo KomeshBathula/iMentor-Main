@@ -1,0 +1,18 @@
+{
+  "uploadedFileName": null,
+  "extractedTopics": [],
+  "matchedConcepts": [],
+  "matchPercentage": 0,
+  "reusedSkillTreeDecision": "generate_new",
+  "uploadReport": {
+    "validRows": 1,
+    "invalidRows": 0,
+    "duplicates": [],
+    "warnings": []
+  },
+  "meta": {
+    "userId": "6a16979cfc0759c4d833fa45",
+    "generatedAt": "2026-07-11T06:18:32.074Z",
+    "threshold": 80
+  }
+}

@@ -44,6 +44,7 @@ const DeepResearchPage     = React.lazy(() => import('./components/research/Deep
 const CourseExplorerPage   = React.lazy(() => import('./components/course/CourseExplorerPage.jsx'));
 const ResearchHistory      = React.lazy(() => import('./components/research/ResearchHistory.jsx'));
 const ResearchDetailView   = React.lazy(() => import('./components/research/ResearchDetailView.jsx'));
+const KnowledgeAssessmentPage = React.lazy(() => import('./components/assessment/KnowledgeAssessmentPage.jsx'));
 
 
 
@@ -464,6 +465,7 @@ function App() {
                         <Route path="/tools/deep-research/history" element={<ResearchHistory />} />
                         <Route path="/tools/deep-research/view/:id" element={<ResearchDetailView />} />
                         <Route path="/courses" element={<CourseExplorerPage />} />
+                        <Route path="/assessment" element={<KnowledgeAssessmentPage />} />
                         {/* Gamification Routes */}
                         <Route path="/gamification/bounties" element={<BountyCreditsPage />} />
                         <Route path="/gamification/credits" element={<BountyCreditsPage />} />
