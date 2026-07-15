@@ -6,7 +6,42 @@ const { redisClient } = require('../config/redisClient');
 const log = require('../utils/logger');
 
 const QUIZ_CACHE_TTL = 3600; // 1 hour
+const SEEN_QUESTIONS_TTL = 30 * 24 * 3600; // 30 days
 const MAX_CONTEXT_LENGTH = 2500; // Truncate context to reduce prompt size
+
+/**
+ * Get Redis key for tracking seen questions per user per course/module
+ */
+function getSeenQuizQuestionsKey(userId, courseName, moduleName) {
+    const mod = moduleName || 'general';
+    return `seen_quiz_questions:${userId}:${courseName}:${mod}`;
+}
+
+/**
+ * Get previously seen question texts for replay protection
+ */
+async function getSeenQuizQuestions(userId, courseName, moduleName) {
+    if (!userId || !redisClient?.isOpen) return [];
+    try {
+        const key = getSeenQuizQuestionsKey(userId, courseName, moduleName);
+        const val = await redisClient.get(key);
+        if (val) return JSON.parse(val);
+    } catch (e) { /* ignore */ }
+    return [];
+}
+
+/**
+ * Add new question texts to seen set
+ */
+async function addSeenQuizQuestions(userId, courseName, moduleName, questionTexts) {
+    if (!userId || !redisClient?.isOpen || !questionTexts?.length) return;
+    try {
+        const key = getSeenQuizQuestionsKey(userId, courseName, moduleName);
+        const existing = await getSeenQuizQuestions(userId, courseName, moduleName);
+        const combined = [...new Set([...existing, ...questionTexts])].slice(-100); // Keep last 100
+        await redisClient.setEx(key, SEEN_QUESTIONS_TTL, JSON.stringify(combined));
+    } catch (e) { /* ignore */ }
+}
 
 /**
  * Shared Question Generator Service
@@ -24,6 +59,22 @@ async function generateSocraticQuiz({ courseName, moduleId, moduleName, user }) 
     let cacheKey = null; // accessible in both try and catch blocks
     try {
         const learningStage = user?.profile?.learningStage || 'Beginner';
+        const userId = user?._id;
+
+        // ── REPLAY PROTECTION: Get previously seen question IDs for this user/course/module ──────────────────
+        let seenQuestionIds = [];
+        if (userId && redisClient) {
+            const seenKey = `quiz:seen:${userId}:${courseName}:${moduleId || moduleName || 'all'}`;
+            try {
+                const seen = await redisClient.get(seenKey);
+                if (seen) {
+                    seenQuestionIds = JSON.parse(seen);
+                    log.info('QUIZ', `Replay protection: ${seenQuestionIds.length} questions already seen for ${courseName}/${moduleName || moduleId || 'all'}`);
+                }
+            } catch (e) {
+                log.warn('QUIZ', `Failed to get seen questions: ${e.message}`);
+            }
+        }
 
         // ── CACHE CHECK ──────────────────────────────────────────────────
         if (redisClient) {
@@ -46,7 +97,8 @@ async function generateSocraticQuiz({ courseName, moduleId, moduleName, user }) 
         // Try contentGenerationService (Redis → MongoDB → Provider → Template)
         try {
             const cg = require('./contentGenerationService');
-            const pipelineResult = await cg.generateOrRetrieveQuiz(courseName, moduleName || moduleId || 'all', user?._id);
+            // Pass seenQuestionIds for replay protection
+            const pipelineResult = await cg.generateOrRetrieveQuiz(courseName, moduleName || moduleId || 'all', user?._id, seenQuestionIds);
             if (pipelineResult && pipelineResult.questions && pipelineResult.questions.length > 0) {
                 const stage = learningStage;
                 const normalized = pipelineResult.questions.map((q, idx) => {
@@ -64,6 +116,13 @@ async function generateSocraticQuiz({ courseName, moduleId, moduleName, user }) 
                 });
                 const now = new Date().toISOString();
                 log.info('QUIZ', `Pipeline quiz HIT for ${courseName}/${moduleName || moduleId || 'all'} via ${pipelineResult._source} (${Date.now() - t0}ms)`);
+
+                // Store new question texts for replay protection
+                if (userId && pipelineResult.questions) {
+                    const questionTexts = pipelineResult.questions.map(q => q.question).filter(Boolean);
+                    await addSeenQuizQuestions(userId, courseName, moduleId || moduleName || 'all', questionTexts);
+                }
+                
                 return {
                     questions: normalized,
                     source: pipelineResult._source || 'mongodb',
@@ -813,7 +872,41 @@ function generateSocraticOfflineFallback({ courseName, moduleName }) {
     return questions;
 }
 
+/**
+ * Store seen question IDs for replay protection
+ * @param {string} userId - User ID
+ * @param {string} courseName - Course name
+ * @param {string} moduleKey - Module identifier (moduleId, moduleName, or 'all')
+ * @param {Array} questions - Array of question objects
+ */
+async function storeSeenQuestions(userId, courseName, moduleKey, questions) {
+    if (!userId || !redisClient || !questions?.length) return;
+    
+    try {
+        const seenKey = `quiz:seen:${userId}:${courseName}:${moduleKey}`;
+        const existing = await redisClient.get(seenKey);
+        let seenIds = existing ? JSON.parse(existing) : [];
+        
+        // Extract question IDs from the questions array
+        const newIds = questions
+            .map(q => q._id || q._conceptQuestionId || q.id || q.question?.substring(0, 100))
+            .filter(Boolean);
+        
+        if (newIds.length > 0) {
+            // Combine and deduplicate, keep last 100
+            const combined = [...new Set([...seenIds, ...newIds])].slice(-100);
+            await redisClient.setEx(`quiz:seen:${userId}:${courseName}:${moduleKey}`, 30 * 24 * 3600, JSON.stringify(combined));
+            log.info('QUIZ', `Stored ${newIds.length} seen question IDs for ${courseName}/${moduleKey}`);
+        }
+    } catch (e) {
+        log.warn('QUIZ', `Failed to store seen questions: ${e.message}`);
+    }
+}
+
 module.exports = {
     generateSocraticQuiz,
-    generateSkillTreeQuestions
+    generateSkillTreeQuestions,
+    storeSeenQuestions,
+    getSeenQuizQuestions,
+    addSeenQuizQuestions,
 };

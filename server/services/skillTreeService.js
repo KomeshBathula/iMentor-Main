@@ -251,6 +251,24 @@ async function submitSkillAssessment(userId, skillId, userAnswers) {
                 correctAnswer: question.correctAnswer,
                 explanation: question.explanation
             });
+
+            // Record question attempt for analytics
+            if (question._id) {
+                try {
+                    const conceptQuestionBankService = require('./conceptQuestionBankService');
+                    // Match question in ConceptQuestionBank by text
+                    const ConceptQuestionBank = require('../models/ConceptQuestionBank');
+                    ConceptQuestionBank.findOne({
+                        question: question.question
+                    }).lean().then(matchedQuestion => {
+                        if (matchedQuestion?._id) {
+                            conceptQuestionBankService.recordQuestionAttempt(matchedQuestion._id, userId, isCorrect);
+                        }
+                    }).catch(() => {}); // Fire and forget
+                } catch (e) {
+                    // Ignore recording errors
+                }
+            }
         });
 
         const score = Math.round((correctCount / skill.assessmentQuestions.length) * 100);

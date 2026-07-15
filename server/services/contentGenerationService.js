@@ -16,6 +16,7 @@ const LECTURES_DIR = path.join(__dirname, '..', '..', 'lectures');
 const COURSE_BOOTSTRAP_DIR = path.join(__dirname, '..', '..', 'course_bootstrap');
 
 const PIPELINE_VERSION = 'v2';
+const SEEN_QUESTIONS_TTL = 30 * 24 * 3600; // 30 days
 
 function logPipeline(step, detail) {
   const label = `[${step}]`;
@@ -30,6 +31,30 @@ function buildMetadata(provider, model) {
     generatedAt: new Date().toISOString(),
     source: provider || 'template',
   };
+}
+
+function getSeenQuestionsKey(userId, course, concept) {
+  return `seen_questions:${userId}:${course}:${concept}`;
+}
+
+async function getSeenQuestions(userId, course, concept) {
+  if (!userId || !redisClient || !redisClient.isOpen) return [];
+  try {
+    const key = getSeenQuestionsKey(userId, course, concept);
+    const val = await redisClient.get(key);
+    if (val) return JSON.parse(val);
+  } catch (e) { /* ignore */ }
+  return [];
+}
+
+async function addSeenQuestions(userId, course, concept, questionIds) {
+  if (!userId || !redisClient || !redisClient.isOpen || !questionIds.length) return;
+  try {
+    const key = getSeenQuestionsKey(userId, course, concept);
+    const existing = await getSeenQuestions(userId, course, concept);
+    const combined = [...new Set([...existing, ...questionIds])].slice(-100); // Keep last 100
+    await redisClient.setEx(key, SEEN_QUESTIONS_TTL, JSON.stringify(combined));
+  } catch (e) { /* ignore */ }
 }
 
 async function getRedis(key) {
@@ -805,16 +830,83 @@ function simpleMarkdownToHtml(md) {
 
 async function generateOrRetrieveAssessment(courseName, topic, userId) {
   const cacheKey = `assessment:${courseName}:${topic}`;
+  let conceptBankTimedOut = false;
 
+  // Get seen questions for replay protection
+  const seenQuestionIds = userId ? await getSeenQuestions(userId, courseName, topic) : [];
+
+  // 1. Concept Question Bank — with timeout guard (max 8s)
+  try {
+    const conceptQbService = require('./conceptQuestionBankService');
+    const conceptBank = await Promise.race([
+      conceptQbService.ensureQuestionsForConcept({
+        course: courseName,
+        concept: topic,
+        topic,
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Concept bank generation timed out (>8s)')), 8000)),
+    ]);
+
+    if (conceptBank && conceptBank.length > 0) {
+      const selected = await conceptQbService.selectQuestionsForLevel({
+        course: courseName,
+        concept: topic,
+        count: 5,
+        seenQuestionIds,
+      });
+
+      if (selected.length >= 3) {
+        const questionIds = selected.map(q => q._id).filter(Boolean);
+        if (userId && questionIds.length) await addSeenQuestions(userId, courseName, topic, questionIds);
+        const questions = selected.map(q => ({
+          question: q.question,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation || '',
+          difficulty: q.difficulty || 'medium',
+          bloomLevel: q.bloomLevel || 'understand',
+          learningObjective: q.learningObjective || '',
+          estimatedTime: q.estimatedTime || '60s',
+          confidence: typeof q.confidence === 'number' ? q.confidence : 0.8,
+          _conceptQuestionId: q._id,
+        }));
+        logPipeline('DATABASE HIT', `ConceptQuestionBank questions for ${courseName}/${topic} (${selected.length} selected, ${conceptBank.length} total)`);
+        const meta = buildMetadata('concept_question_bank', 'stored');
+        return { questions, _source: 'concept_question_bank', cached: true, conceptTotal: conceptBank.length, ...meta };
+      }
+    }
+  } catch (e) {
+    conceptBankTimedOut = true;
+    log.warn('PIPELINE', `Concept question bank timed out or failed, falling back: ${e.message}`);
+  }
+
+  // If concept bank timed out via LLM chain, skip the redundant LLM call and go directly to cache sources → template fallback
+  if (conceptBankTimedOut) {
+    logPipeline('FAST FAILOVER', `Concept bank timed out — skipping LLM chain for ${courseName}/${topic}`);
+  }
+
+  // 2. Redis cache (only used when concept bank is unavailable)
   const cached = await getRedis(cacheKey);
   if (cached) return { ...cached, _source: 'redis_cache' };
 
+  // 3. Legacy Assessment collection
   logPipeline('DATABASE', `Checking Assessment collection for ${courseName}/${topic}`);
   const existing = await Assessment.findOne({ course: courseName, topic }).lean();
   if (existing) {
     logPipeline('DATABASE HIT', `Assessment ${courseName}/${topic}`);
     await setRedis(cacheKey, existing);
     return { ...existing, _source: 'mongodb' };
+  }
+
+  // 4. Generate via LLM (with shuffle + dup detection)
+  // Skip LLM if concept bank already timed out — avoid redundant slow fallback
+  if (conceptBankTimedOut) {
+    logPipeline('SKIP LLM', `Concept bank timed out — using template fallback directly for ${courseName}/${topic}`);
+    const fallback = generateFallbackQuestions(courseName, topic, 'medium');
+    const meta = buildMetadata('template', 'fallback');
+    const data = { course: courseName, topic, questions: fallback, ...meta, createdAt: new Date() };
+    await setRedis(cacheKey, data);
+    return { ...data, _source: 'template_fallback', cached: false, ...meta };
   }
 
   logPipeline('GENERATING', `Assessment for ${courseName}/${topic}`);
@@ -872,6 +964,18 @@ Valid JSON only.`;
           await Assessment.findOneAndUpdate({ course: courseName, topic }, { $setOnInsert: data }, { upsert: true });
           logPipeline('SAVED TO MONGO', `Assessment ${courseName}/${topic}`);
         } catch (e) { /* ok */ }
+        // Save to ConceptQuestionBank for future reuse
+        try {
+          const conceptQbService = require('./conceptQuestionBankService');
+          await conceptQbService.saveQuestionsToBank(questions, {
+            course: courseName,
+            concept: topic,
+            topic,
+            moduleName: '',
+          });
+        } catch (e) {
+          log.warn('PIPELINE', `Saving to concept bank failed: ${e.message}`);
+        }
         await setRedis(cacheKey, data);
         return { ...data, _source: provider };
       }
@@ -880,7 +984,39 @@ Valid JSON only.`;
     log.warn('PIPELINE', `Assessment generation failed: ${e.message}`);
   }
 
-  // Fallback
+  // Also save to legacy QuestionBank for backward compatibility (for LLM-generated questions)
+  if (provider && provider !== 'template' && provider !== 'concept_question_bank') {
+    try {
+      for (const q of questions) {
+        await QuestionBank.findOneAndUpdate(
+          { question: q.question, course: courseName },
+          {
+            $setOnInsert: {
+              question: q.question,
+              options: q.options,
+              correctIndex: q.correctIndex || 0,
+              correctAnswer: q.options?.[q.correctIndex || 0] || '',
+              explanation: q.explanation || '',
+              type: 'mcq',
+              difficulty: q.difficulty || 'medium',
+              bloomLevel: q.bloomLevel || 'understand',
+              learningObjective: q.learningObjective || '',
+              estimatedTime: q.estimatedTime || '60s',
+              confidence: typeof q.confidence === 'number' ? q.confidence : 0.8,
+              course: courseName,
+              subtopic: topic || '',
+            },
+          },
+          { upsert: true }
+        );
+      }
+      logPipeline('SAVED TO QUESTIONBANK', `Assessment ${courseName}/${topic}`);
+    } catch (e) {
+      log.warn('PIPELINE', `Saving assessment to QuestionBank failed: ${e.message}`);
+    }
+  }
+
+  // 5. Template fallback
   const fallback = generateFallbackQuestions(courseName, topic, 'medium');
   const meta = buildMetadata('template', 'fallback');
   const data = { course: courseName, topic, questions: fallback, ...meta, createdAt: new Date() };
@@ -890,12 +1026,53 @@ Valid JSON only.`;
 
 // ── QUIZ GENERATION ───────────────────────────────────────────────────
 
-async function generateOrRetrieveQuiz(courseName, moduleName, userId) {
+async function generateOrRetrieveQuiz(courseName, moduleName, userId, seenQuestionIds = []) {
   const cacheKey = `quiz:${courseName}:${moduleName || 'general'}`;
 
+  // 1. Try Concept Question Bank first (shared with Skill Tree)
+  try {
+    const conceptQbService = require('./conceptQuestionBankService');
+    const conceptBank = await Promise.race([
+      conceptQbService.ensureQuestionsForConcept({
+        course: courseName,
+        concept: moduleName || 'general',
+        topic: moduleName,
+        moduleName: '',
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Concept bank timed out')), 8000)),
+    ]);
+
+    if (conceptBank && conceptBank.length > 0) {
+      const selected = await conceptQbService.selectQuestionsForLevel({
+        course: courseName,
+        concept: moduleName || 'general',
+        count: 5,
+        seenQuestionIds,
+      });
+
+      if (selected.length >= 3) {
+        const questions = selected.map(q => ({
+          question: q.question,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation || '',
+          difficulty: q.difficulty || 'medium',
+          bloomLevel: q.bloomLevel || 'understand',
+        }));
+        logPipeline('DATABASE HIT', `ConceptQuestionBank quiz for ${courseName}/${moduleName} (${selected.length} selected, ${conceptBank.length} total)`);
+        const meta = buildMetadata('concept_question_bank', 'stored');
+        return { questions, _source: 'concept_question_bank', cached: true, conceptTotal: conceptBank.length, ...meta };
+      }
+    }
+  } catch (e) {
+    log.warn('PIPELINE', `Concept question bank quiz timed out or failed, falling back: ${e.message}`);
+  }
+
+  // 2. Redis Cache
   const cached = await getRedis(cacheKey);
   if (cached) return { ...cached, _source: 'redis_cache' };
 
+  // 3. MongoDB Quiz Collection
   logPipeline('DATABASE', `Checking Quiz collection for ${courseName}/${moduleName}`);
   const existing = await QuizModel.findOne({ course: courseName, module: moduleName }).lean();
   if (existing) {
@@ -904,6 +1081,7 @@ async function generateOrRetrieveQuiz(courseName, moduleName, userId) {
     return { ...existing, _source: 'mongodb' };
   }
 
+  // 4. Generate via LLM
   logPipeline('GENERATING', `Quiz for ${courseName}/${moduleName}`);
   const prompt = `You are creating a module quiz for "${moduleName}" within the course "${courseName}".
 
@@ -960,6 +1138,56 @@ Valid JSON only.`;
           logPipeline('SAVED TO MONGO', `Quiz ${courseName}/${moduleName}`);
         } catch (e) { /* ok */ }
         await setRedis(cacheKey, data);
+        // Also save to ConceptQuestionBank for future reuse
+        try {
+          const conceptQbService = require('./conceptQuestionBankService');
+          await conceptQbService.saveQuestionsToBank(questions, {
+            course: courseName,
+            concept: moduleName || 'general',
+            topic: moduleName,
+            moduleName: '',
+          });
+        } catch (e) {
+          log.warn('PIPELINE', `Saving quiz to concept bank failed: ${e.message}`);
+        }
+        // Also save to legacy QuestionBank for backward compatibility
+        try {
+          for (const q of questions) {
+            await QuestionBank.findOneAndUpdate(
+              { question: q.question, course: courseName },
+              {
+                $setOnInsert: {
+                  question: q.question,
+                  options: q.options,
+                  correctIndex: q.correctIndex || 0,
+                  correctAnswer: q.options?.[q.correctIndex || 0] || '',
+                  explanation: q.explanation || '',
+                  type: 'mcq',
+                  difficulty: q.difficulty || 'medium',
+                  bloomLevel: q.bloomLevel || 'understand',
+                  learningObjective: q.learningObjective || '',
+                  estimatedTime: q.estimatedTime || '60s',
+                  confidence: typeof q.confidence === 'number' ? q.confidence : 0.8,
+                  course: courseName,
+                  subtopic: moduleName || '',
+                },
+              },
+              { upsert: true }
+            );
+          }
+          logPipeline('SAVED TO QUESTIONBANK', `Quiz ${courseName}/${moduleName}`);
+        } catch (e) {
+          log.warn('PIPELINE', `Saving quiz to QuestionBank failed: ${e.message}`);
+        }
+        // Store seen questions for replay protection
+        if (userId) {
+          try {
+            const questionGeneratorService = require('./questionGeneratorService');
+            await questionGeneratorService.storeSeenQuestions(userId, courseName, moduleName || 'general', questions);
+          } catch (e) {
+            log.warn('PIPELINE', `Storing seen questions failed: ${e.message}`);
+          }
+        }
         return { ...data, _source: provider };
       }
     }
@@ -967,10 +1195,20 @@ Valid JSON only.`;
     log.warn('PIPELINE', `Quiz generation failed: ${e.message}`);
   }
 
+  // 5. Template fallback
   const fallback = generateFallbackQuestions(courseName, moduleName, 'medium');
   const meta = buildMetadata('template', 'fallback');
   const data = { course: courseName, module: moduleName, questions: fallback, ...meta, createdAt: new Date() };
   await setRedis(cacheKey, data);
+  // Store seen questions for replay protection
+  if (userId) {
+    try {
+      const questionGeneratorService = require('./questionGeneratorService');
+      await questionGeneratorService.storeSeenQuestions(userId, courseName, moduleName || 'general', fallback);
+    } catch (e) {
+      log.warn('PIPELINE', `Storing seen questions failed: ${e.message}`);
+    }
+  }
   return { ...data, _source: 'template' };
 }
 

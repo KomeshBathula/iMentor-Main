@@ -465,6 +465,22 @@ router.post('/skill-tree/diagnostic/submit', async (req, res) => {
                         correct: isCorrect,
                         explanation: questionData.explanation
                     });
+
+                    // Record question attempt for analytics
+                    try {
+                        const ConceptQuestionBank = require('../models/ConceptQuestionBank');
+                        const conceptQuestionBankService = require('../services/conceptQuestionBankService');
+                        const matchedQuestion = await ConceptQuestionBank.findOne({
+                            course: { $regex: new RegExp(`^${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                            concept: { $regex: new RegExp(`^${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                            question: submission.question
+                        }).lean();
+                        if (matchedQuestion?._id) {
+                            await conceptQuestionBankService.recordQuestionAttempt(matchedQuestion._id, req.user._id, isCorrect);
+                        }
+                    } catch (e) {
+                        log.warn('GAMIFICATION', `Failed to record diagnostic question attempt: ${e.message}`);
+                    }
                 }
             }
         }
@@ -485,6 +501,22 @@ router.post('/skill-tree/diagnostic/submit', async (req, res) => {
             recommendedStartingPoint: level === 'Beginner' ? 'Module 1: Fundamentals' : 'Module 2: Advanced Concepts',
             gradingDetails: gradingDetails
         };
+
+        // ── REPLAY PROTECTION: Store seen question texts for this user/topic ───────────────
+        try {
+            const questionTexts = answers.map(a => a.question).filter(Boolean);
+            if (questionTexts.length > 0) {
+                const questionGeneratorService = require('../services/questionGeneratorService');
+                await questionGeneratorService.addSeenQuizQuestions(
+                    req.user._id,
+                    topic,
+                    topic,
+                    questionTexts
+                );
+            }
+        } catch (e) {
+            log.warn('GAMIFICATION', `Failed to store seen diagnostic questions: ${e.message}`);
+        }
 
         // 3. Store the assessment result for future use (Crucial for Skill Tree progression)
         await skillTreeService.storeUserTopicAssessment(req.user._id, topic, result, answers);

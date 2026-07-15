@@ -401,8 +401,21 @@ async function startServer() {
         }
       });
     };
-    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+  // Global production error handlers
+  process.on("unhandledRejection", (reason, promise) => {
+    log.error('SYSTEM', 'Unhandled Rejection', { reason: reason?.message || reason, stack: reason?.stack });
+    // Graceful shutdown
+    gracefulShutdown('UNHANDLED_REJECTION');
+  });
+
+  process.on("uncaughtException", (err) => {
+    log.error('SYSTEM', 'Uncaught Exception', { message: err.message, stack: err.stack });
+    // Graceful shutdown
+    gracefulShutdown('UNCAUGHT_EXCEPTION');
+  });
   } catch (error) {
     log.error('SYSTEM', "Failed to start Node.js server", error);
     process.exit(1);

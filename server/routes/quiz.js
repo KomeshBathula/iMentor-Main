@@ -4,6 +4,7 @@ const axios = require('axios');
 const User = require('../models/User');
 const { callWithFallback } = require('../services/llmFallbackService');
 const log = require('../utils/logger');
+const conceptQuestionBankService = require('../services/conceptQuestionBankService');
 
 const QUIZ_GENERATE_TIMEOUT_MS = 40000; // Total timeout for quiz generation
 
@@ -66,12 +67,21 @@ router.get('/generate', async (req, res) => {
 
         const questionGeneratorService = require('../services/questionGeneratorService');
 
+        // ── REPLAY PROTECTION: Fetch previously seen questions ───────────────
+        const seenQuestionIds = await questionGeneratorService.getSeenQuizQuestions(
+            userId,
+            courseName,
+            moduleName || moduleId || 'all'
+        );
+        log.info('QUIZ', `Replay protection: ${seenQuestionIds.length} questions already seen for ${courseName}/${moduleName || moduleId || 'all'}`);
+
         // Total timeout guard — never block indefinitely
         const generationPromise = questionGeneratorService.generateSocraticQuiz({
             courseName,
             moduleId,
             moduleName,
-            user
+            user,
+            seenQuestionIds
         });
 
         const timeoutPromise = new Promise((_, reject) =>
@@ -171,6 +181,23 @@ JSON format:
                 correctCount++;
             }
 
+            // Record question attempt for analytics (match by question text)
+            if (instruction) {
+                try {
+                    const ConceptQuestionBank = require('../models/ConceptQuestionBank');
+                    const matchedQuestion = await ConceptQuestionBank.findOne({
+                        course: { $regex: new RegExp(`^${courseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                        concept: { $regex: new RegExp(`^${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                        question: instruction
+                    }).lean();
+                    if (matchedQuestion?._id) {
+                        await conceptQuestionBankService.recordQuestionAttempt(matchedQuestion._id, userId, isCorrect);
+                    }
+                } catch (e) {
+                    log.warn('QUIZ', `Failed to record question attempt: ${e.message}`);
+                }
+            }
+
             feedbackList.push({
                 questionIndex: i,
                 topic: topic || 'General',
@@ -178,6 +205,20 @@ JSON format:
                 score: score,
                 feedbackText: feedbackText
             });
+
+            // ── REPLAY PROTECTION: Store seen question for this user/course/module ──────────────
+            if (instruction) {
+                try {
+                    await questionGeneratorService.addSeenQuizQuestions(
+                        userId,
+                        courseName,
+                        moduleName || moduleId || 'all',
+                        [instruction]
+                    );
+                } catch (e) {
+                    log.warn('QUIZ', `Failed to store seen question: ${e.message}`);
+                }
+            }
 
             // Update local Concept Mastery Map (rolling update)
             if (topic) {
@@ -367,6 +408,23 @@ JSON format:
             remediation
         });
 
+        // ── REPLAY PROTECTION: Store seen questions after quiz submit ──────────────
+        try {
+            const questionGeneratorService = require('../services/questionGeneratorService');
+            const questionTexts = answers
+                .map(a => a.instruction || a.topic || a.output)
+                .filter(Boolean);
+            if (questionTexts.length > 0) {
+                await questionGeneratorService.addSeenQuizQuestions(
+                    userId,
+                    courseName,
+                    moduleName || 'general',
+                    questionTexts
+                );
+            }
+        } catch (e) {
+            log.warn('QUIZ', `Failed to store seen quiz questions: ${e.message}`);
+        }
     } catch (error) {
         log.error('QUIZ', 'Failed submitting quiz evaluation', error);
         res.status(500).json({ message: 'Failed to submit quiz.', error: error.message });
