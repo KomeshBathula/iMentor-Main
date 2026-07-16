@@ -191,8 +191,18 @@ router.get('/:courseName/lecture/:subtopicId', async (req, res) => {
             120000
         );
         if (data && (data.markdown || data.html || data.content)) {
-            log.info('LECTURE', `Served from Python RAG: ${courseName}/${subtopicId}`);
-            return res.json(data);
+            // Skip stub placeholder — if the RAG returned "being generated" fall through
+            // to the full Express fallback chain (auto-gen → template)
+            const isStub = data.markdown && (
+                data.markdown.includes('being generated') ||
+                data.markdown.includes('Please try again') ||
+                data.markdown.length < 100
+            );
+            if (!isStub) {
+                log.info('LECTURE', `Served from Python RAG: ${courseName}/${subtopicId}`);
+                return res.json(data);
+            }
+            log.info('LECTURE', `RAG returned stub for ${courseName}/${subtopicId}, continuing fallback chain`);
         }
 
         // 2. Try course_bootstrap per-subtopic lecture notes

@@ -110,11 +110,14 @@ Student Answer: ${userAnswer}
 Return valid JSON with: score (0-10), blooms, strengths[], weaknesses[], misconceptions[], feedback, confidence (0-1), knowledgeGaps[]`;
 
   try {
+    const providerHealth = require('./providerHealthCache');
+    const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'ollama';
     const evalPromise = callWithFallback({
       userQuery: userPrompt,
       systemPrompt: EVALUATION_SYSTEM_PROMPT,
       chatHistory: [],
-      preferredProvider: 'ollama',
+      preferredProvider,
     });
 
     const timeoutPromise = new Promise((_, reject) =>

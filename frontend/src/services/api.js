@@ -858,7 +858,7 @@ const api = {
       moduleId,
       moduleName,
       answers
-    });
+    }, { timeout: 20000 });
     return response.data;
   },
   getQuizAnalytics: async () => {

@@ -172,7 +172,7 @@ const PROVIDER_TIMEOUTS = {
     groq:   15_000,
     gemini: 15_000,
     openai: 15_000,
-    ollama: 20_000,
+    ollama: 300_000,
 };
 
 // ─── FALLBACK CHAIN BUILDER ────────────────────────────────────────────────
@@ -275,7 +275,7 @@ async function callWithFallback({
             ollamaUrl,
             temperature: options.temperature ?? 0.7,
             maxOutputTokens: options.maxOutputTokens ?? 4096,
-            timeout: providerTimeout,
+            timeout: Math.max(providerTimeout, options.timeout || 0),
             ...(provider === 'gemini' && { geminiModel: model }),
             ...(thinkEnabled && { think: true }),
         };
@@ -508,8 +508,174 @@ async function callFast({ prompt, systemPrompt = null, userApiKeys = {}, ollamaU
     return svc.generateContentWithHistory([], prompt, systemPrompt, callOpts);
 }
 
+// ─── PARALLEL PROVIDER DISPATCH ────────────────────────────────────────
+/**
+ * Call multiple LLM providers in parallel; first valid response wins.
+ * Uses AbortController to cancel remaining in-flight requests.
+ *
+ * @param {Object} params - Same as callWithFallback, plus:
+ * @param {string[]} params.parallelProviders - Pre-filtered healthy providers to try in parallel
+ * @param {number} params.staggerMs - Stagger between starts (default 200)
+ * @returns {Promise<{text: string, provider: string, model: string}>}
+ */
+async function parallelCallWithFallback({
+    chatHistory = [],
+    userQuery,
+    systemPrompt = null,
+    options = {},
+    parallelProviders = [],
+    staggerMs = 200,
+    preferredProvider = 'groq',
+    userApiKeys = {},
+    ollamaUrl = null,
+}) {
+    if (!parallelProviders.length) {
+        return callWithFallback({ chatHistory, userQuery, systemPrompt, options, preferredProvider, userApiKeys, ollamaUrl });
+    }
+
+    const logCtx = `parallel(${parallelProviders.join(',')})`;
+    log.info('AI', `[Parallel] Starting ${logCtx}`);
+
+    const aborted = new Set();
+    const errors = [];
+
+    const attemptProvider = (provider, index) => {
+        return new Promise(async (resolve) => {
+            const controller = new AbortController();
+            const signal = controller.signal;
+            const delay = index * staggerMs;
+            if (delay > 0) {
+                await new Promise(r => setTimeout(r, delay));
+            }
+
+            if (aborted.has(provider) || signal.aborted) {
+                resolve(null);
+                return;
+            }
+
+            if (provider !== 'ollama' && !hasApiKey(provider, userApiKeys)) {
+                log.info('AI', `[Parallel] Skipping ${provider} — missing key`);
+                resolve(null);
+                return;
+            }
+
+            if (provider === 'sglang') {
+                const healthy = await isSglangUp();
+                if (!healthy) {
+                    log.info('AI', `[Parallel] Skipping sglang — not reachable`);
+                    resolve(null);
+                    return;
+                }
+            }
+            if (provider === 'ollama') {
+                const { healthy, url } = await isOllamaUp(ollamaUrl);
+                if (!healthy) {
+                    log.info('AI', `[Parallel] Skipping ollama — not reachable`);
+                    resolve(null);
+                    return;
+                }
+                ollamaUrl = url;
+            }
+
+            const apiKey = getApiKey(provider, userApiKeys);
+            const model = resolveModelForProvider(provider, options);
+            const thinkEnabled = isThinkingModel(model);
+            const providerTimeout = PROVIDER_TIMEOUTS[provider] || 30_000;
+
+            const callOptions = {
+                ...options,
+                apiKey,
+                model,
+                ollamaUrl,
+                temperature: options.temperature ?? 0.7,
+                maxOutputTokens: options.maxOutputTokens ?? 4096,
+                timeout: Math.max(providerTimeout, options.timeout || 0),
+                signal,
+                ...(provider === 'gemini' && { geminiModel: model }),
+                ...(thinkEnabled && { think: true }),
+            };
+
+            const providerStartTime = Date.now();
+            log.info('AI', `[Parallel] Attempting ${provider}/${model} (timeout: ${providerTimeout}ms)`);
+
+            try {
+                let result;
+                if (provider === 'sglang') {
+                    const ax = require('axios');
+                    const messages = [];
+                    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+                    messages.push(...chatHistory.map(m => ({
+                        role: m.role === 'model' ? 'assistant' : (m.role || 'user'),
+                        content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
+                    })));
+                    messages.push({ role: 'user', content: userQuery });
+                    const sglangUrl = process.env.SGLANG_CHAT_URL || 'http://localhost:8000/v1';
+                    const resp = await ax.post(`${sglangUrl}/chat/completions`, {
+                        model, messages,
+                        max_tokens: callOptions.maxOutputTokens ?? 4096,
+                        temperature: callOptions.temperature ?? 0.7,
+                        stream: false,
+                    }, { timeout: providerTimeout, signal });
+                    result = resp.data?.choices?.[0]?.message?.content || '';
+                } else {
+                    const svc = getServiceForProvider(provider);
+                    result = await svc.generateContentWithHistory(chatHistory, userQuery, systemPrompt, callOptions);
+                }
+
+                const text = typeof result === 'string' ? result : String(result || '');
+                const { thinking, content } = separateThinking(text);
+
+                if (aborted.has(provider)) {
+                    resolve(null);
+                    return;
+                }
+
+                const elapsed = Date.now() - providerStartTime;
+                log.info('AI', `[Parallel] ✓ ${provider}/${model} succeeded (${content.length} chars, ${elapsed}ms)`);
+                try { const h = require('./providerHealthCache'); h.recordSuccess(provider, elapsed); } catch {}
+                resolve({ text: content, thinking, provider, model });
+            } catch (err) {
+                const msg = err.message || String(err);
+                errors.push({ provider, model, error: msg });
+                if (!aborted.has(provider)) {
+                    log.warn('AI', `[Parallel] ✗ ${provider} failed: ${msg.slice(0, 120)}`);
+                }
+                try { const h = require('./providerHealthCache'); h.recordFailure(provider, msg); } catch {}
+                if (provider === 'ollama') invalidateOllamaHealth();
+                if (provider === 'sglang') invalidateSglangHealth();
+                resolve(null);
+            }
+        });
+    };
+
+    const promises = parallelProviders.map((p, i) => attemptProvider(p, i));
+
+    return new Promise((resolve) => {
+        let settled = 0;
+        for (const promise of promises) {
+            promise.then((result) => {
+                if (result && !aborted.has('_done')) {
+                    aborted.add('_done');
+                    for (const p of parallelProviders) aborted.add(p);
+                    resolve(result);
+                }
+                settled++;
+                if (settled === parallelProviders.length) {
+                    resolve(null);
+                }
+            });
+        }
+    }).then(async (winner) => {
+        if (winner) return { ...winner, wasFailover: winner.provider !== preferredProvider };
+
+        log.error('AI', `[Parallel] ALL providers exhausted`, errors);
+        return callWithFallback({ chatHistory, userQuery, systemPrompt, options, preferredProvider, preferLocalFirst: false, userApiKeys, ollamaUrl });
+    });
+}
+
 module.exports = {
     callWithFallback,
+    parallelCallWithFallback,
     callFast,
     getFastModel,
     buildFallbackChain,

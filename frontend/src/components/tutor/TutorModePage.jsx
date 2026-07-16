@@ -424,7 +424,7 @@ function TutorModePage({
 Evaluate the student's answer strictly against the PROVIDED DOCUMENT ANSWER.
 
 Question ${index + 1} of ${total}:
-QUESTION: "${question.instruction}"
+QUESTION: "${question.instruction || question.question || ''}"
 DOCUMENT ANSWER: "${question.output}"
 
 STRICT OUTPUT FORMAT:

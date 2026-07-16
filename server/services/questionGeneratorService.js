@@ -337,7 +337,14 @@ JSON format:
         const t3 = Date.now();
         log.info('QUIZ', `[PROFILE] stage=${t1-t0}ms rag=${t2-t1}ms total=${t3-t0}ms - calling LLM`);
 
-        const preferredProvider = process.env.NODE_ENV === 'development' ? 'ollama' : 'sglang';
+        // Skip unhealthy providers via health cache
+        const providerHealth = require('./providerHealthCache');
+        const providerChain = ['sglang', 'groq', 'gemini', 'openai', 'ollama'];
+        const healthyProviders = providerHealth.getHealthyProviders(providerChain);
+        const preferredProvider = healthyProviders.length > 0
+          ? healthyProviders[0]
+          : (process.env.NODE_ENV === 'development' ? 'ollama' : 'sglang');
+
         const fallbackResult = await callWithFallback({
             userQuery: prompt,
             preferredProvider,
@@ -550,7 +557,13 @@ JSON Structure (Return ONLY the array of 6 objects):
   }
 ]`;
 
-        const preferredProvider = process.env.NODE_ENV === 'development' ? 'ollama' : 'sglang';
+        const providerHealth = require('./providerHealthCache');
+        const providerChain = ['sglang', 'groq', 'gemini', 'openai', 'ollama'];
+        const healthyProviders = providerHealth.getHealthyProviders(providerChain);
+        const preferredProvider = healthyProviders.length > 0
+          ? healthyProviders[0]
+          : (process.env.NODE_ENV === 'development' ? 'ollama' : 'sglang');
+
         const fallbackResult = await callWithFallback({
             userQuery: prompt,
             preferredProvider,
@@ -909,4 +922,5 @@ module.exports = {
     storeSeenQuestions,
     getSeenQuizQuestions,
     addSeenQuizQuestions,
+    generateSocraticOfflineFallback,
 };

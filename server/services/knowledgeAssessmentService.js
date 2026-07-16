@@ -152,11 +152,14 @@ Return valid JSON only:
 }`;
 
   try {
+    const providerHealth = require('./providerHealthCache');
+    const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'ollama';
     const responseText = await callWithFallback({
       userQuery: prompt,
       systemPrompt: 'You are an educational assessment generator. Respond with valid JSON only.',
       chatHistory: [],
-      preferredProvider: 'ollama',
+      preferredProvider,
     });
 
     const raw = typeof responseText === 'string' ? responseText : (responseText.text || JSON.stringify(responseText));

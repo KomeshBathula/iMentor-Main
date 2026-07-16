@@ -288,11 +288,14 @@ Return a JSON array of objects with this exact structure:
 Valid JSON array only, no markdown.`;
 
     try {
+      const providerHealth = require('./providerHealthCache');
+      const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
+      const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'sglang';
       const result = await callWithFallback({
         userQuery: prompt,
         systemPrompt: 'Return ONLY valid JSON array of MCQ objects with all required fields.',
         chatHistory: [],
-        preferredProvider: 'sglang',
+        preferredProvider,
         options: { temperature: 0.7 + batch * 0.05, maxOutputTokens: 8192 },
       });
 
@@ -393,11 +396,14 @@ Return a JSON array of objects with:
 Valid JSON array only, no markdown.`;
 
     try {
+      const providerHealth = require('./providerHealthCache');
+      const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
+      const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'sglang';
       const result = await callWithFallback({
         userQuery: prompt,
         systemPrompt: 'Return ONLY valid JSON array of MCQ objects.',
         chatHistory: [],
-        preferredProvider: 'sglang',
+        preferredProvider,
         options: { temperature: 0.8, maxOutputTokens: 8192 },
       });
 

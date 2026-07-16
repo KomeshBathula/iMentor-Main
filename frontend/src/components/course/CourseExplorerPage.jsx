@@ -296,7 +296,7 @@ function CourseSidebar({ courseName, displayName, structure, activeSubtopic, onS
 
     return (
         <div
-            className="flex flex-col h-full"
+            className="flex flex-col h-full min-h-0"
             style={{
                 background: 'linear-gradient(180deg, #0d0f14 0%, #0a0c10 100%)',
                 borderRight: '1px solid rgba(255,255,255,0.07)',
@@ -343,7 +343,7 @@ function CourseSidebar({ courseName, displayName, structure, activeSubtopic, onS
                 )}
             </div>
 
-            {/* ── Tree ── */}
+            {/* ── Tree (scrollable) ── */}
             <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 space-y-2 min-h-0">
                 {modules.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-600">
@@ -366,8 +366,8 @@ function CourseSidebar({ courseName, displayName, structure, activeSubtopic, onS
                 )}
             </div>
 
-            {/* ── Sticky Footer — Quiz ── */}
-            <div className="flex-shrink-0 px-3 py-3 border-t border-white/[0.06]">
+            {/* ── Sticky Footer — always visible at bottom ── */}
+            <div className="sticky bottom-0 flex-shrink-0 px-3 py-3 border-t border-white/[0.06] bg-[#0a0c10] z-10">
                 <button
                     onClick={() => {
                         if (activeModule && typeof onTakeQuiz === 'function') {

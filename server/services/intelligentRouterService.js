@@ -17,7 +17,7 @@
  */
 
 const log = require('../utils/logger');
-const { LLMConfiguration } = require('../models');
+const LLMConfiguration = require('../models/LLMConfiguration');
 const { redisClient, isRedisConnected } = require('../config/redisClient');
 const providerHealthMonitor = require('./providerHealthMonitor');
 const routingTelemetry = require('./routingTelemetry');

@@ -342,6 +342,14 @@ async function startServer() {
     
     await auditRedisUsage();
 
+    // --- Startup health check ---
+    try {
+      const { logHealthSummary } = require('./services/startupHealthCheck');
+      await logHealthSummary();
+    } catch (e) {
+      log.warn('HEALTH', `Health check failed: ${e.message}`);
+    }
+
     // --- Course material processing disabled on server startup ---
     // Use offline maintenance jobs (scripts/maintenanceJobs.js) for:
     //   - Course PDF ingestion (Cpurses/)

@@ -251,11 +251,14 @@ Return ONLY valid JSON:
   "recommendation": "actionable next step for the learner"
 }`;
 
+    const providerHealth = require('./providerHealthCache');
+    const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'sglang';
     const result = await callWithFallback({
       userQuery: prompt,
       systemPrompt: 'You are an expert educational evaluator. Return ONLY valid JSON.',
       chatHistory: [],
-      preferredProvider: 'sglang',
+      preferredProvider,
       options: { temperature: 0.3, maxOutputTokens: 1024, timeout: 30000 },
     });
 

@@ -10,6 +10,10 @@ const ConceptMap = require('../models/ConceptMap');
 const { runQuery: neo4jRun } = require('../config/neo4j');
 const fs = require('fs');
 const path = require('path');
+const { validateLecture } = require('./lectureQualityValidator');
+const { buildTemplateLecture } = require('./lectureTemplateBuilder');
+const { isTemplateQuality } = require('./lectureQualityDetector');
+const { upgradeLecture } = require('./enhancedLectureService');
 
 const CACHE_TTL = 7 * 24 * 3600;
 const LECTURES_DIR = path.join(__dirname, '..', '..', 'lectures');
@@ -80,29 +84,63 @@ async function setRedis(key, data) {
 // ── LECTURE GENERATION ────────────────────────────────────────────────
 
 async function generateOrRetrieveLecture(course, subtopicId, subtopicName, topicName, moduleName) {
+  const tStart = Date.now();
   const cacheKey = `lecture:${course}:${subtopicId || 'full'}`;
 
-  // 1. Redis Cache
+  // ── Phase 1: Fast Cache Lookup (<300ms total) ──────────────────────
+  const t0 = Date.now();
   const cached = await getRedis(cacheKey);
-  if (cached) return { ...cached, _source: 'redis_cache' };
+  const redisTime = Date.now() - t0;
 
-  // 2. MongoDB
-  logPipeline('DATABASE', `Checking Lecture collection for ${course}/${subtopicId}`);
+  if (cached?.markdown) {
+    const validation = validateLecture(cached.markdown, subtopicId, subtopicName, course);
+    if (!validation.valid) {
+      logPipeline('CACHE_INVALID', `${cacheKey}: ${validation.reasons.join(', ')}`);
+    } else if (!isTemplateQuality(cached)) {
+      logPipeline('METRICS',
+        `redis_hit=true mongo_hit=false cache_lookup=${redisTime}ms total=${Date.now()-tStart}ms source=redis_cache`
+      );
+      return { ...cached, _source: 'redis_cache' };
+    } else {
+      logPipeline('CACHE_TEMPLATE', `${cacheKey}: template quality, triggering background upgrade`);
+      triggerBackgroundUpgrade(course, subtopicId, subtopicName, topicName, moduleName, cacheKey);
+      return { ...cached, _source: 'redis_cache' };
+    }
+  }
+
+  const t1 = Date.now();
   const mongoQuery = subtopicId
     ? { course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') }, subtopicId }
     : { course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') }, contentType: 'full_lecture' };
   const mongoDoc = await Lecture.findOne(mongoQuery).lean();
+  const mongoTime = Date.now() - t1;
+
   if (mongoDoc) {
-    logPipeline('DATABASE HIT', `Lecture ${course}/${subtopicId}`);
-    await setRedis(cacheKey, mongoDoc);
-    return { ...mongoDoc, _source: 'mongodb' };
+    const validation = validateLecture(mongoDoc.markdown, subtopicId, subtopicName, course);
+    if (!validation.valid) {
+      logPipeline('MONGO_INVALID', `${course}/${subtopicId}: ${validation.reasons.join(', ')}`);
+      await Lecture.deleteOne({ course, subtopicId });
+    } else if (!isTemplateQuality(mongoDoc)) {
+      await setRedis(cacheKey, mongoDoc);
+      logPipeline('METRICS',
+        `redis_hit=false mongo_hit=true cache_lookup=${redisTime}ms mongo_time=${mongoTime}ms total=${Date.now()-tStart}ms source=mongodb`
+      );
+      return { ...mongoDoc, _source: 'mongodb' };
+    } else {
+      logPipeline('MONGO_TEMPLATE', `${course}/${subtopicId}: template quality`);
+      await setRedis(cacheKey, mongoDoc);
+      triggerBackgroundUpgrade(course, subtopicId, subtopicName, topicName, moduleName, cacheKey);
+      return { ...mongoDoc, _source: 'mongodb' };
+    }
   }
 
-  // 3. File-system lectures/ directory
-  logPipeline('REPOSITORY', `Checking lectures/ directory for ${course}`);
+  // ── Phase 2: Markdown File Cache (<500ms) ──────────────────────────
+  const t2 = Date.now();
   const stored = findStoredLecture(course, subtopicId);
+  const mdTime = Date.now() - t2;
+
   if (stored.markdown) {
-    logPipeline('REPOSITORY HIT', `lectures/${course}`);
+    logPipeline('REPOSITORY_HIT', `lectures/${course}`);
     const lectureData = {
       course, subtopicId, subtopicName: subtopicName || '',
       markdown: stored.markdown,
@@ -116,47 +154,141 @@ async function generateOrRetrieveLecture(course, subtopicId, subtopicName, topic
       { $setOnInsert: lectureData },
       { upsert: true }
     );
-    logPipeline('SAVED TO MONGO', `Lecture ${course}/${subtopicId}`);
     await setRedis(cacheKey, lectureData);
+    logPipeline('METRICS',
+      `redis_hit=false mongo_hit=false md_hit=true cache_lookup=${redisTime}ms mongo_time=${mongoTime}ms md_time=${mdTime}ms total=${Date.now()-tStart}ms source=file_repository`
+    );
     return { ...lectureData, _source: 'file_repository' };
   }
 
+  // ── Phase 3: LLM Generation with Progressive Response ──────────────
   logPipeline('GENERATING', `Lecture for ${course}/${subtopicId} via LLM`);
-  const generated = await generateLecture(course, subtopicId, subtopicName, topicName, moduleName);
 
-  if (generated) {
-    const provider = generated._provider || 'generated';
-    const model = generated._model || 'unknown';
-    const meta = buildMetadata(provider, model);
-    const lectureData = {
-      course, subtopicId: subtopicId || null,
-      subtopicName: subtopicName || '',
-      topicName: topicName || '',
-      moduleName: moduleName || '',
-      markdown: generated.markdown,
-      html: generated.html || '',
-      conceptMap: generated.conceptMap || '',
-      contentType: subtopicId ? 'subtopic' : 'full_lecture',
-      source: provider,
-      ...meta,
-      metadata: { wordCount: generated.markdown?.split(/\s+/).length || 0, generatedBy: provider, model, pipelineVersion: PIPELINE_VERSION },
-    };
-    await Lecture.findOneAndUpdate(
-      { course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') }, subtopicId: subtopicId || null },
-      { $set: lectureData },
-      { upsert: true }
-    );
-    logPipeline('SAVED TO MONGO', `Lecture ${course}/${subtopicId}`);
-    await setRedis(cacheKey, lectureData);
-    logPipeline(`GENERATED VIA ${provider.toUpperCase()}`, `Lecture for ${course}/${subtopicId}`);
-    return { ...lectureData, _source: provider };
+  const acquired = await acquireGenerationLock(course, subtopicId);
+  if (!acquired) {
+    logPipeline('LOCK_WAIT', `${course}/${subtopicId}: waiting for in-flight generation`);
+    const polled = await pollForCachedResult(cacheKey, course, subtopicId, subtopicName);
+    if (polled) return polled;
   }
 
-  // 6. Final fallback: concept-based template
-  logPipeline('TEMPLATE FALLBACK', `Lecture for ${course}/${subtopicId}`);
-  const fallback = generateFallbackLecture(course, subtopicId, subtopicName);
-  await setRedis(cacheKey, fallback);
-  return { ...fallback, _source: 'template_fallback' };
+  try {
+    const upgradePromise = upgradeLecture(course, subtopicId, subtopicName, topicName, moduleName);
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('progressive_timeout')), 3000)
+    );
+
+    const raced = await Promise.race([upgradePromise, timeoutPromise]).catch(() => null);
+
+    if (raced) {
+      await releaseGenerationLock(course, subtopicId);
+      const lectureData = raced;
+      const validation = validateLecture(lectureData.markdown, subtopicId, subtopicName, course);
+      if (validation.valid) {
+        logPipeline('METRICS',
+          `redis_hit=false mongo_hit=false md_hit=false generation=fast provider=${lectureData.source} time=${Date.now()-tStart}ms total=${Date.now()-tStart}ms source=${lectureData.source}`
+        );
+        return { ...lectureData, _source: lectureData.source };
+      }
+    }
+
+    logPipeline('PROGRESSIVE_RESPONSE', `${course}/${subtopicId}: returning template, upgrading async`);
+    const fallback = generateFallbackLecture(course, subtopicId, subtopicName);
+    await setRedis(cacheKey, fallback);
+
+    upgradePromise.then(async (upgraded) => {
+      if (upgraded) {
+        const validation = validateLecture(upgraded.markdown, subtopicId, subtopicName, course);
+        if (validation.valid) {
+          await Lecture.findOneAndUpdate(
+            { course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') }, subtopicId: subtopicId || null },
+            { $set: upgraded },
+            { upsert: true }
+          );
+          await setRedis(cacheKey, upgraded);
+          logPipeline('ASYNC_UPGRADE_COMPLETE', `${course}/${subtopicId} → ${upgraded.source}/${upgraded.model}`);
+        }
+      }
+      await releaseGenerationLock(course, subtopicId);
+    }).catch(() => releaseGenerationLock(course, subtopicId));
+
+    logPipeline('METRICS',
+      `redis_hit=false mongo_hit=false md_hit=false generation=progressive time=${Date.now()-tStart}ms total=${Date.now()-tStart}ms source=template_fallback`
+    );
+    return { ...fallback, _source: 'template_fallback' };
+  } catch (e) {
+    await releaseGenerationLock(course, subtopicId);
+    logPipeline('TEMPLATE_FALLBACK', `Lecture for ${course}/${subtopicId}`);
+    const fallback = generateFallbackLecture(course, subtopicId, subtopicName);
+    await setRedis(cacheKey, fallback);
+    return { ...fallback, _source: 'template_fallback' };
+  }
+}
+
+async function acquireGenerationLock(course, subtopicId) {
+  try {
+    if (redisClient && redisClient.isOpen) {
+      const lockKey = `gen_lock:${course}:${subtopicId || 'full'}`;
+      const acquired = await redisClient.set(lockKey, '1', { NX: true, EX: 60 });
+      return acquired === 'OK' || acquired === true;
+    }
+  } catch (e) { /* lock failed */ }
+  return true;
+}
+
+async function releaseGenerationLock(course, subtopicId) {
+  try {
+    if (redisClient && redisClient.isOpen) {
+      const lockKey = `gen_lock:${course}:${subtopicId || 'full'}`;
+      await redisClient.del(lockKey);
+    }
+  } catch (e) { /* ok */ }
+}
+
+async function pollForCachedResult(cacheKey, course, subtopicId, subtopicName) {
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    try {
+      if (redisClient && redisClient.isOpen) {
+        const val = await redisClient.get(cacheKey);
+        if (val) {
+          const data = JSON.parse(val);
+          if (data?.markdown && !isTemplateQuality(data)) {
+            return { ...data, _source: 'redis_cache' };
+          }
+        }
+      }
+      const mongoDoc = await Lecture.findOne({
+        course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') },
+        subtopicId: subtopicId || null,
+      }).lean();
+      if (mongoDoc?.markdown && !isTemplateQuality(mongoDoc)) {
+        return { ...mongoDoc, _source: 'mongodb' };
+      }
+    } catch { /* retry */ }
+  }
+  return null;
+}
+
+function triggerBackgroundUpgrade(course, subtopicId, subtopicName, topicName, moduleName, cacheKey) {
+  upgradeLecture(course, subtopicId, subtopicName, topicName, moduleName).then(async (upgraded) => {
+    if (upgraded) {
+      const validation = validateLecture(upgraded.markdown, subtopicId, subtopicName, course);
+      if (validation.valid) {
+        await Lecture.findOneAndUpdate(
+          { course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') }, subtopicId: subtopicId || null },
+          { $set: upgraded },
+          { upsert: true }
+        );
+        if (redisClient?.isOpen) {
+          await redisClient.setEx(cacheKey, CACHE_TTL, JSON.stringify(upgraded));
+        }
+        logPipeline('BG_UPGRADE_DONE', `${course}/${subtopicId} → ${upgraded.source}/${upgraded.model}`);
+      }
+    }
+  }).catch((e) => {
+    log.warn('BG_UPGRADE_FAIL', `${course}/${subtopicId}: ${e.message}`);
+  });
 }
 
 async function generateLecture(course, subtopicId, subtopicName, topicName, moduleName) {
@@ -190,6 +322,11 @@ Format in Markdown with headings (##), bullet points, and code blocks where rele
     logPipeline(`GENERATED VIA ${provider.toUpperCase()}`, `Lecture in ${generationTime}ms`);
 
     const text = result?.text || '';
+    // Reject: all providers exhausted
+    if (result?.provider === 'none') {
+      logPipeline('PROVIDERS EXHAUSTED', `All LLM providers failed for ${course}/${subtopicId}, using template`);
+      return null;
+    }
     if (text && text.length > 50) {
       const html = simpleMarkdownToHtml(text);
       return { markdown: text, html, conceptMap: '', _provider: provider, _model: result?.model || 'unknown' };
@@ -201,12 +338,8 @@ Format in Markdown with headings (##), bullet points, and code blocks where rele
 }
 
 function generateFallbackLecture(course, subtopicId, subtopicName) {
-  const name = subtopicName || subtopicId?.replace(/[_-]/g, ' ') || course;
-  return {
-    markdown: `## ${name}\n\nThis lecture note covers fundamental concepts of ${name} within the context of ${course}.\n\n### Learning Objectives\n- Understand the core principles of ${name}\n- Identify key applications and use cases\n- Analyze practical implementations\n\n### Key Concepts\n- **Concept 1**: Foundation of ${name} in ${course}\n- **Concept 2**: Core methodologies and approaches\n- **Concept 3**: Practical applications and examples\n\n### Summary\n${name} is an essential topic in ${course}. Master these fundamentals before advancing to more complex material.`,
-    html: '',
-    conceptMap: '',
-  };
+  const template = buildTemplateLecture(course, subtopicId, subtopicName, '', '');
+  return { ...template, conceptMap: '' };
 }
 
 // ── SKILL TREE LEVEL GENERATION ──────────────────────────────────────
