@@ -55,7 +55,7 @@ async function generateLevels(userId, topic, assessmentResult, answers) {
             Important: The FIRST level (id: 1) should have status: "unlocked", all others "locked".
         `;
 
-        let responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig);
+        let responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig, { maxOutputTokens: 300 }); // [Optimization] JSON level array
 
         let levels = [];
         try {
@@ -169,7 +169,7 @@ async function generateDynamicQuestions(userId, topic, levelName, difficulty, st
         `;
 
         const llmConfig = await getUserLLMConfig(userId);
-        let responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig);
+        let responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig, { maxOutputTokens: 300 }); // [Optimization] JSON question set
 
         try {
             const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -285,7 +285,7 @@ async function getDiagnosticQuiz(topic, userId) {
             }
         `;
 
-        const responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig);
+        const responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig, { maxOutputTokens: 300 }); // [Optimization] Diagnostic quiz JSON
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         const data = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
 
@@ -331,7 +331,7 @@ async function evaluateDiagnosticQuiz(topic, answers, userId) {
             }
         `;
 
-        const responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig);
+        const responseText = await socraticTutorService.generateWithFallback([], prompt, null, llmConfig, { maxOutputTokens: 300 }); // [Optimization] Evaluation JSON
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         return JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
 

@@ -144,7 +144,7 @@ init();
  * @param {string}   [cacheKey]   - Optional Redis cache key (e.g. `sem:${userId}:${queryHash}`)
  * @returns {Promise<{ route: string|null, confidence: number, method: string, topMatches: object[] }>}
  */
-async function getSemanticRoute(queryText, cacheKey = null) {
+async function getSemanticRoute(queryText, cacheKey = null, req = null) {
     const t0 = Date.now();
 
     // ── 1. Check Redis cache ─────────────────────────────────────────────────
@@ -172,18 +172,26 @@ async function getSemanticRoute(queryText, cacheKey = null) {
 
     // ── 3. Embed the query ───────────────────────────────────────────────────
     let queryEmbedding;
-    try {
-        const resp = await axios.post(EMBED_URL(), { text: queryText }, {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: EMBED_TIMEOUT,
-        });
-        queryEmbedding = resp.data?.embedding;
-        if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
-            throw new Error('Invalid embedding response');
+    if (req && req._queryEmbedding) {
+        queryEmbedding = req._queryEmbedding;
+        log.info('AI', `[SemanticRouter] Reused query embedding from req._queryEmbedding`);
+    } else {
+        try {
+            const resp = await axios.post(EMBED_URL(), { text: queryText }, {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: EMBED_TIMEOUT,
+            });
+            queryEmbedding = resp.data?.embedding;
+            if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
+                throw new Error('Invalid embedding response');
+            }
+            if (req) {
+                req._queryEmbedding = queryEmbedding;
+            }
+        } catch (err) {
+            log.warn('AI', `[SemanticRouter] /embed call failed: ${err.message} — falling through to keyword classifier`);
+            return { route: null, confidence: 0, method: 'semantic_unavailable', topMatches: [] };
         }
-    } catch (err) {
-        log.warn('AI', `[SemanticRouter] /embed call failed: ${err.message} — falling through to keyword classifier`);
-        return { route: null, confidence: 0, method: 'semantic_unavailable', topMatches: [] };
     }
 
     // ── 4. Cosine similarity against all prototypes ──────────────────────────

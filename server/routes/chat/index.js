@@ -253,6 +253,7 @@ router.post('/message', validateChatMessage, injectContextualMemory, async (req,
                 tot:           criticalThinkingEnabled,
                 deepResearch:  deepResearchMode,
             },
+            req, // [Optimization] Pass req to cache the query embedding
         });
 
         log.info('CHAT', `Semantic routing: ${semanticRouting.intent} (confidence: ${semanticRouting.confidence.toFixed(3)})`);
@@ -463,7 +464,11 @@ router.post('/message', validateChatMessage, injectContextualMemory, async (req,
         const chatContext = {
             userId, subject: documentContextName,
             courseId: documentContextName || null,
-            chatHistory: historyFromDb, user, tutorMode, tutorModeType
+            chatHistory: historyFromDb, user, tutorMode, tutorModeType,
+            // [Optimization] Pass semantic routing result so selectLLM can pick the right SGLang endpoint
+            semanticRouting,
+            criticalThinkingEnabled,
+            useReAct,
         };
 
         const routingStart = Date.now();
@@ -698,7 +703,7 @@ const _sttUpload = multer({
     limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max audio
 }).single('audio');
 
-router.post('/transcribe', authMiddleware, (req, res) => {
+router.post('/transcribe', authMiddleware, sttLimiter, (req, res) => {
     _sttUpload(req, res, async (err) => {
         if (err) return res.status(400).json({ message: err.message });
         if (!req.file) return res.status(400).json({ message: 'No audio file provided.' });

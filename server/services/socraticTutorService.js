@@ -287,7 +287,7 @@ Return ONLY valid JSON:
             prompt,
             'You are an expert educational assessor. Respond with ONLY valid JSON.',
             llmConfig,
-            { jsonMode: true }
+            { jsonMode: true, maxOutputTokens: 200 } // [Optimization] Assessment returns small JSON, cap output
         );
 
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);

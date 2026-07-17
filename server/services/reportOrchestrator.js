@@ -83,7 +83,8 @@ async function callAgentWithValidation(chatHistory, currentQuery, systemPrompt, 
             chatHistory,
             currentQuery,
             systemPrompt,
-            config
+            config,
+            { maxOutputTokens: 400 } // [Optimization] Writer agent: structured bullet output
         );
         return extractAndParseJSON(responseText, schema);
     } catch (firstError) {
@@ -96,7 +97,8 @@ async function callAgentWithValidation(chatHistory, currentQuery, systemPrompt, 
                 chatHistory,
                 strictQuery,
                 "You are a strict data-output agent. Respond with ONLY valid JSON.",
-                config
+                config,
+                { maxOutputTokens: 400 } // [Optimization] Writer agent retry: same cap
             );
             return extractAndParseJSON(responseText, schema);
         } catch (retryError) {
@@ -468,7 +470,8 @@ Do not include any bullet points or markdown list syntax. Output only the paragr
             [],
             query,
             systemPrompt,
-            config
+            config,
+            { maxOutputTokens: 300 } // [Optimization] Expander: 3-6 sentence paragraph
         );
         return responseText.trim();
     } catch (err) {

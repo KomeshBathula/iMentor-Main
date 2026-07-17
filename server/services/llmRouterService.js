@@ -15,6 +15,8 @@ const { getCachedRoutingDecision, cacheRoutingDecision } = require('./routingCac
 
 // SGLang — lazy-imported so the server starts cleanly when SGLANG_ENABLED=false
 const SGLANG_ENABLED = process.env.SGLANG_ENABLED === 'true';
+// [Optimization] LOW_RAM_MODE: skip SGLang entirely on student laptops with insufficient RAM/VRAM
+const LOW_RAM_MODE = process.env.LOW_RAM_MODE === 'true';
 
 const CLASSIFICATION_TTL = 300; // 5 min — tutor/subject context changes frequently
 const AUTO_ROUTING_TTL = 300;  // 5 min for auto smart-router decisions
@@ -237,27 +239,46 @@ async function selectLLM(query, context) {
   }
 
   // ── PRIORITY -1: SGLang (when deployed) ──────────────────────────────────────
-  // When SGLANG_ENABLED=true SGLang beats every other provider.
-  // semantic route from context determines which SGLang endpoint (chat / reason / heavy).
-  if (SGLANG_ENABLED) {
+  // [Optimization] Intent-based SGLang routing: uses semantic route to pick the right endpoint.
+  // LOW_RAM_MODE skips SGLang entirely for student laptops → falls through to Gemini/Groq.
+  if (SGLANG_ENABLED && !LOW_RAM_MODE) {
     try {
       const sglangService = require('./sglangService');
       const semanticRoute = context.semanticRoute || context.queryIntent?.semanticRoute || null;
-      const endpoint = (semanticRoute === 'tot' || context.criticalThinkingEnabled || context.useReAct)
-          ? 'reason' : 'chat';
-      const modelId = endpoint === 'reason'
-          ? (process.env.SGLANG_REASON_MODEL || 'Qwen/Qwen2.5-14B-Instruct-AWQ')
-          : (process.env.SGLANG_CHAT_MODEL   || 'Qwen/Qwen2.5-14B-Instruct-AWQ');
+      const semanticIntent = context.semanticRouting?.intent || null;
 
-      log.info('AI', `[SGLang] PRIORITY-1 route → endpoint=${endpoint} model=${modelId}`);
+      // Map semantic intent/route to SGLang endpoint
+      // direct_answer / greeting / standard → sglang_chat (light, fast)
+      // tot / research / deep reasoning / math → sglang_reason (if available)
+      // tutor → sglang_tutor (or chat if no dedicated tutor endpoint)
+      // night_stn / night_kg / report generation → sglang_heavy
+      let endpoint = 'chat'; // default: fast chat
+      if (semanticRoute === 'tot' || context.criticalThinkingEnabled || context.useReAct
+          || semanticIntent === 'MATHEMATICAL_REASONING' || semanticIntent === 'TECHNICAL_CODING') {
+        endpoint = 'reason';
+      } else if (context.tutorMode) {
+        endpoint = 'chat'; // tutor uses chat endpoint (same model, tutor logic is in the handler)
+      } else if (semanticRoute === 'deep_research' || semanticIntent === 'DEEP_RESEARCH') {
+        endpoint = 'reason'; // deep research benefits from reasoning model
+      }
+
+      const endpointEnvMap = {
+        chat:   { model: process.env.SGLANG_CHAT_MODEL   || 'Qwen/Qwen2.5-14B-Instruct-AWQ',
+                  url:   process.env.SGLANG_CHAT_URL     || 'http://localhost:8000/v1' },
+        reason: { model: process.env.SGLANG_REASON_MODEL || 'Qwen/Qwen2.5-14B-Instruct-AWQ',
+                  url:   process.env.SGLANG_REASON_URL   || 'http://localhost:8000/v1' },
+        heavy:  { model: process.env.SGLANG_HEAVY_MODEL  || 'Qwen/Qwen2.5-14B-Instruct-AWQ',
+                  url:   process.env.SGLANG_HEAVY_URL    || 'http://localhost:8000/v1' },
+      };
+      const target = endpointEnvMap[endpoint] || endpointEnvMap.chat;
+
+      log.info('AI', `[SGLang] PRIORITY-1 route → endpoint=${endpoint} model=${target.model} (intent=${semanticIntent || 'none'})`);
       return {
         chosenModel: {
-          modelId,
+          modelId:     target.model,
           provider:     'sglang',
-          displayName:  `SGLang ${modelId}`,
-          workingUrl:   endpoint === 'reason'
-              ? (process.env.SGLANG_REASON_URL || 'http://localhost:8000/v1')
-              : (process.env.SGLANG_CHAT_URL   || 'http://localhost:8000/v1'),
+          displayName:  `SGLang ${target.model}`,
+          workingUrl:   target.url,
           _sglangEndpoint: endpoint,
           _sglangService:  sglangService,
         },
@@ -265,8 +286,10 @@ async function selectLLM(query, context) {
         modelRoutingMode: routingMode,
       };
     } catch (sglangErr) {
-      log.warn('AI', `[SGLang] Priority-1 routing failed (${sglangErr.message}) — falling back to Ollama/Gemini`);
+      log.warn('AI', `[SGLang] Priority-1 routing failed (${sglangErr.message}) — falling back to Gemini/Groq`);
     }
+  } else if (LOW_RAM_MODE) {
+    log.info('AI', `[Router] LOW_RAM_MODE=true — skipping SGLang, routing to cloud providers`);
   }
 
   // PRIORITY 0: Tutor Mode
@@ -342,7 +365,8 @@ async function selectLLM(query, context) {
     try {
       classification = await classifyQuery(query, {
         preferredProvider,
-        enforcePreferredProvider: Boolean(context.deepResearchContext)
+        enforcePreferredProvider: Boolean(context.deepResearchContext),
+        req: context.req // [Optimization] Pass req to reuse query embedding
       });
     } catch (e) {
       classification = { category: 'chat', confidence: 0, strength: 'chat' };

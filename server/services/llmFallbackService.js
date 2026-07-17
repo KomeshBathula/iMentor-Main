@@ -9,6 +9,7 @@
  *   4. Cloud-first:  user-preferred-cloud → groq → gemini → ollama → anthropic → mistral
  *   5. Works for chat, Socratic, tools, research — every call site
  *   6. Supports thinking models (qwen3, gemma3, deepseek-r1) with native think flag
+ *   7. [Optimization] Per-provider concurrency control via Bottleneck
  *
  * Usage:
  *   const { callWithFallback, streamWithFallback } = require('./llmFallbackService');
@@ -17,6 +18,7 @@
 
 const log = require('../utils/logger');
 const { checkOllamaHealth } = require('./ollamaHealthService');
+const Bottleneck = require('bottleneck'); // [Optimization] Per-provider concurrency control
 
 // Lazy-load provider services to avoid circular deps
 let _gemini, _ollama, _streaming, _sglang, _groq; // [Team1] added sglang + groq
@@ -25,6 +27,47 @@ function ollamaService()    { return _ollama    || (_ollama    = require('./olla
 function sglangService()    { return _sglang    || (_sglang    = require('./sglangService'));    } // [Team1]
 function groqService()      { return _groq      || (_groq      = require('./groqService'));      } // [Team1]
 function streamingService() { return _streaming || (_streaming = require('./llmStreamingService')); }
+
+// ─── PER-PROVIDER CONCURRENCY LIMITERS ─────────────────────────────────────
+// [Optimization] Prevents concurrent users from hammering the same provider.
+// Each provider gets its own limiter. When one provider's queue is full,
+// the request overflows to the next provider in the fallback chain.
+const CONCURRENCY_SGLANG = parseInt(process.env.LLM_CONCURRENCY_SGLANG, 10) || 3;
+const CONCURRENCY_GEMINI = parseInt(process.env.LLM_CONCURRENCY_GEMINI, 10) || 3;
+const CONCURRENCY_GROQ   = parseInt(process.env.LLM_CONCURRENCY_GROQ,   10) || 3;
+const HIGH_WATER_MARK    = parseInt(process.env.LLM_QUEUE_MAX_DEPTH,     10) || 20;
+const QUEUE_WARN_THRESHOLD = 10;
+
+const providerLimiters = {
+    sglang: new Bottleneck({
+        maxConcurrent: CONCURRENCY_SGLANG,
+        highWater: HIGH_WATER_MARK,
+        strategy: Bottleneck.strategy.OVERFLOW,
+    }),
+    gemini: new Bottleneck({
+        maxConcurrent: CONCURRENCY_GEMINI,
+        highWater: HIGH_WATER_MARK,
+        strategy: Bottleneck.strategy.OVERFLOW,
+    }),
+    groq: new Bottleneck({
+        maxConcurrent: CONCURRENCY_GROQ,
+        highWater: HIGH_WATER_MARK,
+        strategy: Bottleneck.strategy.OVERFLOW,
+    }),
+};
+
+// Queue depth monitoring — warn when approaching capacity
+for (const [name, limiter] of Object.entries(providerLimiters)) {
+    limiter.on('queued', () => {
+        const queued = limiter.queued();
+        if (queued >= QUEUE_WARN_THRESHOLD) {
+            log.warn('AI', `[Bottleneck] ${name} queue depth: ${queued}/${HIGH_WATER_MARK} — approaching capacity`);
+        }
+    });
+    limiter.on('dropped', () => {
+        log.warn('AI', `[Bottleneck] ${name} queue FULL (${HIGH_WATER_MARK}) — request overflowing to next provider`);
+    });
+}
 
 // ─── THINKING MODEL DETECTION ──────────────────────────────────────────────
 const THINKING_MODEL_PATTERNS = /qwen3|qwq|deepseek.*r1|gemma3|gemma-3/i;
@@ -239,70 +282,79 @@ async function callWithFallback({
         };
 
         try {
-            let result;
-
-            if (onToken && provider === 'ollama') {
-                // Ollama has native streaming via streamChat
-                result = await ollamaService().streamChat(
-                    chatHistory, userQuery, systemPrompt, callOptions,
-                    (token) => {
-                        if (typeof token === 'string') {
-                            onToken({ type: 'token', content: token });
-                        } else {
-                            onToken(token);
+            // [Optimization] Wrap the actual LLM call in the provider's concurrency limiter.
+            // If the provider's queue is full (OVERFLOW), Bottleneck rejects immediately
+            // and the catch block below falls through to the next provider.
+            const limiter = providerLimiters[provider];
+            const executeLlmCall = async () => {
+                if (onToken && provider === 'ollama') {
+                    // Ollama has native streaming via streamChat
+                    return await ollamaService().streamChat(
+                        chatHistory, userQuery, systemPrompt, callOptions,
+                        (token) => {
+                            if (typeof token === 'string') {
+                                onToken({ type: 'token', content: token });
+                            } else {
+                                onToken(token);
+                            }
                         }
-                    }
-                );
-            } else if (onToken && UNIFIED_STREAM_PROVIDERS.has(provider)) {
-                // Gemini/Groq via unified streaming service
-                const messages = [
-                    ...chatHistory.map(m => ({
+                    );
+                } else if (onToken && UNIFIED_STREAM_PROVIDERS.has(provider)) {
+                    // Gemini/Groq via unified streaming service
+                    const messages = [
+                        ...chatHistory.map(m => ({
+                            role: m.role === 'model' ? 'assistant' : m.role,
+                            content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
+                        })),
+                        { role: 'user', content: userQuery }
+                    ];
+                    return await streamingService().streamCompletion({
+                        messages, provider, model, apiKey, systemPrompt, onToken,
+                        options: { ...callOptions, handleThinkingTags: thinkEnabled }
+                    });
+                } else if (onToken && provider === 'sglang') {
+                    // SGLang via unified streaming service
+                    const messages = [
+                        ...chatHistory.map(m => ({
+                            role: m.role === 'model' ? 'assistant' : m.role,
+                            content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
+                        })),
+                        { role: 'user', content: userQuery }
+                    ];
+                    return await streamingService().streamCompletion({
+                        messages, provider: 'sglang', model, apiKey, systemPrompt, onToken,
+                        options: callOptions
+                    });
+                } else if (provider === 'sglang') {
+                    // SGLang direct REST call
+                    const axios = require('axios');
+                    const messages = [];
+                    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+                    messages.push(...chatHistory.map(m => ({
                         role: m.role === 'model' ? 'assistant' : m.role,
                         content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
-                    })),
-                    { role: 'user', content: userQuery }
-                ];
-                result = await streamingService().streamCompletion({
-                    messages, provider, model, apiKey, systemPrompt, onToken,
-                    options: { ...callOptions, handleThinkingTags: thinkEnabled }
-                });
-            } else if (onToken && provider === 'sglang') {
-                // SGLang via unified streaming service
-                const messages = [
-                    ...chatHistory.map(m => ({
-                        role: m.role === 'model' ? 'assistant' : m.role,
-                        content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
-                    })),
-                    { role: 'user', content: userQuery }
-                ];
-                result = await streamingService().streamCompletion({
-                    messages, provider: 'sglang', model, apiKey, systemPrompt, onToken,
-                    options: callOptions
-                });
-            } else if (provider === 'sglang') {
-                // SGLang direct REST call
-                const axios = require('axios');
-                const messages = [];
-                if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-                messages.push(...chatHistory.map(m => ({
-                    role: m.role === 'model' ? 'assistant' : m.role,
-                    content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
-                })));
-                messages.push({ role: 'user', content: userQuery });
-                const sglangUrl = process.env.SGLANG_CHAT_URL || 'http://localhost:8000/v1';
-                const resp = await axios.post(`${sglangUrl}/chat/completions`, {
-                    model,
-                    messages,
-                    max_tokens: callOptions.maxOutputTokens ?? 4096,
-                    temperature: callOptions.temperature ?? 0.7,
-                    stream: false,
-                }, { timeout: 30000 });
-                result = resp.data?.choices?.[0]?.message?.content || '';
-            } else {
-                // Non-streaming path for gemini/groq
-                const svc = getServiceForProvider(provider);
-                result = await svc.generateContentWithHistory(chatHistory, userQuery, systemPrompt, callOptions);
-            }
+                    })));
+                    messages.push({ role: 'user', content: userQuery });
+                    const sglangUrl = process.env.SGLANG_CHAT_URL || 'http://localhost:8000/v1';
+                    const resp = await axios.post(`${sglangUrl}/chat/completions`, {
+                        model,
+                        messages,
+                        max_tokens: callOptions.maxOutputTokens ?? 4096,
+                        temperature: callOptions.temperature ?? 0.7,
+                        stream: false,
+                    }, { timeout: 30000 });
+                    return resp.data?.choices?.[0]?.message?.content || '';
+                } else {
+                    // Non-streaming path for gemini/groq
+                    const svc = getServiceForProvider(provider);
+                    return await svc.generateContentWithHistory(chatHistory, userQuery, systemPrompt, callOptions);
+                }
+            };
+
+            // Schedule through limiter if one exists for this provider, otherwise call directly
+            const result = limiter
+                ? await limiter.schedule(executeLlmCall)
+                : await executeLlmCall();
 
             const text = typeof result === 'string' ? result : String(result || '');
             const { thinking, content } = separateThinking(text);
@@ -320,10 +372,17 @@ async function callWithFallback({
             };
         } catch (err) {
             const msg = err.message || String(err);
-            errors.push({ provider, model, error: msg });
-            log.warn('AI', `[Fallback] ✗ ${provider} failed: ${msg.slice(0, 120)}`);
-            if (provider === 'ollama') invalidateOllamaHealth();
-            if (provider === 'sglang') invalidateSglangHealth();
+            // [Optimization] Bottleneck OVERFLOW produces a specific error message.
+            // Treat it as "provider busy" — log and continue to the next provider.
+            if (msg === 'This job has been dropped by Bottleneck') {
+                errors.push({ provider, model, error: `Queue full (${HIGH_WATER_MARK} pending) — overflowed to next provider` });
+                log.warn('AI', `[Fallback] ⏳ ${provider} queue full — overflowing to next provider`);
+            } else {
+                errors.push({ provider, model, error: msg });
+                log.warn('AI', `[Fallback] ✗ ${provider} failed: ${msg.slice(0, 120)}`);
+                if (provider === 'ollama') invalidateOllamaHealth();
+                if (provider === 'sglang') invalidateSglangHealth();
+            }
         }
     }
 

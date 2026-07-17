@@ -428,7 +428,16 @@ async function classifyIntent(query, context = {}) {
 
   let queryEmbedding;
   try {
-    queryEmbedding = await getEmbedding(query);
+    // [Optimization] Check request-scoped cache first to prevent duplicate embedding requests
+    if (context.req && context.req._queryEmbedding) {
+      queryEmbedding = context.req._queryEmbedding;
+      log.info('SEMANTIC_ROUTER', `Reused query embedding from req._queryEmbedding`);
+    } else {
+      queryEmbedding = await getEmbedding(query);
+      if (context.req) {
+        context.req._queryEmbedding = queryEmbedding;
+      }
+    }
   } catch (err) {
     log.warn('SEMANTIC_ROUTER', `Cannot embed query — defaulting to CONCEPTUAL_EXPLANATION: ${err.message}`);
     return {

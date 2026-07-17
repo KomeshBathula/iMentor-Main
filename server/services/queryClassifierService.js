@@ -17,6 +17,7 @@ const axios = require('axios');
 const geminiService = require('./geminiService');
 const { ensureModel } = require('./ollamaModelManager');
 const { routeQuery, mapIntentToRoute } = require('./semanticRouter'); // [Team9] upgraded waterfall
+const { getSemanticRoute } = require('./semanticRouterService'); // [Optimization] Fix: was ReferenceError — function was called but never imported
 const { routerMethodCounter, routerCacheCounter } = require('../utils/metrics');
 
 const _RAG_SERVICE_URL = () => (process.env.PYTHON_RAG_SERVICE_URL || 'http://localhost:2001').trim();
@@ -195,7 +196,7 @@ async function classifyQuery(query, config = {}) {
         // Produces one of 3 coarse routes: direct_answer / standard / tot.
         // If confidence is high, return immediately.
         const cacheKey = query.slice(0, 80).replace(/\s+/g, '_');
-        const semanticResult = await getSemanticRoute(query, cacheKey);
+        const semanticResult = await getSemanticRoute(query, cacheKey, config.req);
 
         if (
             semanticResult.route !== null &&
