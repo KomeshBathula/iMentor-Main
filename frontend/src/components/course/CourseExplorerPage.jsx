@@ -13,6 +13,7 @@ import 'katex/dist/katex.min.css';
 import mermaid from 'mermaid';
 import api from '../../services/api.js';
 import { useAppState } from '../../contexts/AppStateContext.jsx';
+import { normalizeCurriculumTree } from '../../utils/normalizeCurriculumTree.js';
 import {
     ArrowLeft, GraduationCap, BookOpen, Layers, Hash,
     ChevronDown, ChevronRight, Loader2, AlertTriangle,
@@ -808,7 +809,7 @@ export default function CourseExplorerPage() {
         // Load structure
         setLoadingStruct(true);
         api.getCourseStructure(code)
-            .then(data => setStructure(data.curriculum || null))
+            .then(data => setStructure(normalizeCurriculumTree(data.curriculum || null)))
             .catch(e => setStructError(e.response?.data?.message || e.message || 'Failed to load'))
             .finally(() => setLoadingStruct(false));
     }, [setSelectedSubject]);
