@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../services/api.js';
 import { useAppState } from '../../contexts/AppStateContext.jsx';
+import { normalizeCurriculumTree } from '../../utils/normalizeCurriculumTree.js';
 import {
     X, ChevronDown, ChevronRight, BookOpen, GraduationCap,
     Loader2, AlertTriangle, BookMarked, Layers, Hash,
@@ -215,7 +216,7 @@ export default function CourseViewerPanel({ onChatMessage }) {
 
         api.getCourseStructure(selectedSubject)
             .then(data => {
-                if (mounted) setStructure(data.curriculum || null);
+                if (mounted) setStructure(normalizeCurriculumTree(data.curriculum || null));
             })
             .catch(e => {
                 if (mounted) setStructError(e.response?.data?.message || e.message || 'Failed to load course structure');
