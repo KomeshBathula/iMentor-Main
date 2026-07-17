@@ -124,7 +124,6 @@ function hasApiKey(provider, userKeys = {}) {
     switch (provider) {
         case 'gemini': return Boolean(userKeys.gemini || process.env.GEMINI_API_KEY);
         case 'groq':   return Boolean(userKeys.groq || process.env.GROQ_API_KEY);
-        case 'groq':   return Boolean(userKeys.groq   || process.env.GROQ_API_KEY);
         case 'ollama': return true; // no key needed
         case 'sglang': return true; // no key needed
         default:       return false;
@@ -135,15 +134,12 @@ function getApiKey(provider, userKeys = {}) {
     switch (provider) {
         case 'gemini': return userKeys.gemini || process.env.GEMINI_API_KEY;
         case 'groq':   return userKeys.groq || process.env.GROQ_API_KEY;
-        case 'groq':   return userKeys.groq   || process.env.GROQ_API_KEY;
         default:       return null;
     }
 }
 
 // ─── FALLBACK CHAIN BUILDER ────────────────────────────────────────────────
 // SGLang is handled via local / API calls. Groq and Gemini are fallback targets.
-const LOCAL_FIRST_CHAIN  = ['sglang', 'groq', 'gemini'];
-const CLOUD_FIRST_CHAIN  = ['groq', 'gemini', 'sglang'];
 // Ollama is REMOVED from LLM chains — it is for embeddings only (now replaced by FastEmbed).
 // SGLang is handled via callFast/getFastModel. Cloud fallback = Groq → Gemini.
 const LOCAL_FIRST_CHAIN  = ['sglang', 'groq', 'gemini'];
@@ -172,7 +168,7 @@ function getServiceForProvider(provider) {
 }
 
 // Providers that support streaming in llmStreamingService
-const UNIFIED_STREAM_PROVIDERS = new Set(['gemini', 'groq', 'groq']);
+const UNIFIED_STREAM_PROVIDERS = new Set(['gemini', 'groq']);
 
 // ─── CORE: CALL WITH FALLBACK ──────────────────────────────────────────────
 /**
