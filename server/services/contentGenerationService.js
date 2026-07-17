@@ -598,6 +598,7 @@ function validateAnswerDistribution(questions) {
 async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, difficulty, gameId, seenQuestions) {
   const cacheKey = `skilltree:questions:${topic}:${levelId || levelName}`;
   let conceptBankTimedOut = false;
+  const conceptName = levelName || `Level ${levelId}`;
 
   // 1. Concept Question Bank — with timeout guard (max 8s)
   try {
@@ -605,7 +606,7 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
     const conceptBank = await Promise.race([
       conceptQbService.ensureQuestionsForConcept({
         course: topic,
-        concept: levelName || `Level ${levelId}`,
+        concept: conceptName,
         topic,
       }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Concept bank generation timed out (>8s)')), 8000)),
@@ -615,7 +616,7 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
       const seenTexts = (seenQuestions || []).map(s => String(s));
       const selected = await conceptQbService.selectQuestionsForLevel({
         course: topic,
-        concept: levelName || `Level ${levelId}`,
+        concept: conceptName,
         count: 5,
         seenQuestionIds: seenTexts,
       });
@@ -633,7 +634,7 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
           confidence: typeof q.confidence === 'number' ? q.confidence : 0.8,
           _conceptQuestionId: q._id,
         }));
-        logPipeline('DATABASE HIT', `ConceptQuestionBank questions for ${topic}/${levelName} (${selected.length} selected, ${conceptBank.length} total)`);
+        logPipeline('DATABASE HIT', `ConceptQuestionBank questions for ${topic}/${conceptName} (${selected.length} selected, ${conceptBank.length} total)`);
         const meta = buildMetadata('concept_question_bank', 'stored');
         return { questions, _source: 'concept_question_bank', cached: true, conceptTotal: conceptBank.length, ...meta };
       }
@@ -646,7 +647,7 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
   // If concept bank timed out via LLM chain, skip the redundant LLM call in step 4
   // and go directly to cache sources → template fallback
   if (conceptBankTimedOut) {
-    logPipeline('FAST FAILOVER', `Concept bank timed out — skipping LLM chain for ${topic}/${levelName}`);
+    logPipeline('FAST FAILOVER', `Concept bank timed out — skipping LLM chain for ${topic}/${conceptName}`);
   }
 
   // 2. Redis cache (only used when concept bank is unavailable)
@@ -687,16 +688,16 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
   // 4. Generate via LLM (with shuffle + dup detection)
   // Skip LLM if concept bank already timed out — avoid redundant slow fallback
   if (conceptBankTimedOut) {
-    logPipeline('SKIP LLM', `Concept bank timed out — using template fallback directly for ${topic}/${levelName}`);
-    const fallback = generateFallbackQuestions(topic, levelName, difficulty).map(q => shuffleOptions(q));
+    logPipeline('SKIP LLM', `Concept bank timed out — using template fallback directly for ${topic}/${conceptName}`);
+    const fallback = generateFallbackQuestions(topic, conceptName, difficulty).map(q => shuffleOptions(q));
     validateAnswerDistribution(fallback);
     await setRedis(cacheKey, fallback);
     const meta = buildMetadata('template', 'fallback');
     return { questions: fallback, _source: 'template_fallback', cached: false, ...meta };
   }
 
-  logPipeline('GENERATING', `Level questions for ${topic}/${levelName}`);
-  const generated = await generateLevelQuestions(topic, levelId, levelName, difficulty);
+  logPipeline('GENERATING', `Level questions for ${topic}/${conceptName}`);
+  const generated = await generateLevelQuestions(topic, levelId, conceptName, difficulty);
   if (generated.length > 0) {
     const shuffled = generated.map(q => shuffleOptions(q));
     validateAnswerDistribution(shuffled);
@@ -707,7 +708,7 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
       const conceptQbService = require('./conceptQuestionBankService');
       await conceptQbService.saveQuestionsToBank(shuffled, {
         course: topic,
-        concept: levelName || `Level ${levelId}`,
+        concept: conceptName,
         topic,
         moduleName: '',
       });
@@ -730,7 +731,7 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
               learningObjective: q.learningObjective || '',
               estimatedTime: q.estimatedTime || '60s',
               confidence: typeof q.confidence === 'number' ? q.confidence : 0.8,
-              course: topic, subtopic: levelName || '',
+              course: topic, subtopic: conceptName || '',
             },
           },
           { upsert: true }
@@ -739,14 +740,14 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
     }
     const provider = shuffled[0]?._provider || 'groq';
     const model = shuffled[0]?._model || 'unknown';
-    logPipeline(`GENERATED VIA ${provider.toUpperCase()}`, `${shuffled.length} questions for ${topic}/${levelName}`);
+    logPipeline(`GENERATED VIA ${provider.toUpperCase()}`, `${shuffled.length} questions for ${topic}/${conceptName}`);
     const meta = buildMetadata(provider, model);
     return { questions: shuffled, _source: provider, ...meta };
   }
 
   // 5. Template fallback questions
-  logPipeline('TEMPLATE FALLBACK', `Level questions for ${topic}/${levelName}`);
-  const fallback = generateFallbackQuestions(topic, levelName, difficulty).map(q => shuffleOptions(q));
+  logPipeline('TEMPLATE FALLBACK', `Level questions for ${topic}/${conceptName}`);
+  const fallback = generateFallbackQuestions(topic, conceptName, difficulty).map(q => shuffleOptions(q));
   validateAnswerDistribution(fallback);
   await setRedis(cacheKey, fallback);
   const meta = buildMetadata('template', 'fallback');
@@ -755,27 +756,29 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
 
 async function generateLevelQuestions(topic, levelId, levelName, difficulty) {
   const name = levelName || `Level ${levelId}`;
-  const prompt = `You are a technical interviewer creating concept-specific assessment questions.
+  const prompt = `You are an expert assessment designer creating reusable concept-specific questions.
 
-Topic: "${topic}"
-Subtopic: "${name}"
+Course context: "${topic}"
+Concept: "${name}"
 Difficulty: ${difficulty || 'medium'}
 
-Generate 5 multiple-choice questions that test understanding of "${name}" — the actual concepts within this subtopic.
+Generate 5 multiple-choice questions that test ONLY the concept "${name}".
 
 RULES (CRITICAL):
-- NEVER reference course codes, topic titles, or subtopic names in questions.
-- Questions must test the CONCEPT itself, not the name of the topic.
+- The concept is the source of truth.
+- NEVER write generic placeholder questions.
+- NEVER broaden the question to the whole course, module, or topic title.
+- Questions must test the concept itself, not the name of the topic.
 - Each question must be unique and concept-specific.
-- Cover different aspects: definitions, applications, edge cases, comparisons.
+- Cover different aspects: definitions, applications, edge cases, comparisons, misconceptions.
 - Every question must have a meaningful, detailed explanation.
-- Distribute correct answers evenly across A, B, C, D — do NOT always put the correct answer first.
+- Distribute correct answers evenly across A, B, C, D.
 
-BAD example (topic name substitution):
+BAD example:
   "What is the most fundamental concept in Selection Sort?"
   "What is the purpose of Binary Search?"
 
-GOOD example (concept-specific):
+GOOD example:
   "Which statement correctly explains how Selection Sort selects the next element?"
   "Why does Binary Search require the input array to be sorted?"
 
@@ -834,59 +837,60 @@ EVERY OBJECT MUST HAVE ALL 9 FIELDS. Valid JSON array only, no markdown.`;
 }
 
 function generateFallbackQuestions(topic, levelName, difficulty) {
+  const concept = levelName || topic;
   const questions = [
     {
-      question: `Which statement best describes a core concept related to this topic?`,
-      options: ['A fundamental principle that governs related phenomena', 'An unrelated observation about the field', 'A historical anecdote with no current relevance', 'A subjective opinion about best practices'],
+      question: `Which statement best describes the core idea behind ${concept}?`,
+      options: [`It captures the central behavior or rule of ${concept}`, 'It is a generic placeholder unrelated to the concept', 'It is only a historical detail with no current use', 'It is an opinion with no technical meaning'],
       correctIndex: 0,
-      explanation: `Core principles form the foundation of any technical subject. Understanding these fundamentals is essential before exploring advanced applications.`,
+      explanation: `A correct answer should focus on the actual behavior or rule of ${concept}, not a generic topic-level description.`,
       difficulty: difficulty || 'easy',
       bloomLevel: 'remember',
-      learningObjective: `Recall foundational concepts in ${topic}`,
+      learningObjective: `Recall the foundational idea behind ${concept}`,
       estimatedTime: '30s',
       confidence: 0.9,
     },
     {
-      question: `How would you apply a key technique from this area to solve a practical problem?`,
-      options: ['Identify the relevant principles and adapt them to the context', 'Ignore established methods and invent a new approach', 'Use trial and error without any framework', 'Copy solutions from unrelated fields'],
-      correctIndex: 1,
-      explanation: `Practical application requires understanding underlying principles and adapting them appropriately to the specific context of the problem.`,
+      question: `Which practical scenario is the best match for ${concept}?`,
+      options: [`A scenario that directly uses ${concept}`, 'A scenario that has nothing to do with the concept', 'A scenario that only needs guesswork', 'A scenario that ignores the underlying rules'],
+      correctIndex: 0,
+      explanation: `The correct option should be a direct use of ${concept}, not a broad or unrelated application.`,
       difficulty: difficulty || 'medium',
       bloomLevel: 'apply',
-      learningObjective: `Apply concepts from ${topic} to practical scenarios`,
+      learningObjective: `Apply ${concept} to a practical scenario`,
       estimatedTime: '60s',
       confidence: 0.85,
     },
     {
-      question: `What distinguishes an efficient approach from an inefficient one when solving problems in this domain?`,
-      options: ['Algorithmic complexity and resource utilization', 'The number of lines of code', 'How modern the technology appears', 'Popularity among practitioners'],
+      question: `What is the key trade-off to consider when using ${concept}?`,
+      options: [`How ${concept} performs versus the resources it uses`, 'How many buzzwords the solution includes', 'How popular the answer sounds', 'How many diagrams are attached'],
       correctIndex: 0,
-      explanation: `In technical domains, efficiency is measured by quantifiable metrics like time complexity, space complexity, and resource utilization rather than subjective factors.`,
+      explanation: `A strong answer should focus on the technical trade-off that is specific to ${concept}.`,
       difficulty: difficulty || 'medium',
       bloomLevel: 'analyze',
-      learningObjective: `Analyze efficiency tradeoffs in ${topic}`,
+      learningObjective: `Analyze trade-offs in ${concept}`,
       estimatedTime: '60s',
       confidence: 0.85,
     },
     {
-      question: `When evaluating competing solutions in this field, what is the most important criterion?`,
-      options: ['Popularity of the approach', 'Simplicity of implementation', 'Correctness within the domain constraints', 'Novelty of the solution'],
-      correctIndex: 2,
-      explanation: `While simplicity, popularity, and novelty are secondary considerations, correctness within the problem's constraints is always the primary criterion for evaluating solutions.`,
+      question: `When evaluating a solution that uses ${concept}, what matters most?`,
+      options: ['Correctness with respect to the concept rules', 'How trendy the solution sounds', 'Whether it uses the longest explanation', 'How unrelated the answer is'],
+      correctIndex: 0,
+      explanation: `Evaluation should start with whether the solution correctly applies ${concept} within its constraints.`,
       difficulty: difficulty || 'hard',
       bloomLevel: 'evaluate',
-      learningObjective: `Evaluate solution quality in ${topic}`,
+      learningObjective: `Evaluate solution quality for ${concept}`,
       estimatedTime: '90s',
       confidence: 0.8,
     },
     {
-      question: `Which approach demonstrates the deepest understanding of this subject area?`,
-      options: ['Repeating explanations without original thought', 'Being able to explain concepts and apply them to novel situations', 'Memorizing terminology without comprehension', 'Completing assignments without understanding why'],
-      correctIndex: 1,
-      explanation: `True mastery is demonstrated by the ability to not only recall and apply knowledge but also transfer it to novel situations and explain it to others.`,
+      question: `Which response shows the deepest understanding of ${concept}?`,
+      options: ['Explaining it clearly and applying it to a new case', 'Repeating a definition without context', 'Listing unrelated terminology', 'Avoiding the concept entirely'],
+      correctIndex: 0,
+      explanation: `Mastery of ${concept} means the learner can explain it accurately and transfer it to a new situation.`,
       difficulty: difficulty || 'hard',
       bloomLevel: 'evaluate',
-      learningObjective: `Demonstrate comprehensive understanding of ${topic}`,
+      learningObjective: `Demonstrate comprehensive understanding of ${concept}`,
       estimatedTime: '90s',
       confidence: 0.8,
     },
