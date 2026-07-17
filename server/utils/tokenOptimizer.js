@@ -311,10 +311,59 @@ class StreamingTokenExpander {
     }
 }
 
+/**
+ * Truncates chat history if it exceeds the maximum context character limit.
+ * Keeps the system prompt (if present) and the most recent messages.
+ */
+function truncateContextToWindow(messages, maxCharLimit = 24000) {
+    if (!Array.isArray(messages) || messages.length <= 1) return messages;
+
+    let systemMessage = null;
+    let otherMessages = [];
+
+    for (const msg of messages) {
+        if (msg && (msg.role === 'system' || msg.role === 'developer')) {
+            systemMessage = msg;
+        } else if (msg) {
+            otherMessages.push(msg);
+        }
+    }
+
+    const getMsgLength = (msg) => {
+        if (typeof msg.content === 'string') return msg.content.length;
+        if (typeof msg.text === 'string') return msg.text.length;
+        if (Array.isArray(msg.parts)) {
+            return msg.parts.reduce((acc, p) => acc + (p?.text?.length || 0), 0);
+        }
+        return 0;
+    };
+
+    let systemLen = systemMessage ? getMsgLength(systemMessage) : 0;
+    let currentLen = systemLen + otherMessages.reduce((acc, msg) => acc + getMsgLength(msg), 0);
+
+    if (currentLen <= maxCharLimit) {
+        return messages;
+    }
+
+    log.warn('AI', `Context length (${currentLen} chars) exceeds safety threshold (${maxCharLimit} chars). Truncating history...`);
+
+    while (otherMessages.length > 1 && currentLen > maxCharLimit) {
+        const removed = otherMessages.shift();
+        currentLen -= getMsgLength(removed);
+    }
+
+    const finalMessages = [];
+    if (systemMessage) finalMessages.push(systemMessage);
+    finalMessages.push(...otherMessages);
+
+    return finalMessages;
+}
+
 module.exports = {
     minifyPrompt,
     optimizeIncomingMessages,
     injectSystemInstruction,
     expandOutgoingResponse,
-    StreamingTokenExpander
+    StreamingTokenExpander,
+    truncateContextToWindow
 };
