@@ -148,8 +148,13 @@ async function streamChat(chatHistory, userQuery, systemPrompt = null, options =
         || 'Qwen/Qwen2.5-14B-Instruct';
 
     const client   = _getClient(endpoint);
-    const messages = _formatHistory(chatHistory, systemPrompt);
-    messages.push({ role: 'user', content: userQuery });
+    const tokenOptimizer = require('../utils/tokenOptimizer');
+    const optimizedSystemPrompt = tokenOptimizer.minifyPrompt(tokenOptimizer.injectSystemInstruction(systemPrompt));
+    const optimizedUserQuery = tokenOptimizer.minifyPrompt(userQuery);
+    const optimizedHistory = tokenOptimizer.optimizeIncomingMessages(chatHistory || []);
+
+    const messages = _formatHistory(optimizedHistory, optimizedSystemPrompt);
+    messages.push({ role: 'user', content: optimizedUserQuery });
 
     log.info('AI', `[SGLang] stream → endpoint=${endpoint} model=${model}`);
 

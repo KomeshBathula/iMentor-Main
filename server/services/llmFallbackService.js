@@ -21,12 +21,14 @@ const { checkOllamaHealth } = require('./ollamaHealthService');
 const Bottleneck = require('bottleneck'); // [Optimization] Per-provider concurrency control
 
 // Lazy-load provider services to avoid circular deps
-let _gemini, _ollama, _streaming, _sglang, _groq, _openai;
+let _gemini, _ollama, _streaming, _sglang, _groq, _openai, _claude, _anthropic;
 function geminiService()    { return _gemini    || (_gemini    = require('./geminiService'));    }
 function ollamaService()    { return _ollama    || (_ollama    = require('./ollamaService'));    }
 function sglangService()    { return _sglang    || (_sglang    = require('./sglangService'));    }
 function groqService()      { return _groq      || (_groq      = require('./groqService'));      }
 function openaiService()    { return _openai    || (_openai    = require('./openaiService'));    }
+function claudeService()    { return _claude    || (_claude    = require('./claudeService'));    }
+function anthropicService() { return _anthropic || (_anthropic = require('./anthropicService')); }
 function streamingService() { return _streaming || (_streaming = require('./llmStreamingService')); }
 
 // ─── PER-PROVIDER CONCURRENCY LIMITERS ─────────────────────────────────────
@@ -242,6 +244,8 @@ function getServiceForProvider(provider) {
         case 'openai': return openaiService();
         case 'ollama': return ollamaService();
         case 'sglang': return sglangService();
+        case 'claude': return claudeService();
+        case 'anthropic': return anthropicService();
         default:       return null;
     }
 }
@@ -327,21 +331,22 @@ async function callWithFallback({
         log.info('AI', `[Fallback] Attempting ${provider}/${model} (timeout: ${providerTimeout}ms)`);
 
         try {
-            let result;
-
-            if (onToken && provider === 'ollama') {
-                result = await ollamaService().streamChat(
-                    chatHistory, userQuery, systemPrompt, callOptions,
-                    (token) => {
-                        if (typeof token === 'string') {
-                            onToken({ type: 'token', content: token });
-                        } else {
-                            onToken(token);
+            const limiter = providerLimiters[provider];
+            const executeLlmCall = async () => {
+                if (onToken && provider === 'ollama') {
+                    // Ollama has native streaming via streamChat
+                    return await ollamaService().streamChat(
+                        chatHistory, userQuery, systemPrompt, callOptions,
+                        (token) => {
+                            if (typeof token === 'string') {
+                                onToken({ type: 'token', content: token });
+                            } else {
+                                onToken(token);
+                            }
                         }
-
                     );
                 } else if (onToken && UNIFIED_STREAM_PROVIDERS.has(provider)) {
-                    // Gemini/Groq via unified streaming service
+                    // Gemini/Groq/OpenAI via unified streaming service
                     const messages = [
                         ...chatHistory.map(m => ({
                             role: m.role === 'model' ? 'assistant' : m.role,
@@ -386,58 +391,19 @@ async function callWithFallback({
                     }, { timeout: 30000 });
                     return resp.data?.choices?.[0]?.message?.content || '';
                 } else {
-                    // Non-streaming path for gemini/groq
+                    // Non-streaming path for gemini/groq/ollama/openai
                     const svc = getServiceForProvider(provider);
                     if (!svc) {
                         throw new Error(`No service implementation for provider: ${provider}`);
                     }
-                );
-            } else if (onToken && UNIFIED_STREAM_PROVIDERS.has(provider)) {
-                const messages = [
-                    ...chatHistory.map(m => ({
-                        role: m.role === 'model' ? 'assistant' : m.role,
-                        content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
-                    })),
-                    { role: 'user', content: userQuery }
-                ];
-                result = await streamingService().streamCompletion({
-                    messages, provider, model, apiKey, systemPrompt, onToken,
-                    options: { ...callOptions, handleThinkingTags: thinkEnabled }
-                });
-            } else if (onToken && provider === 'sglang') {
-                const messages = [
-                    ...chatHistory.map(m => ({
-                        role: m.role === 'model' ? 'assistant' : m.role,
-                        content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
-                    })),
-                    { role: 'user', content: userQuery }
-                ];
-                result = await streamingService().streamCompletion({
-                    messages, provider: 'sglang', model, apiKey, systemPrompt, onToken,
-                    options: callOptions
-                });
-            } else if (provider === 'sglang') {
-                const axios = require('axios');
-                const messages = [];
-                if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-                messages.push(...chatHistory.map(m => ({
-                    role: m.role === 'model' ? 'assistant' : m.role,
-                    content: Array.isArray(m.parts) ? m.parts[0].text : (m.text || m.content || '')
-                })));
-                messages.push({ role: 'user', content: userQuery });
-                const sglangUrl = process.env.SGLANG_CHAT_URL || 'http://localhost:8000/v1';
-                const resp = await axios.post(`${sglangUrl}/chat/completions`, {
-                    model,
-                    messages,
-                    max_tokens: callOptions.maxOutputTokens ?? 4096,
-                    temperature: callOptions.temperature ?? 0.7,
-                    stream: false,
-                }, { timeout: providerTimeout });
-                result = resp.data?.choices?.[0]?.message?.content || '';
-            } else {
-                const svc = getServiceForProvider(provider);
-                result = await svc.generateContentWithHistory(chatHistory, userQuery, systemPrompt, callOptions);
-            }
+                    return await svc.generateContentWithHistory(chatHistory, userQuery, systemPrompt, callOptions);
+                }
+            };
+
+            // Schedule through limiter if one exists for this provider, otherwise call directly
+            const result = limiter
+                ? await limiter.schedule(executeLlmCall)
+                : await executeLlmCall();
 
             const text = typeof result === 'string' ? result : String(result || '');
             const { thinking, content } = separateThinking(text);
