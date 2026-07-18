@@ -40,6 +40,7 @@
     "chokidar": "^3.6.0",
     "chromadb": "^3.2.0",
     "cors": "^2.8.5",
+    "csv-parse": "^7.0.1",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "express-mongo-sanitize": "^2.2.0",

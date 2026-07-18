@@ -19,7 +19,7 @@ const createLimiter = (maxRequestsPerMinute, prefix = 'rl') => {
     validate: false,
     keyGenerator: (req) => {
       // Use userId if authenticated, otherwise fall back to IP
-      return req.user?.userId || req.ip;
+      return req.user?.id || req.user?._id || req.ip;
     }
   };
 
