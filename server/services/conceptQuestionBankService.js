@@ -4,6 +4,7 @@ const semanticSimilarity = require('./semanticSimilarityService');
 const log = require('../utils/logger');
 const { redisClient } = require('../config/redisClient');
 const { randomUUID } = require('crypto');
+const { resolveCourseTitle } = require('./courseIdentityService');
 
 const TARGET_QUESTIONS_PER_CONCEPT = 30;
 const BLOOM_LEVELS = ['remember', 'understand', 'apply', 'analyze', 'evaluate', 'create'];
@@ -106,6 +107,7 @@ function normalizeConceptName(value) {
 
 function buildConceptQuestionPrompt({ course, concept, topic, moduleName, count, remainingCount = null }) {
   const conceptName = normalizeConceptName(concept);
+  const courseTitle = resolveCourseTitle(course, course);
   const countLabel = remainingCount && remainingCount !== count
     ? `${count} questions (targeting ${remainingCount} missing questions)`
     : `${count} questions`;
@@ -113,7 +115,7 @@ function buildConceptQuestionPrompt({ course, concept, topic, moduleName, count,
   return `You are an expert assessment designer creating a reusable question bank for one concept.
 
 Concept: "${conceptName}"
-Course context: "${course || 'General'}"
+Course context: "${courseTitle || course || 'General'}"
 ${topic ? `Related topic context: "${topic}"` : ''}
 ${moduleName ? `Related module context: "${moduleName}"` : ''}
 
@@ -121,6 +123,7 @@ Task:
 - Generate exactly ${countLabel} multiple-choice questions for the concept "${conceptName}".
 - Every question must be specifically about "${conceptName}".
 - Do not create generic placeholder questions.
+- Do not use template openers such as "Which statement best describes" or "What is the key trade-off".
 - Do not ask questions that could be reused unchanged for another concept.
 - Do not mention course codes, module names, or unrelated topic names in the question stem.
 - Cover definitions, applications, comparisons, misconceptions, edge cases, and reasoning.
@@ -149,6 +152,112 @@ Return a JSON array of objects with this exact structure:
 ]
 
 Valid JSON array only, no markdown.`;
+}
+
+function buildConceptRepairPrompt({ course, concept, topic, moduleName, count, previousQuestions = [] }) {
+  const conceptName = normalizeConceptName(concept);
+  const courseTitle = resolveCourseTitle(course, course);
+  return `You previously returned generic or duplicated questions. Rewrite the bank from scratch.
+
+Concept: "${conceptName}"
+Course context: "${courseTitle || course || 'General'}"
+${topic ? `Related topic context: "${topic}"` : ''}
+${moduleName ? `Related module context: "${moduleName}"` : ''}
+
+Rules:
+- Generate exactly ${count} NEW multiple-choice questions.
+- Each question must be clearly and specifically about "${conceptName}".
+- Do not reuse or paraphrase any of the following rejected question stems:
+${previousQuestions.length > 0 ? previousQuestions.map((q, i) => `  ${i + 1}. ${q}`).join('\n') : '  (none)'}
+- Avoid generic stems like "Which statement best describes...", "What is the key trade-off...", or any question that could be reused for another concept.
+- Cover the concept with concrete definitions, mechanisms, applications, comparisons, misconceptions, and edge cases.
+- Return only valid JSON.
+
+Return a JSON array of MCQ objects using the same schema as before.`;
+}
+
+function extractJsonArray(text) {
+  if (!text) return null;
+  const stripped = String(text).replace(/```json/g, '').replace(/```/g, '').trim();
+  const match = stripped.match(/\[[\s\S]*\]/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[0]);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeQuestionStem(text) {
+  return String(text || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function isGenericConceptStem(question, concept) {
+  const stem = normalizeQuestionStem(question);
+  if (!stem) return true;
+
+  const genericPatterns = [
+    /^which statement best describes/,
+    /^which statement best explains/,
+    /^which statement correctly explains/,
+    /^which of the following best describes/,
+    /^which of the following best explains/,
+    /^which of the following correctly describes/,
+    /^what is the key trade-off/,
+    /^what is the defining idea behind/,
+    /^what is the primary characteristic of/,
+    /^what is the primary goal of/,
+    /^what is the main purpose of/,
+    /^what is the core idea behind/,
+    /^which example best demonstrates/,
+    /^what is a common misconception about/,
+    /^how does .* differ from a closely related concept/,
+    /^which response shows the deepest understanding/,
+    /^which practical scenario is the best match for/,
+    /^what happens when .* is applied incorrectly/,
+    /^what prerequisite idea should/,
+    /^how would you explain .* to a new learner/,
+  ];
+
+  if (genericPatterns.some(pattern => pattern.test(stem))) return true;
+
+  return false;
+}
+
+function normalizeGeneratedQuestion(rawQuestion, { concept, defaultDifficulty = 'medium' } = {}) {
+  const question = String(rawQuestion?.question || '').trim();
+  const options = Array.isArray(rawQuestion?.options)
+    ? rawQuestion.options.slice(0, 4).map(o => String(o).trim()).filter(Boolean)
+    : [];
+
+  if (!question || options.length !== 4) return null;
+  if (isGenericConceptStem(question, concept)) return null;
+
+  const correctIndex = resolveCorrectIndex(rawQuestion);
+  const difficulty = ['easy', 'medium', 'hard'].includes(rawQuestion?.difficulty) ? rawQuestion.difficulty : defaultDifficulty;
+  const bloomLevel = BLOOM_LEVELS.includes(rawQuestion?.bloomLevel) ? rawQuestion.bloomLevel : 'understand';
+  const estimatedTime = ['30s', '60s', '90s', '120s'].includes(rawQuestion?.estimatedTime) ? rawQuestion.estimatedTime : '60s';
+  const confidence = typeof rawQuestion?.confidence === 'number' && rawQuestion.confidence >= 0 && rawQuestion.confidence <= 1
+    ? rawQuestion.confidence
+    : 0.8;
+
+  return shuffleOptions({
+    question,
+    options,
+    correctIndex,
+    explanation: String(rawQuestion?.explanation || '').trim(),
+    difficulty,
+    bloomLevel,
+    learningObjective: String(rawQuestion?.learningObjective || `Assess understanding of ${concept || 'the concept'}`).trim(),
+    estimatedTime,
+    confidence,
+    _provider: rawQuestion?._provider || rawQuestion?.provider || 'unknown',
+    _model: rawQuestion?._model || rawQuestion?.model || 'unknown',
+  });
 }
 
 function resetWarmupMetrics(totalConcepts = 0) {
@@ -243,6 +352,14 @@ async function waitForConceptCompletion(course, concept, timeoutMs = 15000) {
   return null;
 }
 
+async function fetchConceptQuestionBank(course, concept) {
+  const conceptKey = concept.toLowerCase().trim();
+  return ConceptQuestionBank.find({
+    course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') },
+    concept: { $regex: new RegExp(`^${escapeRegex(conceptKey)}$`, 'i') },
+  }).lean();
+}
+
 async function getRedis(key) {
   try {
     if (redisClientInstance && redisClientInstance.isOpen) {
@@ -333,6 +450,53 @@ async function ensureQuestionsForConcept({ course, concept, topic, moduleName, f
   const cacheKey = `concept_qb:${course}:${conceptKey}`;
   const lockKey = `concept_qb_lock:${course.toLowerCase().trim()}:${conceptKey}`;
 
+  const completeConceptQuestions = async (initialExisting = []) => {
+    let currentQuestions = Array.isArray(initialExisting) ? initialExisting : [];
+    let attempts = 0;
+    const maxAttempts = 4;
+
+    while (currentQuestions.length < TARGET_QUESTIONS_PER_CONCEPT && attempts < maxAttempts) {
+      const missingCount = TARGET_QUESTIONS_PER_CONCEPT - currentQuestions.length;
+      if (missingCount <= 0) break;
+
+      attempts += 1;
+      const llmStart = Date.now();
+      const generated = await generateConceptQuestions({
+        course,
+        concept,
+        topic,
+        moduleName,
+        targetCount: missingCount,
+      });
+      addTiming('llmGenerationMs', Date.now() - llmStart);
+      incrementProgress(attempts === 1 ? 'generationRuns' : 'topUpRuns');
+      warmupMetrics.lastDurationMs += Date.now() - llmStart;
+      warmupMetrics.generatedQuestions += generated.length;
+
+      if (generated.length === 0) {
+        break;
+      }
+
+      const saved = await saveQuestionsToBank(generated, { course, concept, topic, moduleName });
+      if (saved.length > 0) {
+        const redisStart = Date.now();
+        await setRedis(cacheKey, saved);
+        addTiming('redisUpdateMs', Date.now() - redisStart);
+      }
+
+      currentQuestions = await fetchConceptQuestionBank(course, concept);
+      if (currentQuestions.length >= TARGET_QUESTIONS_PER_CONCEPT) {
+        return currentQuestions;
+      }
+
+      if (saved.length > 0 && saved.length < generated.length) {
+        log.info('CONCEPT_QB', `Saved ${saved.length}/${generated.length} questions for ${course}/${concept}; retrying remaining ${TARGET_QUESTIONS_PER_CONCEPT - currentQuestions.length}`);
+      }
+    }
+
+    return currentQuestions;
+  };
+
   try {
     if (!forceGenerate) {
       const cacheLookupStart = Date.now();
@@ -377,36 +541,9 @@ async function ensureQuestionsForConcept({ course, concept, topic, moduleName, f
             if (warmed && warmed.length > 0) return warmed;
           } else {
             try {
-              const llmStart = Date.now();
-              const generated = await generateConceptQuestions({
-                course,
-                concept,
-                topic,
-                moduleName,
-                targetCount: missingCount,
-              });
-              addTiming('llmGenerationMs', Date.now() - llmStart);
-
-              if (generated.length > 0) {
-                incrementProgress('topUpRuns');
-                incrementProgress('generatedQuestions', generated.length);
-                const saved = await saveQuestionsToBank(generated, { course, concept, topic, moduleName });
-                const allDocs = await ConceptQuestionBank.find({
-                  course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') },
-                  concept: { $regex: new RegExp(`^${escapeRegex(conceptKey)}$`, 'i') },
-                }).lean();
-                if (allDocs.length > 0) {
-                  const redisStart = Date.now();
-                  await setRedis(cacheKey, allDocs);
-                  addTiming('redisUpdateMs', Date.now() - redisStart);
-                  return allDocs;
-                }
-                if (saved.length > 0) {
-                  const redisStart = Date.now();
-                  await setRedis(cacheKey, saved);
-                  addTiming('redisUpdateMs', Date.now() - redisStart);
-                  return saved;
-                }
+              const filled = await completeConceptQuestions(existing);
+              if (filled.length > 0) {
+                return filled;
               }
             } finally {
               await releaseGenerationLock(lockKey, lock.token);
@@ -425,48 +562,21 @@ async function ensureQuestionsForConcept({ course, concept, topic, moduleName, f
     } else {
       try {
         log.info('CONCEPT_QB', `Generating questions for ${course}/${concept}`);
-        const llmStart = Date.now();
-        const generated = await generateConceptQuestions({
-          course,
-          concept,
-          topic,
-          moduleName,
-          targetCount: TARGET_QUESTIONS_PER_CONCEPT,
-        });
-        addTiming('llmGenerationMs', Date.now() - llmStart);
-        incrementProgress('generationRuns');
-        warmupMetrics.lastDurationMs += Date.now() - llmStart;
-        warmupMetrics.generatedQuestions += generated.length;
-
-        if (generated.length > 0) {
-          const saved = await saveQuestionsToBank(generated, { course, concept, topic, moduleName });
-          if (saved.length > 0) {
-            const redisStart = Date.now();
-            await setRedis(cacheKey, saved);
-            addTiming('redisUpdateMs', Date.now() - redisStart);
-          }
-          if (saved.length >= TARGET_QUESTIONS_PER_CONCEPT) {
-            incrementProgress('generatedConcepts');
-            return saved;
-          }
-          const refreshed = await ConceptQuestionBank.find({
-            course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') },
-            concept: { $regex: new RegExp(`^${escapeRegex(conceptKey)}$`, 'i') },
-          }).lean();
-          if (refreshed.length > 0) {
-            return refreshed;
-          }
-          return saved.length > 0 ? saved : generated;
+        const filled = await completeConceptQuestions();
+        if (filled.length >= TARGET_QUESTIONS_PER_CONCEPT) {
+          incrementProgress('generatedConcepts');
+          return filled;
+        }
+        if (filled.length > 0) {
+          incrementProgress('partialConcepts');
+          return filled;
         }
       } finally {
         await releaseGenerationLock(lockKey, lock.token);
       }
     }
 
-    const existing = await ConceptQuestionBank.find({
-      course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') },
-      concept: { $regex: new RegExp(`^${escapeRegex(conceptKey)}$`, 'i') },
-    }).lean();
+    const existing = await fetchConceptQuestionBank(course, concept);
     if (existing.length >= TARGET_QUESTIONS_PER_CONCEPT) {
       incrementProgress('reusedConcepts');
     } else if (existing.length > 0) {
@@ -483,98 +593,64 @@ async function ensureQuestionsForConcept({ course, concept, topic, moduleName, f
   }
 }
 
-function generateFallbackQuestions({ course, concept, topic, moduleName, count }) {
+async function generateFallbackQuestions({ course, concept, topic, moduleName, count, previousQuestions = [] }) {
   const name = normalizeConceptName(concept || topic || course);
-  const fallbacks = [];
+  const prompt = buildConceptRepairPrompt({
+    course,
+    concept: name,
+    topic,
+    moduleName,
+    count,
+    previousQuestions,
+  });
 
-  const templates = [
-    { q: `What is the defining idea behind ${name}?`, e: `A strong answer should describe the actual concept of ${name}, not a generic topic description or course-level summary.`, lo: `Define ${name} precisely`, d: 'easy', bl: 'remember' },
-    { q: `Which statement best explains how ${name} works?`, e: `This checks conceptual understanding of the mechanism behind ${name} and distinguishes it from superficial keyword matching.`, lo: `Explain how ${name} works`, d: 'easy', bl: 'understand' },
-    { q: `Which example best demonstrates ${name} in action?`, e: `A good example should map directly to the behavior or use of ${name} in a realistic scenario.`, lo: `Recognize examples of ${name}`, d: 'medium', bl: 'apply' },
-    { q: `What is a common misconception about ${name}?`, e: `Misconceptions often come from confusing ${name} with a related idea, so this checks deeper understanding.`, lo: `Identify misconceptions about ${name}`, d: 'medium', bl: 'analyze' },
-    { q: `How does ${name} differ from a closely related concept?`, e: `Comparing ${name} to nearby ideas helps show whether the learner truly understands its boundaries and purpose.`, lo: `Differentiate ${name} from related ideas`, d: 'hard', bl: 'evaluate' },
-    { q: `What happens when ${name} is applied incorrectly?`, e: `Incorrect application usually exposes whether the learner understands the constraints and assumptions behind ${name}.`, lo: `Analyze incorrect use of ${name}`, d: 'medium', bl: 'analyze' },
-    { q: `What prerequisite idea should a learner know before studying ${name}?`, e: `${name} usually builds on a smaller set of foundational ideas, and this question checks that dependency chain.`, lo: `Identify prerequisites for ${name}`, d: 'easy', bl: 'remember' },
-    { q: `How would you use ${name} to solve a practical problem?`, e: `This tests whether the learner can transfer the concept of ${name} into a concrete applied scenario.`, lo: `Apply ${name} to a problem`, d: 'medium', bl: 'apply' },
-    { q: `Which edge case is most important when working with ${name}?`, e: `Edge cases reveal whether the learner understands the limits and failure modes of ${name}.`, lo: `Recognize edge cases for ${name}`, d: 'hard', bl: 'analyze' },
-    { q: `What trade-off is most associated with using ${name}?`, e: `Concepts often come with trade-offs, and this checks whether the learner can identify the practical cost of using ${name}.`, lo: `Evaluate trade-offs in ${name}`, d: 'hard', bl: 'evaluate' },
-    { q: `Which representation best matches ${name}?`, e: `A correct representation shows that the learner understands the structure and semantics of ${name}.`, lo: `Represent ${name} accurately`, d: 'medium', bl: 'understand' },
-    { q: `What diagnostic step would help debug an implementation of ${name}?`, e: `This checks whether the learner can reason about failures specific to ${name}.`, lo: `Debug ${name} implementations`, d: 'medium', bl: 'apply' },
-    { q: `What change would improve the performance of ${name}?`, e: `The learner should identify a change that directly improves how ${name} behaves under load or scale.`, lo: `Optimize ${name}`, d: 'hard', bl: 'create' },
-    { q: `Which invariant or rule must remain true for ${name}?`, e: `An invariant is a property that should always hold, and good understanding of ${name} includes knowing that rule.`, lo: `Identify invariants in ${name}`, d: 'hard', bl: 'evaluate' },
-    { q: `How would you explain ${name} to a new learner?`, e: `A strong answer shows that the learner can simplify ${name} without losing accuracy.`, lo: `Explain ${name} clearly`, d: 'easy', bl: 'understand' },
-    { q: `Which real-world problem is a good fit for ${name}?`, e: `This asks the learner to connect ${name} to a specific practical use case.`, lo: `Apply ${name} to real-world cases`, d: 'easy', bl: 'apply' },
-    { q: `What evidence shows that a solution truly uses ${name} correctly?`, e: `The answer should point to observable behavior that proves the concept is implemented properly.`, lo: `Validate correct use of ${name}`, d: 'medium', bl: 'analyze' },
-    { q: `How would you compare two variants of ${name}?`, e: `Comparing variants shows whether the learner can reason about design choices within the concept of ${name}.`, lo: `Compare variants of ${name}`, d: 'hard', bl: 'evaluate' },
-    { q: `What is a good way to test ${name}?`, e: `Testing strategy should be tailored to the specific behavior of ${name}.`, lo: `Design tests for ${name}`, d: 'hard', bl: 'create' },
-    { q: `What misconception would most likely cause a wrong answer about ${name}?`, e: `Good learners can spot the specific misunderstanding that often appears around ${name}.`, lo: `Detect misconceptions about ${name}`, d: 'medium', bl: 'analyze' },
-  ];
-
-  for (let i = 0; i < count; i++) {
-    const t = templates[i % templates.length];
-    fallbacks.push({
-      question: t.q,
-      options: generateFallbackOptions(name),
-      correctIndex: 0,
-      explanation: t.e,
-      difficulty: t.d,
-      bloomLevel: t.bl,
-      learningObjective: t.lo,
-      estimatedTime: `${[30, 60, 60, 90, 120][i % 5]}s`,
-      confidence: 0.8,
-      _provider: 'fallback',
-      _model: 'template',
+  try {
+    const providerHealth = require('./providerHealthCache');
+    const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.includes('groq')
+      ? 'groq'
+      : (healthyProviders[0] || 'groq');
+    const result = await callWithFallback({
+      userQuery: prompt,
+      systemPrompt: `${CONCEPT_QUESTION_SYSTEM_PROMPT}\n\nReturn ONLY valid JSON array of MCQ objects with all required fields.`,
+      chatHistory: [],
+      preferredProvider,
+      preferLocalFirst: false,
+      options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.25, maxOutputTokens: 4096, timeout: 30000 },
     });
-  }
 
-  return fallbacks.map(q => shuffleOptions(q));
-}
+    const parsed = extractJsonArray(result?.text || '');
+    if (!Array.isArray(parsed)) return [];
 
-function generateFallbackOptions(concept) {
-  const wrongAnswers = [
-    `It only applies to unrelated topics and never to ${concept}`,
-    `It is a generic placeholder that works for any subject`,
-    `It replaces all other approaches without any trade-offs`,
-    `It is only relevant for memorization and not for understanding`,
-    `It can be implemented without knowing the underlying concept`,
-    `It has no practical use in solving real problems`,
-    `It is correct only when the input is already solved`,
-    `It does not require any reasoning or analysis`,
-  ];
-  const shuffledWrongs = [...wrongAnswers].sort(() => Math.random() - 0.5);
-  const correct = `It directly explains how ${concept} works and how to use it correctly in practice.`;
-  const distractors = shuffledWrongs.slice(0, 3);
-  const allOptions = [correct, ...distractors];
-  for (let i = allOptions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+    const normalized = parsed
+      .map(q => normalizeGeneratedQuestion(q, { concept: name }))
+      .filter(Boolean);
+
+    const unique = [];
+    const seen = new Set(previousQuestions.map(q => normalizeQuestionStem(q)));
+    for (const q of normalized) {
+      const key = normalizeQuestionStem(q.question);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(q);
+      if (unique.length >= count) break;
+    }
+    return unique;
+  } catch (e) {
+    log.warn('CONCEPT_QB', `AI fallback generation failed for ${name}: ${e.message}`);
+    return [];
   }
-  return allOptions;
 }
 
 async function generateConceptQuestions({ course, concept, topic, moduleName, targetCount = 10 }) {
   const name = concept || topic || course;
   const initialTarget = Math.max(1, Number(targetCount) || 10);
   const allQuestions = [];
-  const bloomDistribution = [
-    { level: 'remember', count: 4 },
-    { level: 'understand', count: 6 },
-    { level: 'apply', count: 8 },
-    { level: 'analyze', count: 6 },
-    { level: 'evaluate', count: 4 },
-    { level: 'create', count: 2 },
-  ];
-
-  const difficultyDistribution = [
-    { level: 'easy', count: 10 },
-    { level: 'medium', count: 12 },
-    { level: 'hard', count: 8 },
-  ];
 
   const generationStart = Date.now();
-  const GENERATION_TIMEOUT = 10_000;
+  const GENERATION_TIMEOUT = 180_000;
 
-  for (let batch = 0; batch < Math.ceil(initialTarget / 10); batch++) {
+  for (let batch = 0; allQuestions.length < initialTarget && batch < 6; batch++) {
     if (Date.now() - generationStart > GENERATION_TIMEOUT) {
       log.info('CONCEPT_QB', `Generation timeout reached after ${Date.now() - generationStart}ms — stopping batch loop`);
       break;
@@ -582,15 +658,6 @@ async function generateConceptQuestions({ course, concept, topic, moduleName, ta
     const remaining = initialTarget - allQuestions.length;
     if (remaining <= 0) break;
     const count = Math.min(10, remaining);
-
-    const bloomSample = bloomDistribution.map(b => ({
-      ...b,
-      count: Math.max(1, Math.round(b.count * (count / TARGET_QUESTIONS_PER_CONCEPT))),
-    }));
-    const difficultySample = difficultyDistribution.map(d => ({
-      ...d,
-      count: Math.max(1, Math.round(d.count * (count / TARGET_QUESTIONS_PER_CONCEPT))),
-    }));
 
     const prompt = buildConceptQuestionPrompt({
       course,
@@ -602,14 +669,17 @@ async function generateConceptQuestions({ course, concept, topic, moduleName, ta
 
     try {
       const providerHealth = require('./providerHealthCache');
-      const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
-      const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'sglang';
+      const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+      const preferredProvider = healthyProviders.includes('groq')
+        ? 'groq'
+        : (healthyProviders[0] || 'groq');
       const result = await callWithFallback({
         userQuery: prompt,
         systemPrompt: `${CONCEPT_QUESTION_SYSTEM_PROMPT}\n\nReturn ONLY valid JSON array of MCQ objects with all required fields.`,
         chatHistory: [],
         preferredProvider,
-        options: { temperature: 0.7 + batch * 0.05, maxOutputTokens: 8192 },
+        preferLocalFirst: false,
+        options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.45 + batch * 0.05, maxOutputTokens: 4096, timeout: 30000 },
       });
 
       const text = result?.text || '';
@@ -624,23 +694,21 @@ async function generateConceptQuestions({ course, concept, topic, moduleName, ta
 
         if (Array.isArray(parsed)) {
           const normalized = parsed
-            .map(q => ({
-              question: q.question || '',
-              options: (q.options || []).slice(0, 4).map(o => String(o).replace(/^[A-Da-d][.):\-]\s*/, '')),
-              correctIndex: resolveCorrectIndex(q),
-              explanation: q.explanation || '',
-              difficulty: ['easy', 'medium', 'hard'].includes(q.difficulty) ? q.difficulty : 'medium',
-              bloomLevel: BLOOM_LEVELS.includes(q.bloomLevel) ? q.bloomLevel : 'understand',
-              learningObjective: q.learningObjective || `Assess understanding of ${name}`,
-              estimatedTime: ['30s', '60s', '90s', '120s'].includes(q.estimatedTime) ? q.estimatedTime : '60s',
-              confidence: typeof q.confidence === 'number' && q.confidence >= 0 && q.confidence <= 1 ? q.confidence : 0.8,
+            .map(q => normalizeGeneratedQuestion({
+              ...q,
               _provider: result?.provider || 'unknown',
               _model: result?.model || 'unknown',
-            }))
-            .filter(q => q.question && q.options.length === 4 && q.options.every(o => o))
-            .map(q => shuffleOptions(q));
+            }, { concept: name }))
+            .filter(Boolean);
 
-          allQuestions.push(...normalized);
+          const existingStems = new Set(allQuestions.map(q => normalizeQuestionStem(q.question)));
+          for (const q of normalized) {
+            const stem = normalizeQuestionStem(q.question);
+            if (!stem || existingStems.has(stem)) continue;
+            existingStems.add(stem);
+            allQuestions.push(q);
+            if (allQuestions.length >= initialTarget) break;
+          }
         }
       }
     } catch (e) {
@@ -648,24 +716,40 @@ async function generateConceptQuestions({ course, concept, topic, moduleName, ta
     }
   }
 
-  // Fallback: if LLM returned no questions, use template questions
   if (allQuestions.length === 0) {
-    log.info('CONCEPT_QB', `LLM providers exhausted — using template fallback for ${name}`);
-    const templateQuestions = generateFallbackQuestions({ course, concept, topic, moduleName, count: initialTarget });
-    allQuestions.push(...templateQuestions);
+    log.info('CONCEPT_QB', `LLM providers exhausted — retrying AI repair path for ${name}`);
+    const repairedQuestions = await generateFallbackQuestions({
+      course,
+      concept: name,
+      topic,
+      moduleName,
+      count: initialTarget,
+    });
+    allQuestions.push(...repairedQuestions);
+  }
+
+  if (allQuestions.length < initialTarget) {
+    const repairNeeded = initialTarget - allQuestions.length;
+    const repairedQuestions = await generateFallbackQuestions({
+      course,
+      concept: name,
+      topic,
+      moduleName,
+      count: repairNeeded,
+      previousQuestions: allQuestions.map(q => q.question),
+    });
+    const existingStems = new Set(allQuestions.map(q => normalizeQuestionStem(q.question)));
+    for (const q of repairedQuestions) {
+      const stem = normalizeQuestionStem(q.question);
+      if (!stem || existingStems.has(stem)) continue;
+      existingStems.add(stem);
+      allQuestions.push(q);
+      if (allQuestions.length >= initialTarget) break;
+    }
   }
 
   const distribution = validateEvenDistribution(allQuestions);
   log.info('CONCEPT_QB', `Generated ${allQuestions.length} questions for ${name} in ${Date.now() - generationStart}ms. Distribution balanced: ${distribution.balanced}`);
-
-  // Fire-and-forget: generate remaining questions in background
-  const existing = await ConceptQuestionBank.find({
-    course: { $regex: new RegExp(`^${escapeRegex(course)}$`, 'i') },
-    concept: { $regex: new RegExp(`^${escapeRegex(concept)}$`, 'i') },
-  }).lean();
-  if (existing.length < TARGET_QUESTIONS_PER_CONCEPT) {
-    generateRemainingQuestions({ course, concept, topic, moduleName, allQuestions, existing });
-  }
 
   return allQuestions;
 }
@@ -698,16 +782,19 @@ async function generateRemainingQuestions({ course, concept, topic, moduleName, 
     });
 
     try {
-      const providerHealth = require('./providerHealthCache');
-      const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
-      const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'sglang';
-      const result = await callWithFallback({
-        userQuery: prompt,
-        systemPrompt: `${CONCEPT_QUESTION_SYSTEM_PROMPT}\n\nReturn ONLY valid JSON array of MCQ objects.`,
-        chatHistory: [],
-        preferredProvider,
-        options: { temperature: 0.8, maxOutputTokens: 8192 },
-      });
+    const providerHealth = require('./providerHealthCache');
+    const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.includes('groq')
+      ? 'groq'
+      : (healthyProviders[0] || 'groq');
+    const result = await callWithFallback({
+      userQuery: prompt,
+      systemPrompt: `${CONCEPT_QUESTION_SYSTEM_PROMPT}\n\nReturn ONLY valid JSON array of MCQ objects.`,
+      chatHistory: [],
+      preferredProvider,
+      preferLocalFirst: false,
+      options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.5, maxOutputTokens: 4096, timeout: 30000 },
+    });
 
       const text = result?.text || '';
       const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -716,21 +803,13 @@ async function generateRemainingQuestions({ course, concept, topic, moduleName, 
         try { parsed = JSON.parse(jsonMatch[0]); } catch { continue; }
         if (Array.isArray(parsed)) {
           const normalized = parsed
-            .map(q => ({
-              question: q.question || '',
-              options: (q.options || []).slice(0, 4).map(o => String(o).replace(/^[A-Da-d][.):\-]\s*/, '')),
-              correctIndex: resolveCorrectIndex(q),
-              explanation: q.explanation || '',
-              difficulty: ['easy', 'medium', 'hard'].includes(q.difficulty) ? q.difficulty : 'medium',
-              bloomLevel: BLOOM_LEVELS.includes(q.bloomLevel) ? q.bloomLevel : 'understand',
-              learningObjective: q.learningObjective || `Assess understanding of ${name}`,
-              estimatedTime: ['30s', '60s', '90s', '120s'].includes(q.estimatedTime) ? q.estimatedTime : '60s',
-              confidence: typeof q.confidence === 'number' && q.confidence >= 0 && q.confidence <= 1 ? q.confidence : 0.8,
+            .map(q => normalizeGeneratedQuestion({
+              ...q,
               _provider: result?.provider || 'unknown',
               _model: result?.model || 'unknown',
-            }))
-            .filter(q => q.question && q.options.length === 4 && q.options.every(o => o) && !existingTexts.has(q.question.toLowerCase().trim()))
-            .map(q => shuffleOptions(q));
+            }, { concept: name }))
+            .filter(Boolean)
+            .filter(q => !existingTexts.has(normalizeQuestionStem(q.question)));
 
           for (const question of normalized) {
             try {

@@ -111,13 +111,17 @@ Return valid JSON with: score (0-10), blooms, strengths[], weaknesses[], misconc
 
   try {
     const providerHealth = require('./providerHealthCache');
-    const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
-    const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'ollama';
+    const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.includes('groq')
+      ? 'groq'
+      : (healthyProviders[0] || 'groq');
     const evalPromise = callWithFallback({
       userQuery: userPrompt,
       systemPrompt: EVALUATION_SYSTEM_PROMPT,
       chatHistory: [],
       preferredProvider,
+      preferLocalFirst: false,
+      options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.2, maxOutputTokens: 512 },
     });
 
     const timeoutPromise = new Promise((_, reject) =>

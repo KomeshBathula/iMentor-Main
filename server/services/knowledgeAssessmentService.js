@@ -5,6 +5,7 @@ const StudentKnowledgeState = require('../models/StudentKnowledgeState');
 const QuestionBank = require('../models/QuestionBank');
 const log = require('../utils/logger');
 const { runQuery: neo4jRun } = require('../config/neo4j');
+const { resolveCourseTitle } = require('./courseIdentityService');
 
 async function fetchCurriculumConcepts(course) {
   try {
@@ -63,12 +64,13 @@ async function reuseOrGenerateQuestions({ course, module, topic, count = 5 }) {
 }
 
 async function generateDiagnosticAssessment({ course, module, topic, userId }) {
+  const courseTitle = resolveCourseTitle(course || topic || '', course || topic || '');
   // 1. Try Question Bank reuse
   const reused = await reuseOrGenerateQuestions({ course, module, topic });
   if (reused) {
     const now = new Date().toISOString();
     return {
-      questions: reused, course, topic,
+      questions: reused, course, topic, courseTitle,
       source: 'question_bank',
       generatedBy: 'database',
       model: 'question_bank',
@@ -96,7 +98,7 @@ async function generateDiagnosticAssessment({ course, module, topic, userId }) {
       }));
       const now = new Date().toISOString();
       return {
-        questions, course, topic,
+        questions, course, topic, courseTitle,
         source: result._source || 'generated',
         generatedBy: result.generatedBy || 'pipeline',
         model: result.model || 'unknown',
@@ -112,10 +114,11 @@ async function generateDiagnosticAssessment({ course, module, topic, userId }) {
   // 3. Fetch curriculum concepts for context-aware generation
   const concepts = await fetchCurriculumConcepts(course || topic || '');
   const conceptList = concepts.length > 0 ? concepts.slice(0, 15).join(', ') : (topic || course || 'general');
+  const subjectTitle = courseTitle || topic || course || 'General';
 
   const prompt = `You are an expert educational diagnostician. Generate a diagnostic assessment to evaluate a learner's current knowledge.
 
-Course: ${course || 'General'}
+Course: ${subjectTitle}
 ${module ? `Module: ${module}` : ''}
 ${topic ? `Topic: ${topic}` : ''}
 Key concepts to cover: ${conceptList}
@@ -153,13 +156,17 @@ Return valid JSON only:
 
   try {
     const providerHealth = require('./providerHealthCache');
-    const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
-    const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'ollama';
+    const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.includes('groq')
+      ? 'groq'
+      : (healthyProviders[0] || 'groq');
     const responseText = await callWithFallback({
       userQuery: prompt,
       systemPrompt: 'You are an educational assessment generator. Respond with valid JSON only.',
       chatHistory: [],
       preferredProvider,
+      preferLocalFirst: false,
+      options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.35, maxOutputTokens: 4096, timeout: 30000 },
     });
 
     const raw = typeof responseText === 'string' ? responseText : (responseText.text || JSON.stringify(responseText));
@@ -189,7 +196,7 @@ Return valid JSON only:
     const model = typeof responseText === 'object' && responseText?.model ? responseText.model : 'unknown';
     const now = new Date().toISOString();
     return {
-      questions, course, topic,
+      questions, course, topic, courseTitle: subjectTitle,
       source: provider,
       generatedBy: provider,
       model,
@@ -199,11 +206,11 @@ Return valid JSON only:
     };
   } catch (error) {
     log.error('KNOWLEDGE_ASSESS', `Diagnostic generation failed: ${error.message}. Using curriculum-based fallback.`);
-    return generateOfflineAssessment({ course, topic, concepts });
+    return generateOfflineAssessment({ course, topic, concepts, courseTitle: subjectTitle });
   }
 }
 
-function generateOfflineAssessment({ course, topic, concepts = [] }) {
+function generateOfflineAssessment({ course, topic, concepts = [], courseTitle = '' }) {
   const allConcepts = concepts.length > 0 ? concepts : ['fundamental principles', 'core concepts', 'practical applications', 'system architecture', 'design trade-offs'];
 
   const questionTemplates = [
@@ -264,7 +271,7 @@ function generateOfflineAssessment({ course, topic, concepts = [] }) {
 
   const now = new Date().toISOString();
   return {
-    questions, course, topic,
+    questions, course, topic, courseTitle: courseTitle || topic || course || 'General',
     source: 'curriculum_fallback',
     generatedBy: 'template',
     model: 'fallback',
@@ -279,6 +286,7 @@ function escapeRegex(str) {
 }
 
 async function evaluateAndClassify({ responses, topic, course, userId, weakAreas: userWeakAreas, strengths: userStrengths }) {
+  const courseTitle = resolveCourseTitle(course || topic || '', course || topic || '');
   // Use agent-based evaluation combining LLM + keyword + basic evaluation
   // with Bloom/difficulty weighting and confidence scoring
   const agentResult = await evaluateAssessment({
@@ -305,6 +313,7 @@ async function evaluateAndClassify({ responses, topic, course, userId, weakAreas
     weakAreas,
     topic: topic || course,
     course,
+    courseTitle,
   };
 
   if (userId) {

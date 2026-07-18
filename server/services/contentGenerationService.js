@@ -14,6 +14,7 @@ const { validateLecture } = require('./lectureQualityValidator');
 const { buildTemplateLecture } = require('./lectureTemplateBuilder');
 const { isTemplateQuality } = require('./lectureQualityDetector');
 const { upgradeLecture } = require('./enhancedLectureService');
+const { resolveCourseTitle } = require('./courseIdentityService');
 
 const CACHE_TTL = 7 * 24 * 3600;
 const LECTURES_DIR = path.join(__dirname, '..', '..', 'lectures');
@@ -644,10 +645,8 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
     log.warn('PIPELINE', `Concept question bank timed out or failed, falling back: ${e.message}`);
   }
 
-  // If concept bank timed out via LLM chain, skip the redundant LLM call in step 4
-  // and go directly to cache sources → template fallback
   if (conceptBankTimedOut) {
-    logPipeline('FAST FAILOVER', `Concept bank timed out — skipping LLM chain for ${topic}/${conceptName}`);
+    logPipeline('FAST FAILOVER', `Concept bank timed out — continuing with direct AI generation for ${topic}/${conceptName}`);
   }
 
   // 2. Redis cache (only used when concept bank is unavailable)
@@ -686,16 +685,6 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
   }
 
   // 4. Generate via LLM (with shuffle + dup detection)
-  // Skip LLM if concept bank already timed out — avoid redundant slow fallback
-  if (conceptBankTimedOut) {
-    logPipeline('SKIP LLM', `Concept bank timed out — using template fallback directly for ${topic}/${conceptName}`);
-    const fallback = generateFallbackQuestions(topic, conceptName, difficulty).map(q => shuffleOptions(q));
-    validateAnswerDistribution(fallback);
-    await setRedis(cacheKey, fallback);
-    const meta = buildMetadata('template', 'fallback');
-    return { questions: fallback, _source: 'template_fallback', cached: false, ...meta };
-  }
-
   logPipeline('GENERATING', `Level questions for ${topic}/${conceptName}`);
   const generated = await generateLevelQuestions(topic, levelId, conceptName, difficulty);
   if (generated.length > 0) {
@@ -745,13 +734,18 @@ async function generateOrRetrieveLevelQuestions(topic, levelId, levelName, diffi
     return { questions: shuffled, _source: provider, ...meta };
   }
 
-  // 5. Template fallback questions
-  logPipeline('TEMPLATE FALLBACK', `Level questions for ${topic}/${conceptName}`);
-  const fallback = generateFallbackQuestions(topic, conceptName, difficulty).map(q => shuffleOptions(q));
-  validateAnswerDistribution(fallback);
-  await setRedis(cacheKey, fallback);
-  const meta = buildMetadata('template', 'fallback');
-  return { questions: fallback, _source: 'template_fallback', cached: false, ...meta };
+  // 5. Retry with a narrower concept-specific AI prompt instead of templates.
+  logPipeline('AI RETRY', `Level questions for ${topic}/${conceptName}`);
+  const retry = await generateAiLevelFallbackQuestions(topic, conceptName, difficulty);
+  if (retry.length > 0) {
+    validateAnswerDistribution(retry);
+    await setRedis(cacheKey, retry);
+    const provider = retry[0]?._provider || 'sglang';
+    const model = retry[0]?._model || 'unknown';
+    const meta = buildMetadata(provider, model);
+    return { questions: retry, _source: provider, cached: false, ...meta };
+  }
+  return { questions: [], _source: 'ai_retry_failed', cached: false, ...buildMetadata('unknown', 'unknown') };
 }
 
 async function generateLevelQuestions(topic, levelId, levelName, difficulty) {
@@ -799,12 +793,18 @@ EVERY OBJECT MUST HAVE ALL 9 FIELDS. Valid JSON array only, no markdown.`;
 
   try {
     const startTime = Date.now();
+    const providerHealth = require('./providerHealthCache');
+    const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.includes('groq')
+      ? 'groq'
+      : (healthyProviders[0] || 'groq');
     const result = await callWithFallback({
       userQuery: prompt,
       systemPrompt: 'Return ONLY valid JSON array of 5 MCQ objects with all required fields.',
       chatHistory: [],
-      preferredProvider: 'sglang',
-      options: { temperature: 0.7, maxOutputTokens: 4096, timeout: 60000 },
+      preferredProvider,
+      preferLocalFirst: false,
+      options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.5, maxOutputTokens: 4096, timeout: 30000 },
     });
     const provider = result?.provider || 'unknown';
     logPipeline(`GENERATED USING ${provider.toUpperCase()}`, `Questions in ${Date.now() - startTime}ms`);
@@ -834,6 +834,140 @@ EVERY OBJECT MUST HAVE ALL 9 FIELDS. Valid JSON array only, no markdown.`;
     log.warn('PIPELINE', `Question generation failed: ${e.message}`);
   }
   return [];
+}
+
+async function generateAiLevelFallbackQuestions(topic, levelName, difficulty) {
+  const concept = levelName || topic;
+  const courseTitle = resolveCourseTitle(topic, topic);
+  const prompt = `You are generating a small set of concept-specific MCQ questions for a single learning concept.
+
+Course context: "${courseTitle || topic}"
+Concept: "${concept}"
+Difficulty: ${difficulty || 'medium'}
+
+Rules:
+- Generate exactly 5 NEW multiple-choice questions.
+- Each question must test the actual concept "${concept}".
+- Do not use generic placeholder stems.
+- Do not reuse the following generic forms: "Which statement best describes...", "What is the key trade-off...", "Which response shows...", "What is the defining idea behind...".
+- Make the questions concrete, concept-aware, and reusable.
+- Return detailed explanations and 4 options per question.
+
+Return ONLY valid JSON array with objects:
+{
+  "question": "string",
+  "options": ["string", "string", "string", "string"],
+  "correctIndex": 0,
+  "explanation": "string"
+}`;
+
+  try {
+      const providerHealth = require('./providerHealthCache');
+      const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+      const preferredProvider = healthyProviders.includes('groq')
+        ? 'groq'
+        : (healthyProviders[0] || 'groq');
+      const result = await callWithFallback({
+        userQuery: prompt,
+        systemPrompt: 'Return ONLY valid JSON array of 5 MCQ objects with a single correct answer.',
+        chatHistory: [],
+        preferredProvider,
+        preferLocalFirst: false,
+        options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.35, maxOutputTokens: 4096, timeout: 30000 },
+      });
+
+    const text = result?.text || '';
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      return [];
+    }
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.map(q => ({
+      question: q.question || '',
+      options: (q.options || []).slice(0, 4).map(o => String(o).replace(/^[A-Da-d][.):\-]\s*/, '')),
+      correctIndex: resolveCorrectIndex(q),
+      explanation: q.explanation || '',
+      difficulty: ['easy', 'medium', 'hard'].includes(q.difficulty) ? q.difficulty : difficulty || 'medium',
+      bloomLevel: ['remember', 'understand', 'apply', 'analyze', 'evaluate', 'create'].includes(q.bloomLevel) ? q.bloomLevel : 'understand',
+      learningObjective: q.learningObjective || `Assess understanding of ${concept}`,
+      estimatedTime: ['30s', '60s', '90s', '120s'].includes(q.estimatedTime) ? q.estimatedTime : '60s',
+      confidence: typeof q.confidence === 'number' && q.confidence >= 0 && q.confidence <= 1 ? q.confidence : 0.8,
+      _provider: result?.provider || 'unknown',
+      _model: result?.model || 'unknown',
+    })).filter(q => q.question && q.options.length === 4 && q.options.every(Boolean));
+  } catch (e) {
+    log.warn('PIPELINE', `AI level fallback failed for ${concept}: ${e.message}`);
+    return [];
+  }
+}
+
+async function generateAiAssessmentFallbackQuestions(courseName, topic) {
+  const courseTitle = resolveCourseTitle(courseName, courseName);
+  const prompt = `You are creating a diagnostic assessment for "${topic}" within the course "${courseTitle || courseName}".
+
+Generate exactly 5 multiple-choice questions that test the actual subject matter and not generic templates.
+
+Rules:
+- Questions must be concept-aware and concrete.
+- Cover different Bloom levels across recall, understanding, application, analysis, and evaluation.
+- Do not reference course codes in the stem.
+- Do not reuse template language such as "Which statement best describes..." or "What is the key trade-off...".
+- Provide 4 options, a correctIndex, and a detailed explanation for each question.
+
+Return ONLY valid JSON array.`;
+
+  try {
+      const providerHealth = require('./providerHealthCache');
+      const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+      const preferredProvider = healthyProviders.includes('groq')
+        ? 'groq'
+        : (healthyProviders[0] || 'groq');
+      const result = await callWithFallback({
+        userQuery: prompt,
+        systemPrompt: 'Return ONLY valid JSON array of 5 concept-aware MCQ objects.',
+        chatHistory: [],
+        preferredProvider,
+        preferLocalFirst: false,
+        options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.35, maxOutputTokens: 4096, timeout: 30000 },
+      });
+
+    const text = result?.text || '';
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      return [];
+    }
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.map(q => ({
+      question: q.question || '',
+      options: (q.options || []).slice(0, 4).map(o => String(o).replace(/^[A-Da-d][.):\-]\s*/, '')),
+      correctIndex: resolveCorrectIndex(q),
+      explanation: q.explanation || '',
+      difficulty: ['easy', 'medium', 'hard'].includes(q.difficulty) ? q.difficulty : 'medium',
+      bloomLevel: ['remember', 'understand', 'apply', 'analyze', 'evaluate', 'create'].includes(q.bloomLevel) ? q.bloomLevel : 'understand',
+      learningObjective: q.learningObjective || `Assess understanding of ${topic}`,
+      estimatedTime: ['30s', '60s', '90s', '120s'].includes(q.estimatedTime) ? q.estimatedTime : '60s',
+      confidence: typeof q.confidence === 'number' && q.confidence >= 0 && q.confidence <= 1 ? q.confidence : 0.8,
+      _provider: result?.provider || 'unknown',
+      _model: result?.model || 'unknown',
+    })).filter(q => q.question && q.options.length === 4 && q.options.every(Boolean));
+  } catch (e) {
+    log.warn('PIPELINE', `AI assessment fallback failed for ${courseName}/${topic}: ${e.message}`);
+    return [];
+  }
 }
 
 function generateFallbackQuestions(topic, levelName, difficulty) {
@@ -967,6 +1101,7 @@ function simpleMarkdownToHtml(md) {
 
 async function generateOrRetrieveAssessment(courseName, topic, userId) {
   const cacheKey = `assessment:${courseName}:${topic}`;
+  const courseTitle = resolveCourseTitle(courseName, courseName);
   let conceptBankTimedOut = false;
 
   // Get seen questions for replay protection
@@ -1017,9 +1152,9 @@ async function generateOrRetrieveAssessment(courseName, topic, userId) {
     log.warn('PIPELINE', `Concept question bank timed out or failed, falling back: ${e.message}`);
   }
 
-  // If concept bank timed out via LLM chain, skip the redundant LLM call and go directly to cache sources → template fallback
+  // If concept bank timed out via LLM chain, continue with the direct AI generation path.
   if (conceptBankTimedOut) {
-    logPipeline('FAST FAILOVER', `Concept bank timed out — skipping LLM chain for ${courseName}/${topic}`);
+    logPipeline('FAST FAILOVER', `Concept bank timed out — continuing with direct AI generation for ${courseName}/${topic}`);
   }
 
   // 2. Redis cache (only used when concept bank is unavailable)
@@ -1036,18 +1171,8 @@ async function generateOrRetrieveAssessment(courseName, topic, userId) {
   }
 
   // 4. Generate via LLM (with shuffle + dup detection)
-  // Skip LLM if concept bank already timed out — avoid redundant slow fallback
-  if (conceptBankTimedOut) {
-    logPipeline('SKIP LLM', `Concept bank timed out — using template fallback directly for ${courseName}/${topic}`);
-    const fallback = generateFallbackQuestions(courseName, topic, 'medium');
-    const meta = buildMetadata('template', 'fallback');
-    const data = { course: courseName, topic, questions: fallback, ...meta, createdAt: new Date() };
-    await setRedis(cacheKey, data);
-    return { ...data, _source: 'template_fallback', cached: false, ...meta };
-  }
-
   logPipeline('GENERATING', `Assessment for ${courseName}/${topic}`);
-  const prompt = `You are creating a diagnostic assessment for "${topic}" within the course "${courseName}".
+  const prompt = `You are creating a diagnostic assessment for "${topic}" within the course "${courseTitle || courseName}".
 
 Generate 5 multiple-choice questions that assess actual knowledge of the subject matter — NOT course codes or topic names.
 
@@ -1070,12 +1195,18 @@ Return JSON array with objects:
 Valid JSON only.`;
 
   try {
+    const providerHealth = require('./providerHealthCache');
+    const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.includes('groq')
+      ? 'groq'
+      : (healthyProviders[0] || 'groq');
     const result = await callWithFallback({
       userQuery: prompt,
       systemPrompt: 'Return ONLY valid JSON array of 5 MCQ objects.',
       chatHistory: [],
-      preferredProvider: 'sglang',
-      options: { temperature: 0.7, maxOutputTokens: 4096, timeout: 60000 },
+      preferredProvider,
+      preferLocalFirst: false,
+      options: { temperature: 0.5, maxOutputTokens: 4096, timeout: 30000 },
     });
     const provider = result?.provider || 'unknown';
     logPipeline(`GENERATED VIA ${provider.toUpperCase()}`, `Assessment for ${courseName}/${topic}`);
@@ -1153,12 +1284,18 @@ Valid JSON only.`;
     }
   }
 
-  // 5. Template fallback
-  const fallback = generateFallbackQuestions(courseName, topic, 'medium');
-  const meta = buildMetadata('template', 'fallback');
-  const data = { course: courseName, topic, questions: fallback, ...meta, createdAt: new Date() };
-  await setRedis(cacheKey, data);
-  return { ...data, _source: 'template' };
+  // 5. Retry with a tighter AI prompt instead of templates.
+  const fallback = await generateAiAssessmentFallbackQuestions(courseName, topic);
+  if (fallback.length > 0) {
+    const meta = buildMetadata(fallback[0]?._provider || 'sglang', fallback[0]?._model || 'unknown');
+    const data = { course: courseName, topic, questions: fallback, ...meta, createdAt: new Date() };
+    await setRedis(cacheKey, data);
+    return { ...data, _source: 'ai_retry' };
+  }
+
+  const empty = { course: courseName, topic, questions: [], ...buildMetadata('unknown', 'unknown'), createdAt: new Date() };
+  await setRedis(cacheKey, empty);
+  return { ...empty, _source: 'ai_retry_failed' };
 }
 
 // ── QUIZ GENERATION ───────────────────────────────────────────────────
