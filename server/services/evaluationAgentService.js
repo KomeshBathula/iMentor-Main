@@ -215,6 +215,8 @@ async function determineLevelWithAgent({ responses, course, topic }) {
     learningObjective: r.learningObjective || '',
     score: r.score || 0,
   }));
+  const rawCorrectCount = gradingDetails.filter(g => g.correct).length;
+  const rawPercent = gradingDetails.length > 0 ? Math.round((rawCorrectCount / gradingDetails.length) * 100) : 0;
 
   try {
     const { callWithFallback } = require('./llmFallbackService');
@@ -235,6 +237,10 @@ ${JSON.stringify(gradingDetails.map(g => ({
   learningObjective: g.learningObjective ? g.learningObjective.substring(0, 100) : '',
 })), null, 2)}
 
+Summary:
+- Raw correctness: ${rawPercent}%
+- Correct answers: ${rawCorrectCount}/${gradingDetails.length}
+
 Analyze the learner's performance considering:
 1. Concept Mastery — which concepts were correct vs incorrect
 2. Bloom's Taxonomy Level — are they answering higher-order questions correctly?
@@ -242,9 +248,16 @@ Analyze the learner's performance considering:
 4. Confidence — how reliable is the assessment data?
 5. Learning Objectives — which objectives are met vs missed?
 
+Classification rubric:
+- Beginner: mostly incorrect, shallow, or missing core concepts.
+- Intermediate: partial understanding, mixed correctness, some application ability, or clear grasp of basics with remaining gaps.
+- Expert: consistently correct, strong reasoning, and successful higher-order responses.
+
+Use the rubric above rather than raw score alone. If the learner shows mixed correctness but understands core ideas, classify as Intermediate.
+
 Return ONLY valid JSON:
 {
-  "level": "Beginner|Intermediate|Advanced|Expert",
+  "level": "Beginner|Intermediate|Expert",
   "confidence": 0-100,
   "reasoning": "brief explanation focusing on concept mastery, bloom levels, and difficulty",
   "conceptMastery": { "mastered": ["concept1"], "developing": ["concept2"], "needsWork": ["concept3"] },
@@ -252,14 +265,17 @@ Return ONLY valid JSON:
 }`;
 
     const providerHealth = require('./providerHealthCache');
-    const healthyProviders = providerHealth.getHealthyProviders(['sglang', 'groq', 'gemini', 'openai', 'ollama']);
-    const preferredProvider = healthyProviders.length > 0 ? healthyProviders[0] : 'sglang';
+    const healthyProviders = providerHealth.getHealthyProviders(['groq', 'sglang', 'gemini', 'openai', 'ollama']);
+    const preferredProvider = healthyProviders.includes('groq')
+      ? 'groq'
+      : (healthyProviders[0] || 'groq');
     const result = await callWithFallback({
       userQuery: prompt,
       systemPrompt: 'You are an expert educational evaluator. Return ONLY valid JSON.',
       chatHistory: [],
       preferredProvider,
-      options: { temperature: 0.3, maxOutputTokens: 1024, timeout: 30000 },
+      preferLocalFirst: false,
+      options: { groqModel: 'llama-3.1-8b-instant', temperature: 0.3, maxOutputTokens: 1024, timeout: 30000 },
     });
 
     const text = typeof result?.text === 'string' ? result.text : '';
@@ -267,8 +283,9 @@ Return ONLY valid JSON:
     if (!jsonMatch) throw new Error('No JSON in LLM response');
 
     const parsed = JSON.parse(jsonMatch[0]);
-    const allowed = new Set(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
-    const level = allowed.has(parsed.level) ? parsed.level : null;
+    const allowed = new Set(['Beginner', 'Intermediate', 'Expert']);
+    const normalizedLevel = parsed.level === 'Advanced' ? 'Expert' : parsed.level;
+    const level = allowed.has(normalizedLevel) ? normalizedLevel : null;
     if (!level) throw new Error(`Invalid level: ${parsed.level}`);
 
     log.info('EVAL_AGENT', `Agent determined level: ${level} (confidence: ${parsed.confidence}) for ${topic}`);
@@ -303,8 +320,7 @@ function determineLevelWeighted(gradingDetails) {
     : 0;
 
   let level = 'Beginner';
-  if (weightedPercent >= 85) level = 'Expert';
-  else if (weightedPercent >= 65) level = 'Advanced';
+  if (weightedPercent >= 80) level = 'Expert';
   else if (weightedPercent >= 40) level = 'Intermediate';
 
   log.info('EVAL_AGENT', `Weighted fallback level: ${level} (weighted: ${weightedPercent}%)`);
