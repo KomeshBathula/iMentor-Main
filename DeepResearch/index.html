@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- Sidebar: session log -->
+    <aside class="log">
+      <button class="log-back">&larr; Dashboard</button>
+
+      <div class="log-section">
+        <span class="log-label">Recent Searches</span>
+        <ul class="log-list" id="log-list">
+          <li class="log-empty">No queries yet. Your first run will land here.</li>
+        </ul>
+      </div>
+
+      <button class="log-archive" id="clear-history-btn" type="button">Clear History</button>
+    </aside>
+
+    <!-- Main console -->
+    <main class="console">
+
+      <header class="console-head">
+      <h1>Ask something.<br>We'll go deep.</h1>
+      </header>
+
+      <section class="query-panel">
+        <div class="query-box" id="query-box">
+          <textarea id="query-input" placeholder="What do you want to research?" rows="2"></textarea>
+          <button class="mic-btn" id="mic-btn" aria-label="Dictate query" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <path d="M12 17v4M9 21h6"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Main page dynamic suggestion checklist (at least 10 items) -->
+        <div class="main-suggestions" id="main-suggestions" style="display: none; margin-top: 20px; border-top: 1px solid var(--border-soft); padding-top: 20px;">
+          <div class="panel-head" style="margin-bottom: 14px;">
+            <span class="group-label">Customize Research Focus (Select 1 or more requirements)</span>
+          </div>
+          <div class="checkbox-list vertical" id="suggestion-checklist"></div>
+        </div>
+
+        <!-- signature signal pulse
+        <div class="signal" id="signal" aria-hidden="true">
+          <svg viewBox="0 0 600 40" preserveAspectRatio="none">
+            <polyline id="signal-line" points="" />
+          </svg>
+        </div> -->
+
+        <!-- <div class="option-group">
+          <span class="group-label">Nature</span>
+          <div class="option-row" id="nature-group">
+            <button class="option-card" data-value="general" data-count="30">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9s1.3-6.4 3.8-9z"/></svg>
+              <span class="option-title">General</span>
+              <span class="option-desc">Broad sweep across web, news, and academic sources.</span>
+            </button>
+            <button class="option-card is-active" data-value="academic" data-count="50">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg>
+              <span class="option-title">Academic</span>
+              <span class="option-desc">Peer-reviewed papers, citations, scholarly databases.</span>
+            </button>
+            <button class="option-card" data-value="research" data-count="65">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3v6L4 20h16L15 9V3"/><path d="M9 3h6"/></svg>
+              <span class="option-title">Research</span>
+              <span class="option-desc">Maximum rigor, deep empirical analysis.</span>
+            </button>
+          </div>
+        </div> -->
+
+        <!-- <div class="option-group">
+          <span class="group-label">Depth</span>
+          <div class="option-row" id="depth-group">
+            <button class="option-card" data-value="quick" data-mult="0.7">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+              <span class="option-title">Quick</span>
+              <span class="option-desc">Fast, focused pass.</span>
+            </button>
+            <button class="option-card is-active" data-value="balanced" data-mult="1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19V10M12 19V5M20 19v-7"/></svg>
+              <span class="option-title">Balanced</span>
+              <span class="option-desc">Thorough, well-rounded.</span>
+            </button>
+            <button class="option-card" data-value="exhaustive" data-mult="1.3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v16h16"/><path d="m6 16 4-6 3 4 5-8"/></svg>
+              <span class="option-title">Exhaustive</span>
+              <span class="option-desc">Maximum depth, no shortcuts.</span>
+            </button>
+          </div>
+        </div> -->
+
+      </section>
+
+      <footer class="readout">
+        <div class="readout-left">
+          <span class="dot"></span>
+          <span class="readout-sources">OpenAlex &middot; Semantic Scholar &middot; arXiv &middot; Web</span>
+        </div>
+        <div class="readout-right">
+          <span class="readout-count"><span id="source-count">50</span> sources est.</span>
+          <button class="start-btn" id="start-btn" type="button">Next <span class="arrow">&rarr;</span></button>
+        </div>
+      </footer>
+
+      <!-- Inline Research Results Panel -->
+      <section class="research-results" id="research-results" style="display: none; margin-top: 40px;">
+        <div class="panel">
+          <div class="panel-head" style="border-bottom: 1px solid var(--border-soft); padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <span class="group-label" id="results-label">Research Synthesis Report</span>
+            <button class="ghost-btn" id="close-results-btn" style="padding: 6px 12px; font-size: 11px; cursor: pointer;" type="button">&larr; Back</button>
+          </div>
+          <h2 id="results-title" style="font-family: var(--font-display); font-size: 28px; margin: 0 0 10px;">Topic Name</h2>
+          <div class="results-meta" id="results-meta" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">
+            Date · Sources analyzed
+          </div>
+          
+          <!-- Structured Summary Section -->
+          <div id="results-summary" class="results-content" style="line-height: 1.7; font-size: 14.5px; color: var(--text); margin-bottom: 30px;">
+            <!-- Generated summary paragraphs go here -->
+          </div>
+          
+          <!-- Scraped Resources Section -->
+          <div class="results-resources">
+            <span class="group-label" style="margin-bottom: 12px; display: block;">Scraped Sources & Citations</span>
+            <ul id="results-resources-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+              <!-- Resources list with links -->
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
