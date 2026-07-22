@@ -1,0 +1,17 @@
+{
+  "id": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "content": "Enterprise RAG Crawler Sample Raw Document.\n\nSection 1: Installation\nTo get started with the crawler, run the requirements install command: pip install -r requirements.txt",
+  "raw_content_path": "data/raw/sample_doc.txt",
+  "mime_type": "text/plain",
+  "metadata": {
+    "source_url": "data/raw/sample_doc.txt",
+    "title": "sample_doc.txt",
+    "author": "System Administrator",
+    "description": "Sample demonstration document to verify RAG parser output schemas.",
+    "language": "en",
+    "crawled_at": "2026-07-21T22:00:00Z",
+    "file_size_bytes": 285,
+    "mime_type": "text/plain",
+    "extra": {}
+  }
+}

@@ -1,0 +1,10 @@
+Enterprise RAG Crawler Sample Raw Document.
+This file serves as a demonstration data payload to verify that your layout extraction, chunking, and metadata parsing modules function as expected.
+It contains simple headings, text blocks, and structured links.
+
+Section 1: Installation
+To get started with the crawler, run the requirements install command:
+pip install -r requirements.txt
+
+Section 2: References
+Check documentation page at: http://example.com/docs
