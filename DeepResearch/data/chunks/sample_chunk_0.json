@@ -1,0 +1,12 @@
+{
+  "id": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855_rc0",
+  "document_id": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "text": "Enterprise RAG Crawler Sample Raw Document.\n\nSection 1: Installation\nTo get started with the crawler, run the requirements install command: pip install -r requirements.txt",
+  "chunk_index": 0,
+  "metadata": {
+    "source": "sample_doc.txt"
+  },
+  "embedding": [
+    0.0125, -0.0456, 0.0891, 0.1245
+  ]
+}
